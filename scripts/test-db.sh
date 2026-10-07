@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# Apply every migration + the dev seed to a throwaway database, then run the
+# security tests.
+#
+#   DATABASE_URL=postgres://... scripts/test-db.sh   # real Postgres + PostGIS (CI)
+#   scripts/test-db.sh --standin                     # no PostGIS available: temp cluster + text stand-in
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+MIG="$ROOT/supabase/migrations"
+TESTS="$ROOT/supabase/tests"
+WORK="$(mktemp -d)"
+trap 'cleanup' EXIT
+cleanup() {
+  if [[ -n "${PGCTL_DATA:-}" ]]; then
+    su postgres -c "/usr/lib/postgresql/16/bin/pg_ctl -D '$PGCTL_DATA' -m fast stop" >/dev/null 2>&1 || \
+      /usr/lib/postgresql/16/bin/pg_ctl -D "$PGCTL_DATA" -m fast stop >/dev/null 2>&1 || true
+  fi
+  rm -rf "$WORK"
+}
+
+STANDIN=0
+[[ "${1:-}" == "--standin" ]] && STANDIN=1
+
+if [[ $STANDIN -eq 1 ]]; then
+  PGBIN=/usr/lib/postgresql/16/bin
+  PGCTL_DATA="$WORK/data"
+  mkdir -p "$PGCTL_DATA"
+  RUN=()
+  if [[ $(id -u) -eq 0 ]]; then chown -R postgres "$WORK"; RUN=(su postgres -c); fi
+  run() { if [[ ${#RUN[@]} -gt 0 ]]; then "${RUN[@]}" "$*"; else bash -c "$*"; fi; }
+  run "$PGBIN/initdb -D '$PGCTL_DATA' -U postgres -A trust >/dev/null"
+  run "$PGBIN/pg_ctl -D '$PGCTL_DATA' -o '-p 54329 -k $WORK' -l '$WORK/pg.log' -w start >/dev/null"
+  DATABASE_URL="postgresql://postgres@localhost:54329/postgres?host=$WORK"
+fi
+
+: "${DATABASE_URL:?set DATABASE_URL or pass --standin}"
+
+if [[ $STANDIN -eq 0 ]]; then
+  # Use a fresh database: some PostGIS images pre-install the extension into
+  # the default database's public schema, but Supabase keeps it in "extensions".
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -X -c 'drop database if exists i12farm_test' -c 'create database i12farm_test'
+  DATABASE_URL="$(python3 -c 'import sys,urllib.parse as u; p=u.urlsplit(sys.argv[1]); print(u.urlunsplit(p._replace(path="/i12farm_test")))' "$DATABASE_URL")"
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -X -c 'drop extension if exists postgis cascade'
+fi
+
+PSQL=(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -X)
+
+echo "→ Supabase stand-ins (roles, auth, storage)"
+"${PSQL[@]}" -f "$TESTS/supabase_stubs.sql"
+
+if [[ $STANDIN -eq 1 ]]; then
+  echo "→ PostGIS text stand-in (local only)"
+  "${PSQL[@]}" -f "$TESTS/postgis_standin.sql"
+fi
+
+for f in "$MIG"/*.sql; do
+  echo "→ $(basename "$f")"
+  if [[ $STANDIN -eq 1 ]]; then
+    sed -E \
+      -e '/create extension if not exists postgis/d' \
+      -e 's/geography\(Point, 4326\)/geography/g' \
+      -e '/using gist \(public_location\)/d' \
+      "$f" > "$WORK/m.sql"
+    "${PSQL[@]}" -f "$WORK/m.sql"
+  else
+    "${PSQL[@]}" -f "$f"
+  fi
+done
+
+echo "→ seed.sql"
+"${PSQL[@]}" -f "$ROOT/supabase/seed.sql"
+
+echo "→ security tests"
+"${PSQL[@]}" -f "$TESTS/security_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'

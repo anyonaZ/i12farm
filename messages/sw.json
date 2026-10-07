@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "i12farm",
+    "tagline": "Kila shamba, kwenye ramani.",
+    "offline": "Uko nje ya mtandao. Kurasa ulizotembelea karibuni bado zinafanya kazi."
+  },
+  "nav": {
+    "explore": "Gundua",
+    "market": "Soko",
+    "requests": "Maombi",
+    "inbox": "Ujumbe",
+    "myFarm": "Shamba Langu"
+  },
+  "explore": {
+    "searchPlaceholder": "Tafuta mashamba, mazao au mahali",
+    "comingTitle": "Ramani ya mashamba inafunguliwa hivi karibuni",
+    "comingBody": "Tunaweka mashamba ya kwanza Homa Bay na Kisumu. Hivi karibuni utapata maziwa, mayai, asali, madaktari wa mifugo na mafunzo karibu nawe.",
+    "categoriesTitle": "Utakachopata",
+    "categoriesUnavailable": "Aina zitaonekana hifadhidata ikiunganishwa."
+  },
+  "myFarm": {
+    "title": "Shamba Langu",
+    "signedInAs": "Umeingia kama {name}",
+    "pinTitle": "Weka shamba lako kwenye ramani",
+    "pinBody": "Jina, aina, alama ya mahali, picha, bidhaa. Hatua tano fupi, zinakuja katika toleo lijalo.",
+    "signOut": "Toka"
+  },
+  "inbox": {
+    "title": "Ujumbe",
+    "empty": "Ujumbe kutoka kwa wanunuzi na washirika utaonekana hapa."
+  },
+  "auth": {
+    "title": "Ingia i12farm",
+    "subtitle": "Weka shamba lako, hifadhi unayopenda na zungumza na wanunuzi.",
+    "google": "Endelea na Google",
+    "or": "au",
+    "emailLabel": "Barua pepe",
+    "emailButton": "Nitumie kiungo cha kuingia",
+    "emailSent": "Angalia barua pepe yako upate kiungo cha kuingia.",
+    "error": "Kuna hitilafu. Tafadhali jaribu tena.",
+    "noEmail": "Huna barua pepe? Afisa wa nyanjani anaweza kusajili shamba lako."
+  },
+  "language": {
+    "label": "Lugha",
+    "en": "English",
+    "sw": "Kiswahili"
+  },
+  "offline": {
+    "title": "Hakuna mtandao",
+    "body": "Simu yako iko nje ya mtandao. Kurasa ulizofungua karibuni bado zinapatikana. Tutaunganisha upya wenyewe.",
+    "retry": "Jaribu tena"
+  }
+}

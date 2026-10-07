@@ -1,0 +1,45 @@
+name: Nightly database backup
+
+# Supabase's free plan has no automated backups, so we take our own.
+# Runs at 01:15 Nairobi (22:15 UTC). The dump is encrypted before it leaves
+# the runner and kept as a private workflow artifact for 30 days.
+#
+# Repository secrets needed:
+#   SUPABASE_DB_URL     Session pooler connection string (Dashboard → Connect)
+#   BACKUP_PASSPHRASE   Long random passphrase; store it in your password manager
+#
+# Restore: gpg -d backup.sql.gz.gpg | gunzip | psql "$TARGET_DB_URL"
+#
+# The nightly connection also counts as activity, which helps keep a free
+# project from pausing after a quiet week.
+
+on:
+  schedule:
+    - cron: '15 22 * * *'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump, compress and encrypt
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          stamp=$(date -u +%Y%m%dT%H%MZ)
+          # Match the server's major version (Supabase runs Postgres 15 or 17).
+          docker run --rm -e SUPABASE_DB_URL postgres:17 \
+            pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges \
+              --schema=public --schema=auth --schema=storage \
+            | gzip -9 \
+            | gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
+                  --symmetric --cipher-algo AES256 -o "i12farm-$stamp.sql.gz.gpg"
+          ls -lh i12farm-*.gpg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: db-backup
+          path: i12farm-*.sql.gz.gpg
+          retention-days: 30
+          if-no-files-found: error

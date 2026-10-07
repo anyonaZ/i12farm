@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+/*
+ * i12farm design tokens. Every colour on screen comes from here, so the
+ * palette can change without touching a component.
+ *
+ * Contrast notes (WCAG): white text on Sprout is only 2.6:1, so filled
+ * buttons use Sprout Deep (#067647, 5.7:1 with white). Sprout itself is for
+ * map pins, icons, active states and large accents.
+ */
+@theme {
+  --color-sprout: #12b76a;
+  --color-sprout-deep: #067647;
+  --color-forest: #053b2b;
+  --color-lime: #b6f04a;
+  --color-mint: #f3fbf6;
+  --color-amber: #f5a524;
+  --color-soil: #5b6b63;
+  --color-line: #d8eadf;
+  --color-surface: #ffffff;
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+  --spacing-tap: 3rem; /* 48 px minimum tap target */
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--color-mint);
+    color: var(--color-forest);
+    font-family: var(--font-sans);
+    font-feature-settings: 'ss01';
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-sprout);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex min-h-tap w-full items-center justify-center gap-2 rounded-full bg-sprout-deep px-5 text-base font-semibold text-white transition active:scale-[0.98] disabled:opacity-60;
+  }
+  .btn-secondary {
+    @apply inline-flex min-h-tap w-full items-center justify-center gap-2 rounded-full border border-line bg-surface px-5 text-base font-semibold text-forest transition active:scale-[0.98];
+  }
+  .card {
+    @apply rounded-card border border-line bg-surface p-5;
+  }
+  .chip {
+    @apply inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-medium text-forest;
+  }
+}

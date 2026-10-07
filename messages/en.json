@@ -1,0 +1,53 @@
+{
+  "app": {
+    "name": "i12farm",
+    "tagline": "Every farm, on the map.",
+    "offline": "You're offline. Recently viewed pages still work."
+  },
+  "nav": {
+    "explore": "Explore",
+    "market": "Market",
+    "requests": "Requests",
+    "inbox": "Inbox",
+    "myFarm": "My Farm"
+  },
+  "explore": {
+    "searchPlaceholder": "Search farms, produce or places",
+    "comingTitle": "The farm map opens soon",
+    "comingBody": "We're pinning the first farms in Homa Bay and Kisumu. Soon you'll find milk, eggs, honey, vets and training near you.",
+    "categoriesTitle": "What you'll find",
+    "categoriesUnavailable": "Categories load once the database is connected."
+  },
+  "myFarm": {
+    "title": "My Farm",
+    "signedInAs": "Signed in as {name}",
+    "pinTitle": "Put your farm on the map",
+    "pinBody": "Name, category, pin, photos, products. Five short steps, coming in the next release.",
+    "signOut": "Sign out"
+  },
+  "inbox": {
+    "title": "Inbox",
+    "empty": "Messages from buyers and partners will appear here."
+  },
+  "auth": {
+    "title": "Sign in to i12farm",
+    "subtitle": "Pin your farm, save favourites and talk to buyers.",
+    "google": "Continue with Google",
+    "or": "or",
+    "emailLabel": "Email address",
+    "emailButton": "Email me a sign-in link",
+    "emailSent": "Check your email for a sign-in link.",
+    "error": "Something went wrong. Please try again.",
+    "noEmail": "No email? A field agent can register your farm for you."
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "sw": "Kiswahili"
+  },
+  "offline": {
+    "title": "No connection",
+    "body": "Your phone is offline. Pages you opened recently are still available. We'll reconnect automatically.",
+    "retry": "Try again"
+  }
+}
