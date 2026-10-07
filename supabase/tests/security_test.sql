@@ -108,6 +108,17 @@ exception when insufficient_privilege or with_check_option_violation then
   raise notice 'ok  events cannot be logged as someone else';
 end $$;
 
+do $$ begin
+  if (select string_agg(name, ', ' order by name) from public.counties where is_pilot)
+     <> 'Homa Bay, Kiambu, Kisumu, Migori, Nairobi' then
+    raise exception 'FAIL: pilot counties are %', (select string_agg(name, ', ' order by name) from public.counties where is_pilot);
+  end if;
+  if (select count(*) from public.sub_counties where county_code in (22, 42, 43, 44, 47)) <> 52 then
+    raise exception 'FAIL: expected 52 pilot sub-counties, got %', (select count(*) from public.sub_counties where county_code in (22, 42, 43, 44, 47));
+  end if;
+  raise notice 'ok  five pilot counties with all their sub-counties';
+end $$;
+
 -- ===========================================================================
 -- Signed-in farmer (owns farm1, nothing else)
 -- ===========================================================================

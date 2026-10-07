@@ -14,7 +14,7 @@ This repository is **Phase 0: Foundations**.
 | Sign-in | Supabase Auth with Google and email magic link (`/sign-in`, `/auth/callback`, `/auth/sign-out`) |
 | Database | The full Phase 1 schema in `supabase/migrations/`: profiles, farms, exact and public locations, photos, listings, append-only price history, contact events, event log, daily rollups |
 | Security | Row-level security on every table, column-level grants, storage policies. 29 automated tests in `supabase/tests/security_test.sql` |
-| Reference data | All 47 counties with official codes, pilot sub-counties (Homa Bay, Kisumu), 16 farm categories and 38 products, all bilingual |
+| Reference data | All 47 counties with official codes, all sub-counties for the five pilot counties (Homa Bay, Kisumu, Migori, Kiambu, Nairobi), 16 farm categories and 38 products, all bilingual |
 | Analytics | First-party event tracker (`src/lib/analytics`) → `/api/events` → `public.events`, rolled up nightly into `events_daily` |
 | Ops | GitHub Actions: CI (typecheck, build, database tests on real PostGIS) and an encrypted nightly backup |
 
@@ -61,7 +61,7 @@ PostGIS stand-in, for machines where PostGIS can't be installed.
 
 ## Load all wards
 
-The pilot sub-counties ship in the migrations. For national coverage, export
+Sub-counties for the five pilot counties ship in the migrations; `counties.is_pilot` marks them. For national coverage, export
 the IEBC ward list to CSV with columns `county_code, sub_county, ward_code, ward`
 and run:
 

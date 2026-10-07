@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Logo } from '@/components/Logo';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
-import { listFarmCategories } from '@/domains/reference/queries';
+import { listFarmCategories, listPilotCounties } from '@/domains/reference/queries';
 import type { Locale } from '@/i18n/config';
 
 // Phase 0 Explore screen: the real shell (header, search pill, category chips,
@@ -10,7 +10,8 @@ export default async function ExplorePage() {
   const t = await getTranslations('explore');
   const tApp = await getTranslations('app');
   const locale = (await getLocale()) as Locale;
-  const categories = await listFarmCategories(locale);
+  const [categories, pilots] = await Promise.all([listFarmCategories(locale), listPilotCounties()]);
+  const pilotNames = (pilots ?? FALLBACK_PILOTS).map((c) => c.name).join(' · ');
 
   return (
     <main className="flex flex-col gap-5 px-4 pt-[max(1rem,env(safe-area-inset-top))]">
@@ -33,7 +34,7 @@ export default async function ExplorePage() {
       <section aria-labelledby="map-coming" className="relative overflow-hidden rounded-card bg-forest p-6 text-white">
         <MapSketch />
         <div className="relative">
-          <p className="mb-2 inline-block rounded-full bg-lime px-3 py-1 text-xs font-bold text-forest">Homa Bay · Kisumu</p>
+          <p className="mb-3 inline-block rounded-full bg-lime px-3 py-1 text-xs font-bold leading-5 text-forest">{pilotNames}</p>
           <h1 id="map-coming" className="text-2xl font-extrabold leading-tight">
             {t('comingTitle')}
           </h1>
@@ -63,6 +64,15 @@ export default async function ExplorePage() {
     </main>
   );
 }
+
+// Shown when the database isn't connected yet.
+const FALLBACK_PILOTS = [
+  { code: 43, name: 'Homa Bay' },
+  { code: 22, name: 'Kiambu' },
+  { code: 42, name: 'Kisumu' },
+  { code: 44, name: 'Migori' },
+  { code: 47, name: 'Nairobi' },
+];
 
 // Decorative contour lines and pins behind the hero, a hint of the map to come.
 function MapSketch() {

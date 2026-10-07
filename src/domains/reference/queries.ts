@@ -33,3 +33,11 @@ export async function listCounties(): Promise<County[] | null> {
   if (error || !data) return null;
   return data;
 }
+
+export async function listPilotCounties(): Promise<County[] | null> {
+  if (!isSupabaseConfigured) return null;
+  const supabase = await createClient();
+  const { data, error } = await supabase.from('counties').select('code, name').eq('is_pilot', true).order('name');
+  if (error || !data) return null;
+  return data;
+}
