@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
-// Market and Requests join this bar when Phases 2 and 3 ship.
+// Requests joins this bar when Phase 3 ships.
 const ITEMS = [
   { href: '/', key: 'explore', icon: CompassIcon },
+  { href: '/orders', key: 'orders', icon: BagIcon },
   { href: '/inbox', key: 'inbox', icon: InboxIcon },
   { href: '/my-farm', key: 'myFarm', icon: SproutIcon },
 ] as const;
@@ -50,6 +51,15 @@ function CompassIcon() {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
       <circle cx="12" cy="12" r="9" />
       <path d="M15.5 8.5l-2 5-5 2 2-5 5-2z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function BagIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M5 8h14l-1.2 12.5H6.2z" strokeLinejoin="round" />
+      <path d="M9 8V6.5a3 3 0 0 1 6 0V8" strokeLinecap="round" />
     </svg>
   );
 }

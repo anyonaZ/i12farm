@@ -17,6 +17,8 @@ export interface FarmSummary {
   min_price_kes: number | null;
   min_price_unit: string | null;
   listing_count: number;
+  rating: number | null;
+  review_count: number;
 }
 
 export interface Listing {
@@ -54,6 +56,8 @@ export interface FarmDetail {
   sub_county: { name: string } | null;
   listings: Listing[];
   media: { id: string; storage_path: string; position: number }[];
+  rating: { avg: number | null; count: number } | null;
+  created_at?: string;
 }
 
 export interface NewFarmPayload {

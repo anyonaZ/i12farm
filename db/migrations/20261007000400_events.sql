@@ -87,7 +87,8 @@ $$;
 revoke execute on function public.rollup_events(date) from public, anon, authenticated;
 
 -- Schedule the nightly rollup at 00:30 Nairobi (21:30 UTC) where pg_cron exists
--- (it does on Supabase; enable it under Database → Extensions first).
+-- (enable it in your host's extensions list). Without pg_cron the nightly
+-- GitHub Actions workflow (.github/workflows/backup.yml) runs it instead.
 do $$
 begin
   if exists (select 1 from pg_extension where extname = 'pg_cron') then

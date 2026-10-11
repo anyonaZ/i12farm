@@ -1,12 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { endSession } from '@/lib/auth/session';
+import { recordEvent } from '@/lib/analytics/server';
+import { withUser } from '@/lib/db';
+import { sameOrigin } from '@/lib/http';
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (data.user) {
-    await supabase.from('events').insert({ name: 'auth.signed_out', user_id: data.user.id, path: '/auth/sign-out' });
+  if (!sameOrigin(request)) return new NextResponse(null, { status: 403 });
+  const userId = await endSession('signed_out');
+  if (userId) {
+    await withUser(userId, (tx) => recordEvent(tx, { name: 'auth.signed_out', userId, path: '/auth/sign-out' })).catch(() => undefined);
   }
-  await supabase.auth.signOut();
   return NextResponse.redirect(new URL('/', request.url), { status: 303 });
 }

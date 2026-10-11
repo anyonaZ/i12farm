@@ -3,7 +3,6 @@
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Icon } from '@/components/Icon';
-import { createClient } from '@/lib/supabase/client';
 import { getAnonymousId, track } from '@/lib/analytics/track';
 import { displayPhone, toInternational } from '@/lib/phone';
 
@@ -28,10 +27,12 @@ export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, list
 
   function log(channel: Channel) {
     track('contact.tapped', { farm: farmId, channel });
-    createClient()
-      .from('contact_events')
-      .insert({ farm_id: farmId, listing_id: listingId, channel, anonymous_id: getAnonymousId() })
-      .then(() => undefined);
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ farm_id: farmId, listing_id: listingId, channel, anonymous_id: getAnonymousId() }),
+      keepalive: true,
+    }).catch(() => undefined);
   }
 
   const tel = toInternational(phone);
@@ -62,7 +63,13 @@ export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, list
           <span />
         )}
         {wa ? (
-          <a href={`https://wa.me/${wa}?text=${greeting}`} target="_blank" rel="noopener" onClick={() => log('whatsapp')} className="btn-secondary">
+          <a
+            href={`https://wa.me/${wa}?text=${greeting}`}
+            target="_blank"
+            rel="noopener"
+            onClick={() => log('whatsapp')}
+            className="btn-secondary"
+          >
             <Icon name="chat" size={18} />
             {t('whatsapp')}
           </a>
@@ -81,7 +88,12 @@ export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, list
             <Icon name="route" />
           </a>
         ) : null}
-        <button type="button" onClick={share} className="grid size-12 place-items-center rounded-full border border-line" aria-label={copied ? t('linkCopied') : t('share')}>
+        <button
+          type="button"
+          onClick={share}
+          className="grid size-12 place-items-center rounded-full border border-line"
+          aria-label={copied ? t('linkCopied') : t('share')}
+        >
           <Icon name={copied ? 'check' : 'share'} />
         </button>
       </div>

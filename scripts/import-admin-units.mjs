@@ -1,7 +1,7 @@
 // Turns a national list of sub-counties and wards into SQL for the reference
 // tables. Uses only Node built-ins.
 //
-//   node scripts/import-admin-units.mjs wards.csv > supabase/migrations/<timestamp>_admin_units.sql
+//   node scripts/import-admin-units.mjs wards.csv > db/migrations/<timestamp>_admin_units.sql
 //
 // Expected CSV header (any order, case-insensitive):
 //   county_code, sub_county, ward_code, ward

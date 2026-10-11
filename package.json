@@ -1,8 +1,8 @@
 {
   "name": "i12farm",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
-  "description": "Pinned, discoverable farm pages for every Kenyan farmer.",
+  "description": "Pinned, discoverable farm pages and orders for every Kenyan farmer.",
   "engines": {
     "node": ">=20.9"
   },
@@ -11,11 +11,13 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "db:start": "supabase start",
-    "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
+    "db:reset": "node scripts/db.mjs reset",
     "db:test": "scripts/test-db.sh",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "db:migrate": "node scripts/db.mjs migrate",
+    "db:status": "node scripts/db.mjs status",
+    "db:seed": "node scripts/db.mjs seed",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\""
   },
   "dependencies": {
     "aws4fetch": "^1.0.20",
@@ -34,6 +36,7 @@
     "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "prettier": "^3.9.10",
     "sharp": "^0.34.0",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.9.0"

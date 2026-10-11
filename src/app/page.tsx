@@ -1,7 +1,7 @@
 import { getLocale } from 'next-intl/server';
 import { ExploreClient } from '@/components/explore/ExploreClient';
 import { COUNTY_FOCUS, listFarmCategories, listPilotCounties } from '@/domains/reference/queries';
-import { isSupabaseConfigured } from '@/lib/env';
+import { isDbConfigured } from '@/lib/db';
 import type { Locale } from '@/i18n/config';
 
 // Explore: full-screen map of published farms, search, category chips and a
@@ -10,11 +10,11 @@ export default async function ExplorePage() {
   const locale = (await getLocale()) as Locale;
   const [categories, pilots] = await Promise.all([listFarmCategories(locale), listPilotCounties()]);
 
-  if (!isSupabaseConfigured) {
+  if (!isDbConfigured) {
     return (
       <main className="px-4 pb-24 pt-10">
         <h1 className="text-2xl font-extrabold">i12farm</h1>
-        <p className="mt-2 text-soil">Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in .env.local (see README).</p>
+        <p className="mt-2 text-soil">Set DATABASE_URL in .env.local and run npm run db:migrate (see README).</p>
       </main>
     );
   }

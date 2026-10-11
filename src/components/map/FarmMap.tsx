@@ -258,7 +258,10 @@ function fit(map: MlMap, pts: [number, number][], padding?: Props['padding']) {
     map.flyTo({ center: pts[0], zoom: 13, padding });
     return;
   }
-  let w = 180, e = -180, s = 90, n = -90;
+  let w = 180,
+    e = -180,
+    s = 90,
+    n = -90;
   for (const [lng, lat] of pts) {
     w = Math.min(w, lng);
     e = Math.max(e, lng);

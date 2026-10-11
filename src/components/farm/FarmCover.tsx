@@ -1,5 +1,5 @@
 import { CATEGORY_HUE, CATEGORY_ICON, ICON_PATHS } from '@/components/Icon';
-import { publicMediaUrl } from '@/lib/storage';
+import { publicMediaUrl } from '@/lib/media-url';
 
 // A farm's first photo, or a generated cover (category colour, contour lines,
 // category icon) so farms without photos still look cared for.
@@ -7,7 +7,7 @@ import { publicMediaUrl } from '@/lib/storage';
 function seeded(seed: string) {
   let x = 0;
   for (const ch of seed) x = (x * 31 + ch.charCodeAt(0)) >>> 0;
-  return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296);
+  return () => (x = (x * 1664525 + 1013904223) >>> 0) / 4294967296;
 }
 
 export function FarmCover({
@@ -28,7 +28,9 @@ export function FarmCover({
   const url = publicMediaUrl(coverPath);
   if (url) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={url} alt={name} sizes={sizes} loading="lazy" decoding="async" className={`h-full w-full object-cover ${className ?? ''}`} />;
+    return (
+      <img src={url} alt={name} sizes={sizes} loading="lazy" decoding="async" className={`h-full w-full object-cover ${className ?? ''}`} />
+    );
   }
   const cat = category ?? 'vegetables';
   const hue = CATEGORY_HUE[cat] ?? 140;
@@ -40,7 +42,13 @@ export function FarmCover({
   });
   const gid = `cover-${id}`;
   return (
-    <svg viewBox="0 0 200 140" preserveAspectRatio="xMidYMid slice" role="img" aria-label={name} className={`h-full w-full ${className ?? ''}`}>
+    <svg
+      viewBox="0 0 200 140"
+      preserveAspectRatio="xMidYMid slice"
+      role="img"
+      aria-label={name}
+      className={`h-full w-full ${className ?? ''}`}
+    >
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor={`hsl(${hue} 55% 82%)`} />
@@ -53,7 +61,15 @@ export function FarmCover({
           <path key={i} d={d} />
         ))}
       </g>
-      <g transform="translate(118 46) scale(3.1)" fill="none" stroke={`hsl(${hue} 50% 28%)`} strokeOpacity={0.55} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round">
+      <g
+        transform="translate(118 46) scale(3.1)"
+        fill="none"
+        stroke={`hsl(${hue} 50% 28%)`}
+        strokeOpacity={0.55}
+        strokeWidth={1.4}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d={ICON_PATHS[CATEGORY_ICON[cat] ?? 'leaf']} />
       </g>
     </svg>

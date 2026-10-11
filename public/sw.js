@@ -2,10 +2,10 @@
  * - App shell + static assets: cache-first (they are content-hashed).
  * - Pages: network-first, falling back to the last cached copy, then /offline.
  * - Farm photos: cache-first with a small cap, so recently seen farms work offline.
- * - API, auth and Supabase data calls are never cached.
+ * - API and auth calls are never cached.
  * Bump VERSION to force every phone to drop old caches.
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL = `i12f-shell-${VERSION}`;
 const PAGES = `i12f-pages-${VERSION}`;
 const MEDIA = `i12f-media-${VERSION}`;
@@ -13,7 +13,7 @@ const PRECACHE = ['/offline', '/manifest.webmanifest', '/icons/icon-192.png'];
 const MAX_PAGES = 30;
 const MAX_MEDIA = 80;
 // Personal pages are never stored: field agents often share one phone.
-const PRIVATE = ['/my-farm', '/inbox', '/sign-in'];
+const PRIVATE = ['/my-farm', '/inbox', '/sign-in', '/account', '/orders', '/admin', '/checkout'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(SHELL).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
@@ -65,8 +65,9 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
-  // Farm photos from Supabase Storage (public bucket).
-  if (url.pathname.startsWith('/storage/v1/object/public/farm-media/')) {
+  // Farm photos: /media/farms/... on our own server, or the same path on the
+  // public bucket (e.g. Cloudflare R2) when NEXT_PUBLIC_MEDIA_URL points there.
+  if (url.pathname.startsWith('/media/farms/') || url.pathname.startsWith('/farms/')) {
     event.respondWith(cacheFirst(request, MEDIA, MAX_MEDIA));
     return;
   }

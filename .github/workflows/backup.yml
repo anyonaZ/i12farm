@@ -1,17 +1,17 @@
-name: Nightly database backup
+name: Nightly database backup and rollup
 
-# Supabase's free plan has no automated backups, so we take our own.
-# Runs at 01:15 Nairobi (22:15 UTC). The dump is encrypted before it leaves
-# the runner and kept as a private workflow artifact for 30 days.
+# Free Postgres plans keep few or no backups, so we take our own.
+# Runs at 01:15 Nairobi (22:15 UTC):
+#   1. rolls yesterday's raw events into events_daily (works without pg_cron)
+#   2. dumps the public and auth schemas, encrypted before leaving the runner,
+#      kept as a private workflow artifact for 30 days.
 #
 # Repository secrets needed:
-#   SUPABASE_DB_URL     Session pooler connection string (Dashboard → Connect)
+#   DATABASE_URL        Direct (non-pooled) connection string with sslmode=require
 #   BACKUP_PASSPHRASE   Long random passphrase; store it in your password manager
 #
 # Restore: gpg -d backup.sql.gz.gpg | gunzip | psql "$TARGET_DB_URL"
-#
-# The nightly connection also counts as activity, which helps keep a free
-# project from pausing after a quiet week.
+# The dump holds password hashes and phone numbers: never make it public.
 
 on:
   schedule:
@@ -22,17 +22,20 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
+      - name: Roll up yesterday's events
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: docker run --rm -e DATABASE_URL postgres:17 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'select public.rollup_events()'
       - name: Dump, compress and encrypt
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
           set -euo pipefail
           stamp=$(date -u +%Y%m%dT%H%MZ)
-          # Match the server's major version (Supabase runs Postgres 15 or 17).
-          docker run --rm -e SUPABASE_DB_URL postgres:17 \
-            pg_dump "$SUPABASE_DB_URL" --no-owner --no-privileges \
-              --schema=public --schema=auth --schema=storage \
+          # pg_dump must be at least the server's major version.
+          docker run --rm -e DATABASE_URL postgres:17 \
+            pg_dump "$DATABASE_URL" --no-owner --no-privileges --schema=public --schema=auth \
             | gzip -9 \
             | gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" \
                   --symmetric --cipher-algo AES256 -o "i12farm-$stamp.sql.gz.gpg"

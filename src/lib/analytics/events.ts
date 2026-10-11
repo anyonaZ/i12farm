@@ -25,6 +25,23 @@ export const EVENT_NAMES = [
   'explore.county_selected',
   'farm.saved',
   'listing.price_changed',
+  // Phase 2 · Trade (own accounts, orders, M-Pesa, reviews, messaging)
+  'auth.signed_up',
+  'farm.claim_code_issued',
+  'farm.claimed',
+  'farm.photo_added',
+  'listing.quantity_changed',
+  'cart.item_added',
+  'cart.item_removed',
+  'checkout.started',
+  'order.placed',
+  'order.status_changed',
+  'payment.requested',
+  'payment.succeeded',
+  'payment.failed',
+  'review.left',
+  'conversation.opened',
+  'message.sent',
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];

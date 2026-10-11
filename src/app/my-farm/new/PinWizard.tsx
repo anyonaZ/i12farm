@@ -5,12 +5,10 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Icon, CATEGORY_ICON } from '@/components/Icon';
 import { FarmMap } from '@/components/map/FarmMap';
-import { createClient } from '@/lib/supabase/client';
 import { compressImage, formatBytes, type CompressedImage } from '@/lib/images';
 import { isKenyanMobile } from '@/lib/phone';
-import { FARM_MEDIA_BUCKET } from '@/lib/storage';
 import { track } from '@/lib/analytics/track';
-import { attachFarmMedia, createFarm } from '@/domains/farms/actions';
+import { createFarm } from '@/domains/farms/actions';
 import type { Visibility } from '@/domains/farms/types';
 import type { Product, SubCounty } from '@/domains/reference/queries';
 
@@ -115,22 +113,19 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
       }
       const { id, slug } = result.data;
 
-      // Photos go straight from the phone to Storage; only paths reach our server.
+      // Photos were shrunk on this phone; each one is a small upload to our server.
       if (photos.length) {
-        const supabase = createClient();
-        const uploaded: { path: string; width: number; height: number; bytes: number }[] = [];
+        let failed = 0;
         for (const p of photos) {
-          const ext = p.blob.type === 'image/webp' ? 'webp' : 'jpg';
-          const path = `farms/${id}/${crypto.randomUUID()}.${ext}`;
-          const { error: upErr } = await supabase.storage.from(FARM_MEDIA_BUCKET).upload(path, p.blob, {
-            contentType: p.blob.type,
-            cacheControl: '31536000',
-          });
-          if (!upErr) uploaded.push({ path, width: p.width, height: p.height, bytes: p.blob.size });
+          const form = new FormData();
+          form.set('file', p.blob, p.blob.type === 'image/webp' ? 'photo.webp' : 'photo.jpg');
+          form.set('width', String(p.width));
+          form.set('height', String(p.height));
+          const response = await fetch(`/api/farms/${id}/photos`, { method: 'POST', body: form }).catch(() => null);
+          if (!response?.ok) failed += 1;
         }
-        if (uploaded.length) await attachFarmMedia(id, uploaded);
-        if (uploaded.length < photos.length) {
-          router.push(`/my-farm?photosFailed=${photos.length - uploaded.length}`);
+        if (failed) {
+          router.push(`/my-farm?photosFailed=${failed}`);
           return;
         }
       }
@@ -210,20 +205,50 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
           <>
             <h2 className="text-2xl font-extrabold">{t('s1')}</h2>
             <Field id="w-name" label={t('farmName')}>
-              <input id="w-name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('farmNameHint')} maxLength={80} />
+              <input
+                id="w-name"
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t('farmNameHint')}
+                maxLength={80}
+              />
             </Field>
             <Field id="w-farmer" label={t('farmerName')}>
-              <input id="w-farmer" className="input" value={farmer} onChange={(e) => setFarmer(e.target.value)} autoComplete="name" maxLength={120} />
+              <input
+                id="w-farmer"
+                className="input"
+                value={farmer}
+                onChange={(e) => setFarmer(e.target.value)}
+                autoComplete="name"
+                maxLength={120}
+              />
             </Field>
             <Field id="w-phone" label={t('phone')}>
-              <input id="w-phone" className="input tabular-nums" type="tel" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0712 345 678" autoComplete="tel" />
+              <input
+                id="w-phone"
+                className="input tabular-nums"
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="0712 345 678"
+                autoComplete="tel"
+              />
             </Field>
             <label className="flex min-h-10 items-center gap-2.5 text-sm">
               <input type="checkbox" checked={waSame} onChange={(e) => setWaSame(e.target.checked)} className="size-5 accent-sprout-deep" />
               {t('waSame')}
             </label>
             <Field id="w-desc" label={t('desc')}>
-              <textarea id="w-desc" className="input min-h-24 py-3" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('descHint')} maxLength={2000} />
+              <textarea
+                id="w-desc"
+                className="input min-h-24 py-3"
+                value={desc}
+                onChange={(e) => setDesc(e.target.value)}
+                placeholder={t('descHint')}
+                maxLength={2000}
+              />
             </Field>
           </>
         ) : null}
@@ -282,7 +307,14 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
               </Field>
             </div>
             <Field id="w-place" label={t('place')}>
-              <input id="w-place" className="input" value={place} onChange={(e) => setPlace(e.target.value)} placeholder={t('placeHint')} maxLength={120} />
+              <input
+                id="w-place"
+                className="input"
+                value={place}
+                onChange={(e) => setPlace(e.target.value)}
+                placeholder={t('placeHint')}
+                maxLength={120}
+              />
             </Field>
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-2">
@@ -313,8 +345,18 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
                   ['hidden', 'visHidden', 'visHiddenD'],
                 ] as const
               ).map(([v, a, d]) => (
-                <label key={v} className={`flex items-start gap-3 rounded-2xl border bg-surface p-3 ${vis === v ? 'border-sprout-deep' : 'border-line'}`}>
-                  <input type="radio" name="w-vis" value={v} checked={vis === v} onChange={() => setVis(v)} className="mt-0.5 size-5 accent-sprout-deep" />
+                <label
+                  key={v}
+                  className={`flex items-start gap-3 rounded-2xl border bg-surface p-3 ${vis === v ? 'border-sprout-deep' : 'border-line'}`}
+                >
+                  <input
+                    type="radio"
+                    name="w-vis"
+                    value={v}
+                    checked={vis === v}
+                    onChange={() => setVis(v)}
+                    className="mt-0.5 size-5 accent-sprout-deep"
+                  />
                   <span>
                     <b className="block text-sm">{t(a)}</b>
                     <span className="text-sm text-soil">{t(d)}</span>
@@ -427,13 +469,24 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
               <Row label={t('farmerName')} value={farmer} />
               <Row label={t('phone')} value={phone} />
               <Row label={t('s2')} value={cats.map(catLabel).join(', ')} />
-              <Row label={t('county')} value={[place, subs.find((s) => s.id === subId)?.name, counties.find((c) => c.code === county)?.name].filter(Boolean).join(', ')} />
+              <Row
+                label={t('county')}
+                value={[place, subs.find((s) => s.id === subId)?.name, counties.find((c) => c.code === county)?.name]
+                  .filter(Boolean)
+                  .join(', ')}
+              />
               <Row label={t('visibility')} value={t(vis === 'approximate' ? 'visApprox' : vis === 'exact' ? 'visExact' : 'visHidden')} />
               {items
                 .filter((i) => Number(i.price) > 0)
                 .map((i, k) => {
                   const p = productLabel(i.product);
-                  return <Row key={k} label={p?.name ?? i.product} value={`KES ${Number(i.price).toLocaleString('en-KE')} / ${p ? tu(p.unit) : ''}`} />;
+                  return (
+                    <Row
+                      key={k}
+                      label={p?.name ?? i.product}
+                      value={`KES ${Number(i.price).toLocaleString('en-KE')} / ${p ? tu(p.unit) : ''}`}
+                    />
+                  );
                 })}
             </dl>
           </>

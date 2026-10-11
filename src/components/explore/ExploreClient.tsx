@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import { FarmMap, type Bounds } from '@/components/map/FarmMap';
 import { FarmCard } from '@/components/farm/FarmCard';
 import { Icon, CATEGORY_ICON } from '@/components/Icon';
-import { createClient } from '@/lib/supabase/client';
 import { track } from '@/lib/analytics/track';
 import type { FarmSummary } from '@/domains/farms/types';
 
@@ -19,7 +18,6 @@ const SHEET_COLLAPSED = 214;
 
 export function ExploreClient({ categories, counties }: Props) {
   const t = useTranslations('explore');
-  const supabase = useMemo(() => createClient(), []);
   const [inView, setInView] = useState<FarmSummary[]>([]);
   const [results, setResults] = useState<FarmSummary[] | null>(null);
   const [q, setQ] = useState('');
@@ -33,13 +31,11 @@ export function ExploreClient({ categories, counties }: Props) {
   const [fitPoints, setFitPoints] = useState<[number, number][]>(
     counties.map((c) => c.focus).filter((f): f is [number, number] => f !== null),
   );
-  const bounds = useRef<Bounds | null>(null);
+  // Start with all of Kenya so the list fills even if map tiles are slow or fail to load.
+  const bounds = useRef<Bounds | null>({ west: 33.9, south: -4.7, east: 41.9, north: 5.0 });
   const request = useRef(0);
 
-  const categoryName = useCallback(
-    (slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug,
-    [categories],
-  );
+  const categoryName = useCallback((slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug, [categories]);
 
   const loadInView = useCallback(async () => {
     const b = bounds.current;
@@ -48,18 +44,18 @@ export function ExploreClient({ categories, counties }: Props) {
     // Ask for a slightly larger box so small pans don't refetch empty edges.
     const padLng = (b.east - b.west) * 0.15;
     const padLat = (b.north - b.south) * 0.15;
-    const { data, error } = await supabase.rpc('farms_in_bbox', {
-      min_lng: b.west - padLng,
-      min_lat: b.south - padLat,
-      max_lng: b.east + padLng,
-      max_lat: b.north + padLat,
-      category_filter: cat ? [cat] : null,
-      county_filter: county,
-      max_rows: 500,
+    const params = new URLSearchParams({
+      w: String(b.west - padLng),
+      s: String(b.south - padLat),
+      e: String(b.east + padLng),
+      n: String(b.north + padLat),
     });
-    if (id !== request.current || error) return;
-    setInView((data ?? []) as FarmSummary[]);
-  }, [supabase, cat, county]);
+    if (cat) params.set('cat', cat);
+    if (county) params.set('county', String(county));
+    const response = await fetch(`/api/farms?${params}`).catch(() => null);
+    if (id !== request.current || !response?.ok) return;
+    setInView((await response.json()) as FarmSummary[]);
+  }, [cat, county]);
 
   useEffect(() => {
     loadInView();
@@ -73,13 +69,11 @@ export function ExploreClient({ categories, counties }: Props) {
       return;
     }
     const timer = setTimeout(async () => {
-      const { data } = await supabase.rpc('search_farms', {
-        q: term,
-        category_filter: cat ? [cat] : null,
-        county_filter: county,
-        max_rows: 50,
-      });
-      const rows = (data ?? []) as FarmSummary[];
+      const params = new URLSearchParams({ q: term });
+      if (cat) params.set('cat', cat);
+      if (county) params.set('county', String(county));
+      const response = await fetch(`/api/farms/search?${params}`).catch(() => null);
+      const rows = (response?.ok ? await response.json() : []) as FarmSummary[];
       setResults(rows);
       track('search.performed', { q: term.slice(0, 40), results: rows.length });
       const pts = rows.filter((r) => r.lng !== null && r.lat !== null).map((r) => [r.lng, r.lat] as [number, number]);
@@ -89,12 +83,14 @@ export function ExploreClient({ categories, counties }: Props) {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [q, cat, county, supabase]);
+  }, [q, cat, county]);
 
   const visibleInBounds = useMemo(() => {
     const b = bounds.current;
     if (!b) return inView;
-    return inView.filter((f) => f.lng !== null && f.lat !== null && f.lng >= b.west && f.lng <= b.east && f.lat >= b.south && f.lat <= b.north);
+    return inView.filter(
+      (f) => f.lng !== null && f.lat !== null && f.lng >= b.west && f.lng <= b.east && f.lat >= b.south && f.lat <= b.north,
+    );
     // inView changes after every move, which is when bounds change too
   }, [inView]);
 
@@ -152,7 +148,10 @@ export function ExploreClient({ categories, counties }: Props) {
       />
 
       <div className="pointer-events-none absolute inset-x-4 top-[max(0.75rem,env(safe-area-inset-top))] z-10 flex flex-col gap-2.5">
-        <div role="search" className="pointer-events-auto flex min-h-13 items-center gap-2.5 rounded-full border border-line bg-surface pl-4 pr-2 shadow-lg">
+        <div
+          role="search"
+          className="pointer-events-auto flex min-h-13 items-center gap-2.5 rounded-full border border-line bg-surface pl-4 pr-2 shadow-lg"
+        >
           <Icon name="search" className="shrink-0 text-soil" />
           <label htmlFor="explore-q" className="sr-only">
             {t('searchPlaceholder')}
@@ -183,7 +182,11 @@ export function ExploreClient({ categories, counties }: Props) {
             ))}
           </select>
         </div>
-        <div className="pointer-events-auto -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" role="toolbar" aria-label="Categories">
+        <div
+          className="pointer-events-auto -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]"
+          role="toolbar"
+          aria-label="Categories"
+        >
           <Chip pressed={cat === null} onClick={() => setCat(null)}>
             {t('all')}
           </Chip>

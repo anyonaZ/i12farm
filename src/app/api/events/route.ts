@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { isSupabaseConfigured } from '@/lib/env';
+import { currentUserId } from '@/lib/auth/session';
+import { isDbConfigured, withUser } from '@/lib/db';
 import { isEventName, MAX_BATCH, type EventBatch } from '@/lib/analytics/events';
 
 // Receives batches from the client tracker and appends them to public.events.
@@ -29,7 +29,7 @@ function cleanProperties(input: unknown): Record<string, string | number | boole
 }
 
 export async function POST(request: NextRequest) {
-  if (!isSupabaseConfigured) return new NextResponse(null, { status: 204 });
+  if (!isDbConfigured) return new NextResponse(null, { status: 204 });
 
   let body: Partial<EventBatch>;
   try {
@@ -47,15 +47,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'nothing to record' }, { status: 400 });
   }
 
-  const supabase = await createClient();
-  const { data: auth } = await supabase.auth.getUser();
-  const userId = auth.user?.id ?? null;
-
-  let countyCode: number | null = null;
-  if (userId) {
-    const { data: profile } = await supabase.from('profiles').select('county_code').eq('id', userId).maybeSingle();
-    countyCode = profile?.county_code ?? null;
-  }
+  const userId = await currentUserId();
 
   const device = deviceClass(request.headers.get('user-agent') ?? '');
   const locale = body.locale === 'sw' ? 'sw' : 'en';
@@ -65,12 +57,11 @@ export async function POST(request: NextRequest) {
     .filter((e) => e && isEventName(e.name))
     .map((e) => ({
       name: e.name,
-      occurred_at: typeof e.occurred_at === 'string' && !Number.isNaN(Date.parse(e.occurred_at)) ? e.occurred_at : undefined,
+      occurred_at: typeof e.occurred_at === 'string' && !Number.isNaN(Date.parse(e.occurred_at)) ? e.occurred_at : null,
       user_id: userId,
       anonymous_id: anonymousId,
       session_id: sessionId,
       properties: cleanProperties(e.properties),
-      county_code: countyCode,
       path: typeof e.path === 'string' ? e.path.slice(0, 300) : null,
       device,
       locale,
@@ -79,9 +70,29 @@ export async function POST(request: NextRequest) {
 
   if (rows.length === 0) return NextResponse.json({ error: 'unknown events' }, { status: 400 });
 
-  const { error } = await supabase.from('events').insert(rows);
-  if (error) {
-    console.error('events insert failed', error.message);
+  try {
+    await withUser(userId, async (tx) => {
+      // The visitor's county (from their profile) is attached in SQL; RLS still checks user_id.
+      const [profile] = userId
+        ? await tx<{ county_code: number | null }[]>`select county_code from public.profiles where id = ${userId}`
+        : [];
+      await tx`insert into public.events ${tx(
+        rows.map((r) => ({ ...r, properties: tx.json(r.properties), county_code: profile?.county_code ?? null })),
+        'name',
+        'occurred_at',
+        'user_id',
+        'anonymous_id',
+        'session_id',
+        'properties',
+        'county_code',
+        'path',
+        'device',
+        'locale',
+        'app_version',
+      )}`;
+    });
+  } catch (error) {
+    console.error('events insert failed', (error as Error).message);
     return NextResponse.json({ error: 'not recorded' }, { status: 500 });
   }
   return new NextResponse(null, { status: 204 });

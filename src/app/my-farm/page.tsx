@@ -1,13 +1,15 @@
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
 import { FarmCover } from '@/components/farm/FarmCover';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
-import { createClient } from '@/lib/supabase/server';
-import { isSupabaseConfigured } from '@/lib/env';
 import { getPilotProgress, listManagedFarms, listSavedFarms } from '@/domains/farms/queries';
+import { unreadTotal } from '@/domains/messaging/queries';
+import { farmOrdersNeedingAction } from '@/domains/orders/queries';
+import { displayName, requireViewer } from '@/lib/auth/viewer';
+import { kes } from '@/lib/format';
 import type { Locale } from '@/i18n/config';
+import { ClaimCode, PhotoManager, StockEditor } from './FarmTools';
 import { PriceEditor } from './PriceEditor';
 
 export const metadata = { title: 'My Farm' };
@@ -16,23 +18,19 @@ const PILOT_TARGET = 100;
 
 export default async function MyFarmPage({ searchParams }: { searchParams: Promise<{ photosFailed?: string }> }) {
   const t = await getTranslations();
-  if (!isSupabaseConfigured) redirect('/sign-in?next=/my-farm');
-
-  const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect('/sign-in?next=/my-farm');
-
+  const viewer = await requireViewer('/my-farm');
   const locale = (await getLocale()) as Locale;
   const { photosFailed } = await searchParams;
-  const { data: profile } = await supabase.from('profiles').select('full_name, roles').eq('id', data.user.id).maybeSingle();
-  const roles: string[] = profile?.roles ?? [];
-  const isAgent = roles.includes('agent');
-  const [farms, saved, progress] = await Promise.all([
-    listManagedFarms(data.user.id),
-    listSavedFarms(data.user.id),
+  const isAgent = viewer.roles.includes('agent');
+  const isAdmin = viewer.roles.includes('admin');
+  const [farms, saved, progress, needAction, unread] = await Promise.all([
+    listManagedFarms(viewer.id),
+    listSavedFarms(viewer.id),
     isAgent ? getPilotProgress() : Promise.resolve([]),
+    farmOrdersNeedingAction(viewer),
+    unreadTotal(viewer),
   ]);
-  const name = profile?.full_name || data.user.email || '';
+  const name = displayName(viewer);
   const total = progress.reduce((s, r) => s + Number(r.farms), 0);
   const mine = progress.reduce((s, r) => s + Number(r.mine), 0);
   const maxCounty = Math.max(1, ...progress.map((r) => Number(r.farms)));
@@ -46,6 +44,49 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
         </div>
         <LanguageSwitch />
       </header>
+
+      <nav className="grid grid-cols-2 gap-2" aria-label={t('myFarmPlus.account')}>
+        <Link
+          href="/orders"
+          className="flex min-h-14 items-center gap-2.5 rounded-2xl border border-line bg-surface px-3.5 text-sm font-bold"
+        >
+          <Icon name="bag" className="shrink-0 text-sprout-deep" />
+          <span className="min-w-0">
+            <span className="block">{t('myFarmPlus.orders')}</span>
+            {farms.length ? (
+              <span className={`block truncate text-xs ${needAction ? 'text-sprout-deep' : 'font-medium text-soil'}`}>
+                {t('myFarmPlus.needAction', { n: needAction })}
+              </span>
+            ) : null}
+          </span>
+        </Link>
+        <Link
+          href="/inbox"
+          className="flex min-h-14 items-center gap-2.5 rounded-2xl border border-line bg-surface px-3.5 text-sm font-bold"
+        >
+          <Icon name="chat" className="shrink-0 text-sprout-deep" />
+          <span className="min-w-0">
+            <span className="block">{t('myFarmPlus.inbox')}</span>
+            {unread ? <span className="block truncate text-xs text-sprout-deep">{t('myFarmPlus.unread', { n: unread })}</span> : null}
+          </span>
+        </Link>
+        <Link
+          href="/account"
+          className="flex min-h-14 items-center gap-2.5 rounded-2xl border border-line bg-surface px-3.5 text-sm font-bold"
+        >
+          <Icon name="user" className="shrink-0 text-sprout-deep" />
+          {t('myFarmPlus.account')}
+        </Link>
+        {isAdmin ? (
+          <Link
+            href="/admin"
+            className="flex min-h-14 items-center gap-2.5 rounded-2xl border border-line bg-surface px-3.5 text-sm font-bold"
+          >
+            <Icon name="shield" className="shrink-0 text-sprout-deep" />
+            {t('myFarmPlus.admin')}
+          </Link>
+        ) : null}
+      </nav>
 
       {photosFailed ? (
         <p role="alert" className="rounded-xl bg-amber/15 px-3 py-2.5 text-sm font-semibold">
@@ -109,19 +150,44 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
                 <Stat label={t('myFarm.calls')} value={f.stats.calls} />
                 <Stat label={t('myFarm.whatsapps')} value={f.stats.whatsapps} />
               </dl>
+              {f.balance.pending || f.balance.due || f.balance.paidOut ? (
+                <div className="flex flex-col gap-1.5 rounded-2xl border border-line p-3 text-sm">
+                  <h4 className="flex items-center gap-2 font-bold">
+                    <Icon name="wallet" size={18} className="text-sprout-deep" />
+                    {t('myFarmPlus.earnings')}
+                  </h4>
+                  <Money label={t('myFarmPlus.due')} value={f.balance.due} strong />
+                  <Money label={t('myFarmPlus.pending')} value={f.balance.pending} />
+                  <Money label={t('myFarmPlus.paidOut')} value={f.balance.paidOut} />
+                  <p className="text-xs text-soil">{t('myFarmPlus.payoutNote')}</p>
+                </div>
+              ) : null}
+              {isAgent && !f.claimed && f.managed_by === viewer.id ? <ClaimCode farmId={f.id} /> : null}
+              {f.claimed && f.managed_by === viewer.id && f.owner_id !== viewer.id ? (
+                <p className="flex items-center gap-2 text-sm text-soil">
+                  <Icon name="check" size={16} className="text-sprout-deep" />
+                  {t('myFarmPlus.claimedBy')}
+                </p>
+              ) : null}
               <h4 className="font-bold">{t('myFarm.productsTitle')}</h4>
               <div>
-                {f.listings.map((l) => (
-                  <PriceEditor
-                    key={l.id}
-                    listingId={l.id}
-                    name={l.product ? (locale === 'sw' ? l.product.name_sw : l.product.name_en) : l.title}
-                    unitLabel={t('farm.per', { unit: t(`units.${l.unit}`) })}
-                    price={l.price_kes === null ? null : Number(l.price_kes)}
-                    history={f.history[l.id] ?? []}
-                  />
-                ))}
+                {f.listings.map((l) => {
+                  const label = l.product ? (locale === 'sw' ? l.product.name_sw : l.product.name_en) : l.title;
+                  return (
+                    <div key={l.id}>
+                      <PriceEditor
+                        listingId={l.id}
+                        name={label}
+                        unitLabel={t('farm.per', { unit: t(`units.${l.unit}`) })}
+                        price={l.price_kes === null ? null : Number(l.price_kes)}
+                        history={f.history[l.id] ?? []}
+                      />
+                      <StockEditor listingId={l.id} quantity={l.quantity === null ? null : Number(l.quantity)} label={label} />
+                    </div>
+                  );
+                })}
               </div>
+              <PhotoManager farmId={f.id} photos={f.media} />
               <Link href={`/f/${f.slug}`} className="btn-secondary">
                 {t('myFarm.viewPublic')}
               </Link>
@@ -178,6 +244,15 @@ function Stat({ label, value }: { label: string; value: number }) {
     <div className="flex min-w-0 flex-col-reverse rounded-2xl bg-mint p-3">
       <dt className="text-xs text-soil">{label}</dt>
       <dd className="text-[22px] font-extrabold tabular-nums">{value}</dd>
+    </div>
+  );
+}
+
+function Money({ label, value, strong }: { label: string; value: number; strong?: boolean }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span className={strong ? 'font-semibold' : 'text-soil'}>{label}</span>
+      <span className={`tabular-nums ${strong ? 'font-extrabold' : ''}`}>{kes(value)}</span>
     </div>
   );
 }

@@ -29,7 +29,15 @@ export function SaveButton({ farmId, initial, signedIn }: { farmId: string; init
       }}
       className="grid size-11 place-items-center rounded-full bg-white/85 text-forest"
     >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill={saved ? '#F5A524' : 'none'} stroke={saved ? '#F5A524' : 'currentColor'} strokeWidth="1.9" aria-hidden="true">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill={saved ? '#F5A524' : 'none'}
+        stroke={saved ? '#F5A524' : 'currentColor'}
+        strokeWidth="1.9"
+        aria-hidden="true"
+      >
         <path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" strokeLinejoin="round" />
       </svg>
     </button>

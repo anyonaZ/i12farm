@@ -5,6 +5,7 @@ out
 .env.local
 *.tsbuildinfo
 next-env.d.ts
-supabase/.temp
-supabase/.branches
 .DS_Store
+
+# Local photo storage and Postgres data
+/data

@@ -29,6 +29,13 @@ export function FarmCard({
       <span className="text-sm text-soil">{t('farm.onRequest')}</span>
     );
   const place = [farm.place_name, farm.county_name].filter(Boolean).join(' · ');
+  const rating =
+    farm.review_count > 0 ? (
+      <span className="inline-flex items-center gap-1 text-sm font-semibold" aria-label={t('farmPage.rating', { avg: String(farm.rating), n: farm.review_count })}>
+        <Icon name="star" size={13} className="fill-amber text-amber" />
+        {farm.rating} <span className="font-normal text-soil">({farm.review_count})</span>
+      </span>
+    ) : null;
 
   if (layout === 'compact') {
     return (
@@ -46,7 +53,10 @@ export function FarmCard({
           <span className="truncate text-sm text-soil">{place}</span>
           <span className="truncate text-sm text-soil">{farm.categories.map(categoryName).join(', ')}</span>
           {price}
-          {farm.verified ? <VerifiedBadge label={t('farm.verified')} /> : null}
+          <span className="flex items-center gap-2">
+            {rating}
+            {farm.verified ? <VerifiedBadge label={t('farm.verified')} /> : null}
+          </span>
         </span>
       </Link>
     );
@@ -66,9 +76,12 @@ export function FarmCard({
         <span className="min-w-0 truncate text-base font-bold">{farm.name}</span>
         {price}
       </span>
-      <span className="-mt-1.5 text-sm text-soil">
-        {place}
-        {farm.lng === null ? ` · ${t('explore.hiddenOnMap')}` : ''}
+      <span className="-mt-1.5 flex items-center justify-between gap-2 text-sm text-soil">
+        <span className="min-w-0 truncate">
+          {place}
+          {farm.lng === null ? ` · ${t('explore.hiddenOnMap')}` : ''}
+        </span>
+        {rating}
       </span>
       <span className="-mt-1.5 text-sm text-soil">
         {farm.categories.map(categoryName).join(' · ')} · {t('farm.products', { n: farm.listing_count })}
