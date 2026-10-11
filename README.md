@@ -1,119 +1,112 @@
 # i12farm
 
-Every Kenyan farm, pinned and discoverable. A mobile-first web app (installable
-on Android from Chrome) built on Next.js and Supabase, delivered in phases.
-Phases 0 (foundations) and 1 (be seen) are built. See `HANDOFF.md` for the
-current state, decisions and what comes next.
+Every Kenyan farm, pinned, discoverable and able to sell. A mobile-first web
+app (installable on Android from Chrome) built on Next.js and plain
+PostgreSQL + PostGIS, delivered in phases. Phases 0, 1 and 2 are built. See
+`HANDOFF.md` for the current state, decisions and what comes next.
 
-## What Phase 1 adds
+No vendor backend: the app talks to Postgres directly and handles sign-in,
+sessions and photo storage itself. Any Postgres 15+ with PostGIS works
+(your laptop, a VPS, Neon, Aiven).
 
-| Area | What's here |
-| --- | --- |
-| Explore | Full-screen MapLibre map on free OpenFreeMap tiles, clustered pins, category chips, county picker, text search (English and Kiswahili product names), bottom sheet of farms in view (`src/components/explore`) |
-| Farm page | `/f/<slug>`: photos, verified badge, products and prices, location note, mini map, Call / WhatsApp / Directions / Share bar that records every tap, save (heart), WhatsApp link previews |
-| Pin your farm | `/my-farm/new`: six steps (details, categories, pin on map, photos, products, review). Photos shrink on the phone before upload. Field agents use the same flow to enrol farmers without accounts |
-| My Farm | Views and contact counts per farm, inline price editing (old prices kept in history), saved farms; field agents also see pilot progress toward 100 farms |
-| Database | `20261011000100_phase1.sql`: `farms_in_bbox` (card fields), `search_farms`, `create_farm` (one transaction), `farm_stats`, `pilot_progress`, `saved_farms`, `public_lng/lat` |
-| Prototype | `prototype/index.html`: self-contained clickable demo with 34 sample farms (no backend needed) |
-
-## What Phase 0 contains
+## What's in it
 
 | Area | What's here |
 | --- | --- |
-| App shell | Next.js 16 (App Router, TypeScript), Tailwind CSS 4 design tokens, bottom navigation, Explore / Inbox / My Farm screens |
-| Languages | English and Kiswahili from day one (`messages/en.json`, `messages/sw.json`); choice saved in a cookie and on the profile |
-| Installable app | Web manifest, icons, and a hand-written service worker (`public/sw.js`): offline page, cached shell, cached farm photos; personal pages are never cached |
-| Sign-in | Supabase Auth with Google and email magic link (`/sign-in`, `/auth/callback`, `/auth/sign-out`) |
-| Database | The full Phase 1 schema in `supabase/migrations/`: profiles, farms, exact and public locations, photos, listings, append-only price history, contact events, event log, daily rollups |
-| Security | Row-level security on every table, column-level grants, storage policies. 40 automated tests in `supabase/tests/security_test.sql` |
-| Reference data | All 47 counties with official codes, all sub-counties for the five pilot counties (Homa Bay, Kisumu, Migori, Kiambu, Nairobi), 16 farm categories and 38 products, all bilingual |
-| Analytics | First-party event tracker (`src/lib/analytics`) → `/api/events` → `public.events`, rolled up nightly into `events_daily` |
-| Ops | GitHub Actions: CI (typecheck, build, database tests on real PostGIS) and an encrypted nightly backup |
+| Explore | Full-screen MapLibre map on free OpenFreeMap tiles, clustered pins, category chips, county picker, search in English and Kiswahili, ratings on cards |
+| Farm page | `/f/<slug>`: photos, verified badge, rating and reviews, products with **Add to cart**, Message, Call / WhatsApp / Directions / Share (every tap recorded) |
+| Accounts | Phone number **or** email + password, Google (optional), one-time email sign-in link, account page, signed-in devices, sign out elsewhere |
+| Pin your farm | Six-step wizard; photos shrink on the phone (to ~200 KB WebP) before upload. Field agents enrol farmers who have no account |
+| Claiming | An agent gets an 8-digit claim code; the farmer signs up with their phone and enters it to own the farm. No SMS cost |
+| Orders | One-farm cart kept on the phone, checkout (pickup or delivery), M-Pesa STK Push, order status history, farm accepts / declines / marks ready, buyer confirms receipt |
+| Money | Commission snapshotted per order (10% by default, admin can change), append-only ledger: payment, commission, farmer share held until completion, payouts and refunds recorded by an admin |
+| Reviews | One per completed order, public on the farm page and map cards |
+| Inbox | Buyer ↔ farm conversations, order updates posted into the thread, unread counts; polls every 5 s while open |
+| My Farm | Views, calls, WhatsApp taps, earnings (held, due, paid out), price and stock editing, photos, claim codes, pilot progress for agents |
+| Admin | `/admin`: people (roles, suspend, one-time sign-in link for a farmer who forgot their password), farms to verify, payouts due, refunds due, commission rate |
+| Analytics | First-party events (`src/lib/analytics`) into `public.events`, rolled up nightly into `events_daily` |
 
-## Run it locally
+## Run it locally (Arch Linux)
 
-Requirements: Node 20.9+, Docker (for local Supabase).
+Requirements: Node 20.9+, PostgreSQL 15+ with PostGIS.
 
 ```bash
+# 1. Postgres + PostGIS (once)
+sudo pacman -S postgresql postgis
+sudo -iu postgres initdb -D /var/lib/postgres/data
+sudo systemctl enable --now postgresql
+sudo -iu postgres psql -c "alter user postgres password 'postgres'" -c "create database i12farm"
+#    or with Docker:  docker run -d --name i12db -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=i12farm postgis/postgis:16-3.4
+
+# 2. App
 npm install
-npx supabase start            # local Postgres + PostGIS, Auth, Storage; applies migrations + seed
-cp .env.example .env.local    # paste the API URL and publishable/anon key that `supabase start` prints
-npm run dev                   # http://localhost:3000
+cp .env.example .env.local      # DATABASE_URL is the only required value
+npm run db:reset                # creates schema, loads 36 demo farms and dev accounts
+npm run dev                     # http://localhost:3000
 ```
 
-The seed adds two dev accounts and 35 sample farms across the five pilot
-counties (`seed.sql` for tests, `seed_demo.sql` for a full map). Make your own
-account a field agent with the SQL in "Data rules" below to try enrolment. Sign in with email: local Supabase catches the magic link in its mail
-viewer at http://127.0.0.1:54324.
+Dev accounts (password `i12farm-dev` for all):
 
-Test the installable app on a phone with `npm run build && npm start` and open
-it from Chrome on Android over your local network (or a tunnel). The service
-worker only registers in production builds.
+| Who | Sign in with | Can do |
+| --- | --- | --- |
+| Field agent | `0700 000 001` | Manages most demo farms (including Homa Organica), enrols farms, issues claim codes, handles their orders |
+| Farmer | `0700 000 002` | Owns Lakeview Dairy |
+| Buyer | `0700 000 003` | Orders and reviews |
+| Admin | `admin@dev.i12farm.local` | Everything under `/admin` |
 
-## Test the database
+**Try a full sale:** sign in as the buyer, open `/f/homa-organica`, add racing
+pigeons, check out. With `MPESA_ENV=simulate` (the default without keys) the
+order page shows **Simulate: pay**. Then sign in as the agent → Orders →
+accept → mark ready; back as the buyer → I received it → review. The admin
+sees the payout due under `/admin?tab=money`.
+
+In `npm run dev`, email sign-in links appear on screen; in production they
+are emailed (or printed to the server log if `SMTP_URL` is unset).
+
+## Database
 
 ```bash
-DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres npm run db:test
+npm run db:migrate      # apply new files in db/migrations (each once, in order)
+npm run db:status       # applied / pending
+npm run db:seed         # dev data (refuses to run against hosted databases)
+npm run db:reset        # drop and rebuild (development only)
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres npm run db:test   # 70 schema/security/trade checks
 ```
 
-CI runs the same script against a `postgis/postgis` container on every push.
-`scripts/test-db.sh --standin` runs it on a plain Postgres 16 with a small
-PostGIS stand-in, for machines where PostGIS can't be installed.
+Security lives in the database: every user-facing query runs inside
+`withUser()` (`src/lib/db.ts`), which switches to the `anon` or
+`authenticated` role and sets `app.user_id` for that transaction only, so the
+row-level security policies apply. Money moves only through database
+functions (`place_order`, `record_payment_result`, `set_order_status`), and
+the ledger is append-only.
 
-## Deploy (free tier)
+## M-Pesa
 
-1. Create a Supabase project (region closest to Kenya). Enable `pg_cron` under
-   Database → Extensions, then run `npx supabase link` and `npx supabase db push`.
-2. Auth → Providers: enable Google (OAuth client from Google Cloud) and Email.
-   Auth → URL configuration: add `https://<your-domain>/auth/callback`.
-3. Import the project into Vercel, set the variables from `.env.example`.
-   Vercel's free plan is for non-commercial use; move to Cloudflare or a small
-   VPS before charging any fee (see the plan doc).
-4. Add repository secrets `SUPABASE_DB_URL` and `BACKUP_PASSPHRASE` to turn on
-   nightly backups.
+`MPESA_ENV=simulate` needs nothing. For the Daraja sandbox, create an app at
+developer.safaricom.co.ke, then set `MPESA_ENV=sandbox`, the consumer key and
+secret, `MPESA_PASSKEY` (sandbox shortcode 174379), and
+`MPESA_CALLBACK_SECRET` (`openssl rand -hex 24`). The callback URL must be
+public HTTPS; locally use a tunnel (`cloudflared tunnel --url localhost:3000`)
+and set `MPESA_CALLBACK_BASE_URL` to it. Callbacks are confirmed with an STK
+status query before an order is marked paid.
+
+## Deploy
+
+See "Hosting" in `HANDOFF.md` for the recommended free setups. Whatever the host:
+
+1. Create the database (with PostGIS), set `DATABASE_URL`, run `npm run db:migrate`.
+2. Set `NEXT_PUBLIC_SITE_URL` to the https address (cookies become Secure).
+3. On hosts without a lasting disk, set the `S3_*` variables (Cloudflare R2) for photos.
+4. Make yourself admin once:
+   `psql "$DATABASE_URL" -c "update profiles set roles = roles || '{admin}' where id = (select id from auth.users where phone = '2547XXXXXXXX')"`
+5. Add repository secrets `DATABASE_URL` and `BACKUP_PASSPHRASE` for the nightly backup and rollup workflow.
 
 ## Load all wards
 
-Sub-counties for the five pilot counties ship in the migrations; `counties.is_pilot` marks them. For national coverage, export
-the IEBC ward list to CSV with columns `county_code, sub_county, ward_code, ward`
-and run:
+Sub-counties for the five pilot counties ship in the migrations. For national
+coverage, export the IEBC ward list to CSV (`county_code, sub_county, ward_code, ward`) and run:
 
 ```bash
-node scripts/import-admin-units.mjs wards.csv > supabase/migrations/20261008000000_admin_units.sql
-npx supabase db push
+node scripts/import-admin-units.mjs wards.csv > db/migrations/<timestamp>_admin_units.sql
+npm run db:migrate
 ```
-
-## How the code is organised
-
-- `src/app` – routes (pages, API, auth callbacks)
-- `src/domains` – business domains; each owns its tables (see `src/domains/README.md`)
-- `src/lib` – Supabase clients, analytics, env
-- `supabase/migrations` – schema, security, reference data (source of truth)
-- `supabase/tests` – database tests and the Supabase stand-ins they use
-
-## Data rules worth knowing
-
-- **Exact farm coordinates** live in `farm_locations`, readable only by the
-  farm's owner, its field agent and admins. The map reads `farms.public_location`,
-  which a trigger keeps exact, snapped to a ~1 km grid, or empty, per the
-  farmer's choice. Clients cannot write it.
-- **History is never overwritten.** Every listing price, quantity or status
-  change appends a row to `price_history`; every "Call" or "WhatsApp" tap is a
-  `contact_events` row.
-- **Events** must use a name from `src/lib/analytics/events.ts`. Renaming an
-  event breaks year-on-year analysis, so add new names instead.
-- **Roles** (`farmer`, `buyer`, `provider`, `agent`, `partner`, `admin`) can
-  only be granted by an admin. Give the first admin their role in the SQL
-  editor: `update profiles set roles = roles || '{admin}' where id = '<user id>';`
-
-## Colours
-
-| Token | Hex | Use |
-| --- | --- | --- |
-| `sprout` | #12B76A | Pins, icons, active states, large accents |
-| `sprout-deep` | #067647 | Filled buttons and links (white text passes WCAG AA at 5.7:1) |
-| `forest` | #053B2B | Text and dark surfaces |
-| `lime` | #B6F04A | Highlights and badges |
-| `mint` | #F3FBF6 | Page background |
-| `amber` | #F5A524 | Prices and warnings |
-| `soil` | #5B6B63 | Secondary text |

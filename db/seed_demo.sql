@@ -1,5 +1,5 @@
 -- i12farm · demo seed for local development (never run against production)
--- 27 sample farms across the five pilot counties, matching the clickable prototype.
+-- 28 sample farms across the five pilot counties, matching the clickable prototype.
 -- Managed by the dev field agent from seed.sql. Names and numbers are made up.
 
 do $$
