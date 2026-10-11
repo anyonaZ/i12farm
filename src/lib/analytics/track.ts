@@ -49,6 +49,11 @@ function batch(events: ClientEvent[]): EventBatch {
   };
 }
 
+/** Stable per-device id, shared with contact_events so taps join to sessions. */
+export function getAnonymousId(): string {
+  return storedId(typeof localStorage === 'undefined' ? undefined : localStorage, AID_KEY);
+}
+
 export function flush(useBeacon = false): void {
   if (timer) {
     clearTimeout(timer);

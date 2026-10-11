@@ -2,7 +2,19 @@
 
 Every Kenyan farm, pinned and discoverable. A mobile-first web app (installable
 on Android from Chrome) built on Next.js and Supabase, delivered in phases.
-This repository is **Phase 0: Foundations**.
+Phases 0 (foundations) and 1 (be seen) are built. See `HANDOFF.md` for the
+current state, decisions and what comes next.
+
+## What Phase 1 adds
+
+| Area | What's here |
+| --- | --- |
+| Explore | Full-screen MapLibre map on free OpenFreeMap tiles, clustered pins, category chips, county picker, text search (English and Kiswahili product names), bottom sheet of farms in view (`src/components/explore`) |
+| Farm page | `/f/<slug>`: photos, verified badge, products and prices, location note, mini map, Call / WhatsApp / Directions / Share bar that records every tap, save (heart), WhatsApp link previews |
+| Pin your farm | `/my-farm/new`: six steps (details, categories, pin on map, photos, products, review). Photos shrink on the phone before upload. Field agents use the same flow to enrol farmers without accounts |
+| My Farm | Views and contact counts per farm, inline price editing (old prices kept in history), saved farms; field agents also see pilot progress toward 100 farms |
+| Database | `20261011000100_phase1.sql`: `farms_in_bbox` (card fields), `search_farms`, `create_farm` (one transaction), `farm_stats`, `pilot_progress`, `saved_farms`, `public_lng/lat` |
+| Prototype | `prototype/index.html`: self-contained clickable demo with 34 sample farms (no backend needed) |
 
 ## What Phase 0 contains
 
@@ -13,7 +25,7 @@ This repository is **Phase 0: Foundations**.
 | Installable app | Web manifest, icons, and a hand-written service worker (`public/sw.js`): offline page, cached shell, cached farm photos; personal pages are never cached |
 | Sign-in | Supabase Auth with Google and email magic link (`/sign-in`, `/auth/callback`, `/auth/sign-out`) |
 | Database | The full Phase 1 schema in `supabase/migrations/`: profiles, farms, exact and public locations, photos, listings, append-only price history, contact events, event log, daily rollups |
-| Security | Row-level security on every table, column-level grants, storage policies. 29 automated tests in `supabase/tests/security_test.sql` |
+| Security | Row-level security on every table, column-level grants, storage policies. 40 automated tests in `supabase/tests/security_test.sql` |
 | Reference data | All 47 counties with official codes, all sub-counties for the five pilot counties (Homa Bay, Kisumu, Migori, Kiambu, Nairobi), 16 farm categories and 38 products, all bilingual |
 | Analytics | First-party event tracker (`src/lib/analytics`) → `/api/events` → `public.events`, rolled up nightly into `events_daily` |
 | Ops | GitHub Actions: CI (typecheck, build, database tests on real PostGIS) and an encrypted nightly backup |
@@ -29,8 +41,9 @@ cp .env.example .env.local    # paste the API URL and publishable/anon key that 
 npm run dev                   # http://localhost:3000
 ```
 
-The seed adds two dev accounts and eight sample farms around Homa Bay and
-Kisumu. Sign in with email: local Supabase catches the magic link in its mail
+The seed adds two dev accounts and 35 sample farms across the five pilot
+counties (`seed.sql` for tests, `seed_demo.sql` for a full map). Make your own
+account a field agent with the SQL in "Data rules" below to try enrolment. Sign in with email: local Supabase catches the magic link in its mail
 viewer at http://127.0.0.1:54324.
 
 Test the installable app on a phone with `npm run build && npm start` and open

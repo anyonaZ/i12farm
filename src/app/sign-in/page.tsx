@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { LogoMark } from '@/components/Logo';
+import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { SignInForm } from './SignInForm';
 
 export const metadata = { title: 'Sign in' };
@@ -10,7 +11,10 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   const safeNext = next && next.startsWith('/') && !next.startsWith('//') ? next : '/my-farm';
 
   return (
-    <main className="flex flex-col gap-6 px-4 pt-12">
+    <main className="flex flex-col gap-6 px-4 pb-24 pt-6">
+      <div className="flex justify-end">
+        <LanguageSwitch />
+      </div>
       <div className="flex flex-col items-center gap-3 text-center">
         <LogoMark size={56} />
         <h1 className="text-2xl font-extrabold">{t('title')}</h1>

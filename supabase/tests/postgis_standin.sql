@@ -41,4 +41,10 @@ $$;
 
 create operator extensions.&& (leftarg = text, rightarg = text, function = extensions._overlaps);
 
+create or replace function extensions.st_makepoint(x double precision, y double precision) returns extensions.geometry
+language sql immutable as $$ select format('POINT(%s %s)', x, y)::extensions.geometry; $$;
+
+create or replace function extensions.st_setsrid(g extensions.geometry, srid integer) returns extensions.geometry
+language sql immutable as $$ select ('SRID=' || srid || ';' || regexp_replace(g, '^SRID=\d+;', ''))::extensions.geometry; $$;
+
 grant usage on schema extensions to anon, authenticated, service_role;

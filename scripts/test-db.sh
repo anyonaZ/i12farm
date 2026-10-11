@@ -73,3 +73,7 @@ echo "→ seed.sql"
 
 echo "→ security tests"
 "${PSQL[@]}" -f "$TESTS/security_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
+
+echo "→ seed_demo.sql (applies cleanly on top)"
+"${PSQL[@]}" -f "$ROOT/supabase/seed_demo.sql"
+"${PSQL[@]}" -t -c "select 'published farms: ' || count(*) from public.farms where status = 'published'"

@@ -1,6 +1,6 @@
 {
   "name": "i12farm",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Pinned, discoverable farm pages for every Kenyan farmer.",
   "engines": {
@@ -20,6 +20,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.0",
+    "maplibre-gl": "^5.6.0",
     "next": "^16.0.0",
     "next-intl": "^4.3.0",
     "react": "^19.2.0",

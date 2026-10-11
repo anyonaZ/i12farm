@@ -299,6 +299,116 @@ exception when insufficient_privilege then
 end $$;
 
 -- ===========================================================================
+-- Phase 1: map, search, dashboard, pilot progress, saved farms, create_farm
+-- ===========================================================================
+set role anon;
+select set_config('request.jwt.claims', '', false);
+
+do $$
+declare r record;
+begin
+  select * into r from public.farms_in_bbox(34.0, -1.0, 34.8, -0.3) where name = 'Lakeview Dairy';
+  if r.min_price_kes is null or r.listing_count <> 2 or r.county_name <> 'Homa Bay' then
+    raise exception 'FAIL: farm card fields wrong: price % listings % county %', r.min_price_kes, r.listing_count, r.county_name;
+  end if;
+  raise notice 'ok  map query returns cheapest price, listing count and county';
+end $$;
+
+do $$
+declare n integer;
+begin
+  select count(*) into n from public.search_farms('honey');
+  if n <> 1 then raise exception 'FAIL: search "honey" expected 1 farm, got %', n; end if;
+  select count(*) into n from public.search_farms('asali');
+  if n <> 1 then raise exception 'FAIL: Kiswahili search "asali" expected 1 farm, got %', n; end if;
+  select count(*) into n from public.search_farms('kanyadoto poultry');
+  if n <> 1 then raise exception 'FAIL: multi-word search expected 1, got %', n; end if;
+  select count(*) into n from public.search_farms('draft');
+  if n <> 0 then raise exception 'FAIL: search found a draft farm'; end if;
+  raise notice 'ok  search matches products in English and Kiswahili, never drafts';
+end $$;
+
+do $$
+declare n integer;
+begin
+  select coalesce(sum(farms), 0) into n from public.pilot_progress();
+  if n < 9 then raise exception 'FAIL: pilot progress expected at least 9 published farms, got %', n; end if;
+  if (select count(*) from public.pilot_progress()) <> 5 then raise exception 'FAIL: pilot progress should list 5 counties'; end if;
+  raise notice 'ok  pilot progress counts published farms per pilot county';
+end $$;
+
+do $$ begin
+  perform * from public.farm_stats('10000000-0000-4000-8000-000000000001');
+  raise exception 'FAIL: anon read farm stats';
+exception when insufficient_privilege then
+  raise notice 'ok  farm stats need a signed-in manager';
+end $$;
+
+set role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000000f1","role":"authenticated"}', false);
+
+do $$
+declare r record;
+begin
+  select * into r from public.farm_stats('10000000-0000-4000-8000-000000000001');
+  if r is null then raise exception 'FAIL: owner got no stats for own farm'; end if;
+  if exists (select 1 from public.farm_stats('10000000-0000-4000-8000-000000000002')) then
+    raise exception 'FAIL: farmer read stats for a farm they do not manage';
+  end if;
+  raise notice 'ok  farmers see stats only for their own farms';
+end $$;
+
+do $$ begin
+  insert into public.saved_farms (farm_id) values ('10000000-0000-4000-8000-000000000003');
+  if (select count(*) from public.saved_farms) <> 1 then raise exception 'FAIL: saved farm not visible to its owner'; end if;
+  raise notice 'ok  buyers save farms';
+end $$;
+
+do $$
+declare r record; loc_x double precision;
+begin
+  select * into r from public.create_farm('{
+    "name": "Kendu Greens", "farmer_name": "Dev Farmer", "categories": ["vegetables"],
+    "county_code": 43, "place_name": "Kendu Bay", "visibility": "approximate",
+    "lng": 34.651, "lat": -0.371, "phone": "0712345678",
+    "listings": [{"product_slug": "kale-sukuma", "price_kes": 45, "quantity": 100},
+                 {"product_slug": "tomatoes", "price_kes": 90}]
+  }'::jsonb);
+  if r.slug !~ '^kendu-greens-' then raise exception 'FAIL: create_farm slug %', r.slug; end if;
+  if (select count(*) from public.listings where farm_id = r.id) <> 2 then raise exception 'FAIL: create_farm listings'; end if;
+  if (select owner_id from public.farms where id = r.id) <> auth.uid() then raise exception 'FAIL: create_farm owner'; end if;
+  select extensions.st_x(public_location::extensions.geometry) into loc_x from public.farms where id = r.id;
+  if loc_x is null or loc_x = 34.651 then raise exception 'FAIL: create_farm public pin should be approximate, got %', loc_x; end if;
+  if (select count(*) from public.price_history where farm_id = r.id) <> 2 then raise exception 'FAIL: create_farm price history'; end if;
+  raise notice 'ok  create_farm saves farm, pin, listings and price history together';
+end $$;
+
+do $$ begin
+  perform * from public.create_farm('{"name": "Nowhere", "categories": ["dairy"], "county_code": 43, "lng": 10, "lat": 50}'::jsonb);
+  raise exception 'FAIL: pin outside Kenya accepted';
+exception when invalid_parameter_value then
+  raise notice 'ok  pins outside Kenya are refused';
+end $$;
+
+do $$ begin
+  perform * from public.create_farm('{"name": "Proxy Farm", "categories": ["dairy"], "county_code": 43, "lng": 34.5, "lat": -0.5, "for_farmer": true}'::jsonb);
+  raise exception 'FAIL: a non-agent created a farm for someone else';
+exception when insufficient_privilege or with_check_option_violation then
+  raise notice 'ok  only agents enrol farms for other farmers';
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000000a1","role":"authenticated"}', false);
+
+do $$
+declare r record;
+begin
+  select * into r from public.create_farm('{"name": "Oyugis Layers", "farmer_name": "Akinyi B.", "categories": ["poultry"], "county_code": 43, "lng": 34.73, "lat": -0.51, "for_farmer": true, "listings": [{"product_slug": "eggs", "price_kes": 440}]}'::jsonb);
+  if (select managed_by from public.farms where id = r.id) <> auth.uid() then raise exception 'FAIL: agent-enrolled farm not managed by agent'; end if;
+  if (select sum(mine) from public.pilot_progress()) < 1 then raise exception 'FAIL: agent progress missing'; end if;
+  raise notice 'ok  agents enrol farms and see their own progress';
+end $$;
+
+-- ===========================================================================
 -- Nightly rollup (runs as the database owner via pg_cron)
 -- ===========================================================================
 reset role;

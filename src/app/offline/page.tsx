@@ -9,7 +9,7 @@ export const dynamic = 'force-static';
 
 export default function OfflinePage() {
   return (
-    <main className="flex flex-col items-center gap-4 px-6 pt-24 text-center">
+    <main className="flex flex-col items-center gap-4 px-6 pb-24 pt-24 text-center">
       <LogoMark size={56} />
       <h1 className="text-2xl font-extrabold">{en.offline.title}</h1>
       <p className="max-w-[32ch] text-soil">{en.offline.body}</p>

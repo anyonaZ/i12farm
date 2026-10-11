@@ -1,0 +1,1329 @@
+<title>i12farm Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one phone-sized app column; full-bleed map under floating search, a Bolt-style bottom sheet, fixed bottom nav. */
+:root {
+  --bg: #F3FBF6; --surface: #FFFFFF; --surface-2: #E8F5ED; --ink: #053B2B; --ink-2: #4A5F55;
+  --line: #D3E6DA; --sprout: #12B76A; --sprout-deep: #067647; --on-primary: #FFFFFF;
+  --lime: #B6F04A; --on-lime: #053B2B; --amber: #F5A524; --amber-tint: #FDF0D6;
+  --water: #B8DCE4; --land: #EEF8F1; --land-out: #DDE9E1; --map-border: #8DB8A0; --map-label: #2F4A3E; --map-grid: rgba(5,59,43,.06);
+  --pin: #067647; --pin-icon: #FFFFFF; --cluster-bg: #053B2B; --cluster-fg: #FFFFFF; --halo: rgba(255,255,255,.85);
+  --shadow: 0 8px 28px rgba(5,59,43,.14); --shadow-sm: 0 2px 8px rgba(5,59,43,.10);
+  --font: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --r-lg: 22px; --r-md: 14px; --tap: 48px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #06140F; --surface: #0D231B; --surface-2: #133026; --ink: #E4F4EA; --ink-2: #A3BDB0;
+  --line: #21402F; --sprout: #2BD884; --sprout-deep: #12B76A; --on-primary: #04281D;
+  --lime: #C4F56A; --on-lime: #06140F; --amber: #F7B347; --amber-tint: #3A2C0F;
+  --water: #123A47; --land: #10291F; --land-out: #0A1A14; --map-border: #2E6A4E; --map-label: #B3CFC0; --map-grid: rgba(228,244,234,.05);
+  --pin: #2BD884; --pin-icon: #04281D; --cluster-bg: #E4F4EA; --cluster-fg: #06140F; --halo: rgba(6,20,15,.85);
+  --shadow: 0 8px 28px rgba(0,0,0,.45); --shadow-sm: 0 2px 8px rgba(0,0,0,.35); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #06140F; --surface: #0D231B; --surface-2: #133026; --ink: #E4F4EA; --ink-2: #A3BDB0;
+  --line: #21402F; --sprout: #2BD884; --sprout-deep: #12B76A; --on-primary: #04281D;
+  --lime: #C4F56A; --on-lime: #06140F; --amber: #F7B347; --amber-tint: #3A2C0F;
+  --water: #123A47; --land: #10291F; --land-out: #0A1A14; --map-border: #2E6A4E; --map-label: #B3CFC0; --map-grid: rgba(228,244,234,.05);
+  --pin: #2BD884; --pin-icon: #04281D; --cluster-bg: #E4F4EA; --cluster-fg: #06140F; --halo: rgba(6,20,15,.85);
+  --shadow: 0 8px 28px rgba(0,0,0,.45); --shadow-sm: 0 2px 8px rgba(0,0,0,.35); color-scheme: dark }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 15px; line-height: 1.45; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--sprout); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; line-height: 1.2; }
+p { margin: 0; }
+.num { font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+#app { position: relative; height: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; background: var(--bg); overflow: hidden; }
+@media (min-width: 520px) { #app { border-left: 1px solid var(--line); border-right: 1px solid var(--line); box-shadow: var(--shadow); } }
+
+/* Top bar */
+.topbar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); z-index: 20; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 19px; letter-spacing: -.01em; margin-right: auto; }
+.brand b { color: var(--sprout-deep); font-weight: 800; }
+.pill { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 13px; white-space: nowrap; }
+.pill svg { width: 16px; height: 16px; }
+.role-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sprout); }
+
+/* Screens */
+.screens { position: relative; flex: 1; min-height: 0; }
+.screen { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.screen.pad { padding: 20px 16px 28px; display: flex; flex-direction: column; gap: 16px; }
+
+/* Explore */
+#explore { overflow: hidden; }
+.map-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; cursor: grab; }
+.map-canvas:active { cursor: grabbing; }
+.map-top { position: absolute; top: 12px; left: 16px; right: 16px; display: flex; flex-direction: column; gap: 10px; z-index: 5; pointer-events: none; }
+.map-top > * { pointer-events: auto; }
+.search { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 8px 0 16px; border-radius: 999px; background: var(--surface); box-shadow: var(--shadow); border: 1px solid var(--line); }
+.search svg { width: 20px; height: 20px; color: var(--ink-2); flex: none; }
+.search input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font-size: 15px; height: 48px; }
+.search input::placeholder { color: var(--ink-2); }
+.search select { border: 0; background: var(--surface-2); border-radius: 999px; height: 36px; padding: 0 10px; font-weight: 600; font-size: 13px; max-width: 40%; }
+.chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding: 2px 0 4px; margin: 0 -16px; padding-inline: 16px; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 13px; box-shadow: var(--shadow-sm); white-space: nowrap; }
+.chip svg { width: 16px; height: 16px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.map-ctrl { position: absolute; right: 16px; z-index: 5; display: flex; flex-direction: column; gap: 8px; transition: bottom .25s ease; }
+.ctrl { width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--shadow-sm); display: grid; place-items: center; }
+.ctrl svg { width: 20px; height: 20px; }
+.map-attr { position: absolute; left: 16px; z-index: 4; font-size: 11px; color: var(--ink-2); background: var(--halo); padding: 2px 8px; border-radius: 6px; transition: bottom .25s ease; }
+
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: var(--surface); border-radius: var(--r-lg) var(--r-lg) 0 0; box-shadow: 0 -6px 24px rgba(5,59,43,.12); display: flex; flex-direction: column; transition: height .28s cubic-bezier(.2,.8,.2,1); height: 214px; border-top: 1px solid var(--line); }
+.sheet.open { height: calc(100% - 64px); }
+.sheet-head { display: flex; align-items: center; gap: 12px; padding: 8px 16px 6px; border: 0; background: none; width: 100%; text-align: left; flex-direction: column; }
+.grip { width: 40px; height: 5px; border-radius: 3px; background: var(--line); }
+.sheet-title { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; }
+.sheet-title h2 { font-size: 16px; font-weight: 700; }
+.sheet-title span { font-size: 13px; color: var(--sprout-deep); font-weight: 700; }
+.carousel { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 16px 14px; scrollbar-width: none; }
+.carousel::-webkit-scrollbar { display: none; }
+.sheet.open .carousel { display: none; }
+.sheet-list { display: none; overflow-y: auto; padding: 4px 16px 24px; flex-direction: column; gap: 14px; }
+.sheet.open .sheet-list { display: flex; }
+.empty-note { padding: 8px 16px 16px; color: var(--ink-2); font-size: 14px; }
+
+.fcard { flex: none; width: 78%; max-width: 320px; scroll-snap-align: start; display: flex; gap: 12px; padding: 10px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface); text-align: left; align-items: stretch; }
+.fcard.sel { border-color: var(--sprout); box-shadow: 0 0 0 2px var(--sprout) inset; }
+.fcard .thumb { width: 92px; flex: none; border-radius: 10px; overflow: hidden; aspect-ratio: 1; max-width: 100%; }
+.h3 { display: block; }
+.fcard .body { min-width: 0; display: flex; flex-direction: column; gap: 3px; justify-content: center; }
+.fcard .h3 { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meta { font-size: 13px; color: var(--ink-2); }
+.price { font-weight: 700; font-size: 14px; }
+.price small { font-weight: 500; color: var(--ink-2); font-size: 12px; }
+.lcard { display: flex; flex-direction: column; gap: 10px; border: 0; background: none; padding: 0; text-align: left; width: 100%; }
+.lcard .thumb { width: 100%; aspect-ratio: 16/10; border-radius: var(--r-md); overflow: hidden; position: relative; max-width: 100%; }
+.lcard .row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.lcard .h3 { font-size: 16px; font-weight: 700; }
+.cover { width: 100%; height: 100%; display: block; }
+.cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--on-lime); background: var(--lime); padding: 2px 8px; border-radius: 999px; }
+.badge svg { width: 12px; height: 12px; }
+.badge.soft { background: var(--surface-2); color: var(--ink); }
+.thumb .badge { position: absolute; left: 10px; top: 10px; }
+.heart { position: absolute; right: 10px; top: 10px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--halo); display: grid; place-items: center; }
+.heart svg { width: 20px; height: 20px; }
+.heart[aria-pressed="true"] svg { fill: var(--amber); stroke: var(--amber); }
+
+/* Bottom nav */
+.nav { display: flex; background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); z-index: 20; }
+.nav button { flex: 1; min-height: 62px; border: 0; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--ink-2); }
+.nav button span.ic { padding: 3px 16px; border-radius: 999px; display: grid; place-items: center; }
+.nav button svg { width: 22px; height: 22px; }
+.nav button[aria-current="page"] { color: var(--sprout-deep); }
+.nav button[aria-current="page"] span.ic { background: color-mix(in srgb, var(--sprout) 18%, transparent); }
+
+/* Overlays (farm page, wizard) */
+.overlay { position: absolute; inset: 0; z-index: 30; background: var(--bg); display: flex; flex-direction: column; animation: slide .24s cubic-bezier(.2,.8,.2,1); }
+@keyframes slide { from { transform: translateY(24px); opacity: .4; } to { transform: none; opacity: 1; } }
+.ov-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+.ov-bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.ov-bar h2 { font-size: 17px; font-weight: 700; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; flex: none; }
+.icon-btn svg { width: 20px; height: 20px; }
+.hero { position: relative; aspect-ratio: 16/11; max-height: 300px; width: 100%; max-width: 100%; }
+.hero .float { position: absolute; top: 12px; display: flex; gap: 8px; }
+.hero .float.l { left: 16px; } .hero .float.r { right: 16px; }
+.hero .icon-btn { background: var(--halo); border: 0; }
+.hero .icon-btn[aria-pressed="true"] svg { fill: var(--amber); stroke: var(--amber); }
+.photo-dots { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; }
+.photo-dots button { width: 8px; height: 8px; border-radius: 50%; border: 0; padding: 0; background: var(--halo); }
+.photo-dots button[aria-current="true"] { background: var(--lime); width: 20px; border-radius: 4px; }
+.farm-body { padding: 18px 16px 120px; display: flex; flex-direction: column; gap: 22px; }
+.farm-head { display: flex; flex-direction: column; gap: 8px; }
+.farm-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -.015em; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 999px; background: var(--surface-2); }
+.tag svg { width: 14px; height: 14px; color: var(--sprout-deep); }
+.section { display: flex; flex-direction: column; gap: 12px; }
+.section h2 { font-size: 18px; font-weight: 700; }
+.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.fact { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 12px; min-width: 0; }
+.fact dt { font-size: 12px; color: var(--ink-2); }
+.fact dd { margin: 2px 0 0; font-weight: 700; font-size: 15px; overflow: hidden; text-overflow: ellipsis; }
+.offer { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.offer .l { min-width: 0; display: flex; gap: 12px; align-items: center; }
+.offer .ic { width: 40px; height: 40px; border-radius: 12px; background: var(--surface-2); display: grid; place-items: center; flex: none; color: var(--sprout-deep); }
+.offer .ic svg { width: 22px; height: 22px; }
+.offer h3 { font-size: 15px; font-weight: 700; }
+.offer .r { text-align: right; flex: none; }
+.mini-map { position: relative; height: 180px; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); max-width: 100%; }
+.mini-map canvas { pointer-events: none; }
+.loc-note { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink-2); }
+.loc-note svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--sprout-deep); }
+.actionbar { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; z-index: 2; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--tap); padding: 0 18px; border-radius: 999px; font-weight: 700; font-size: 15px; border: 1px solid transparent; }
+.btn svg { width: 18px; height: 18px; }
+.btn.primary { background: var(--sprout-deep); color: var(--on-primary); }
+.btn.secondary { background: var(--surface); border-color: var(--line); }
+.btn.lime { background: var(--lime); color: var(--on-lime); }
+.btn.ghost { background: none; color: var(--sprout-deep); padding: 0 8px; }
+.btn.block { width: 100%; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Cards and dashboards */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.card h2 { font-size: 18px; font-weight: 700; }
+.card.ink { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.card.ink .meta { color: color-mix(in srgb, var(--bg) 75%, transparent); }
+.page-title { font-size: 26px; font-weight: 800; letter-spacing: -.015em; }
+.lead { color: var(--ink-2); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { border-radius: var(--r-md); background: var(--surface-2); padding: 12px; min-width: 0; }
+.stat b { display: block; font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--ink-2); }
+.progress { height: 12px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 22%, transparent); overflow: hidden; }
+.progress i { display: block; height: 100%; background: var(--lime); border-radius: 999px; }
+.bars { display: flex; flex-direction: column; gap: 10px; }
+.bar-row { display: grid; grid-template-columns: 84px 1fr 28px; gap: 10px; align-items: center; font-size: 14px; }
+.bar-row .track { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.bar-row .track i { display: block; height: 100%; background: var(--sprout); border-radius: 999px; }
+.bar-row b { text-align: right; font-variant-numeric: tabular-nums; }
+.rows { display: flex; flex-direction: column; }
+.rowi { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); background: none; border-left: 0; border-right: 0; border-bottom: 0; width: 100%; text-align: left; }
+.rowi:first-child { border-top: 0; }
+.rowi .thumb { width: 48px; height: 48px; border-radius: 12px; overflow: hidden; flex: none; }
+.rowi .grow { min-width: 0; flex: 1; }
+.rowi .h3 { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log { font-family: var(--mono); font-size: 12px; line-height: 1.55; background: var(--surface-2); border-radius: var(--r-md); padding: 12px; overflow-x: auto; max-height: 260px; overflow-y: auto; }
+.log div { white-space: nowrap; }
+.log time { color: var(--ink-2); }
+.log b { color: var(--sprout-deep); font-weight: 500; }
+.edit-row { display: grid; grid-template-columns: minmax(0, 1fr) 110px auto; gap: 8px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.edit-row:first-of-type { border-top: 0; }
+.edit-row .t { min-width: 0; }
+.edit-row .t h3 { font-size: 14px; font-weight: 700; }
+.hist { font-size: 12px; color: var(--ink-2); grid-column: 1 / -1; font-variant-numeric: tabular-nums; }
+
+/* Forms */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label, .field .lbl { font-size: 14px; font-weight: 700; }
+.field .hint { font-size: 13px; color: var(--ink-2); }
+.input { min-height: var(--tap); border-radius: 12px; border: 1px solid var(--line); background: var(--surface); padding: 0 14px; font-size: 16px; width: 100%; }
+textarea.input { padding: 12px 14px; min-height: 92px; resize: vertical; }
+.input:focus { outline: none; border-color: var(--sprout); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sprout) 25%, transparent); }
+.check { display: flex; gap: 10px; align-items: center; font-size: 14px; min-height: 40px; }
+.check input { width: 20px; height: 20px; accent-color: var(--sprout-deep); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.cat-opt { display: flex; gap: 10px; align-items: center; min-height: 54px; padding: 0 12px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface); font-weight: 600; font-size: 14px; text-align: left; }
+.cat-opt svg { width: 22px; height: 22px; color: var(--sprout-deep); flex: none; }
+.cat-opt[aria-pressed="true"] { border-color: var(--sprout-deep); background: color-mix(in srgb, var(--sprout) 14%, var(--surface)); box-shadow: 0 0 0 1px var(--sprout-deep) inset; }
+.vis-opt { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface); }
+.vis-opt input { margin-top: 3px; width: 20px; height: 20px; accent-color: var(--sprout-deep); flex: none; }
+.vis-opt b { display: block; font-size: 14px; }
+.vis-opt span { font-size: 13px; color: var(--ink-2); }
+.vis-opt:has(input:checked) { border-color: var(--sprout-deep); }
+.pick-map { position: relative; height: 260px; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); max-width: 100%; }
+.center-pin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); pointer-events: none; width: 40px; height: 52px; filter: drop-shadow(0 4px 6px rgba(0,0,0,.25)); }
+.center-pin::after { content: ''; position: absolute; left: 50%; bottom: -4px; width: 10px; height: 4px; margin-left: -5px; border-radius: 50%; background: rgba(0,0,0,.25); }
+.coords { position: absolute; left: 10px; bottom: 10px; font-family: var(--mono); font-size: 11px; background: var(--halo); padding: 2px 8px; border-radius: 6px; }
+.photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.photos figure { margin: 0; position: relative; aspect-ratio: 1; border-radius: var(--r-md); overflow: hidden; background: var(--surface-2); max-width: 100%; }
+.photos img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photos figcaption { position: absolute; left: 6px; bottom: 6px; font-size: 11px; font-family: var(--mono); background: var(--halo); padding: 1px 6px; border-radius: 5px; }
+.photos .x { position: absolute; right: 6px; top: 6px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--halo); display: grid; place-items: center; }
+.photos .x svg { width: 16px; height: 16px; }
+.upload { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 2px dashed var(--line); border-radius: var(--r-md); min-height: 120px; text-align: center; padding: 16px; font-weight: 700; color: var(--sprout-deep); }
+.upload svg { width: 28px; height: 28px; }
+.prod-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 12px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface); }
+.prod-row .grid2 { grid-column: 1 / -1; }
+.steps { display: flex; gap: 6px; }
+.steps i { flex: 1; height: 4px; border-radius: 3px; background: var(--line); }
+.steps i.on { background: var(--sprout); }
+.wiz-body { padding: 18px 16px 24px; display: flex; flex-direction: column; gap: 16px; }
+.wiz-body h1 { font-size: 24px; font-weight: 800; letter-spacing: -.01em; }
+.wiz-foot { padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--surface); border-top: 1px solid var(--line); display: flex; gap: 10px; }
+.wiz-foot .btn.primary { flex: 1; }
+.error { color: var(--ink); background: var(--amber-tint); border-radius: 10px; padding: 10px 12px; font-size: 14px; font-weight: 600; }
+.review { display: flex; flex-direction: column; gap: 0; }
+.review div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.review div:first-child { border-top: 0; }
+.review dt { color: var(--ink-2); }
+.review dd { margin: 0; font-weight: 700; text-align: right; min-width: 0; }
+
+/* Sheets and toast */
+.scrim { position: absolute; inset: 0; z-index: 40; background: rgba(3,20,14,.45); display: flex; align-items: flex-end; animation: fade .18s ease; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.modal { width: 100%; background: var(--surface); border-radius: var(--r-lg) var(--r-lg) 0 0; padding: 10px 16px calc(20px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 14px; max-height: 88%; overflow-y: auto; animation: slide .22s ease; }
+.modal .grip { align-self: center; }
+.modal h2 { font-size: 20px; font-weight: 800; }
+.role-opt { display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--surface); text-align: left; width: 100%; }
+.role-opt[aria-pressed="true"] { border-color: var(--sprout-deep); box-shadow: 0 0 0 1px var(--sprout-deep) inset; }
+.role-opt .ic { width: 42px; height: 42px; border-radius: 12px; background: var(--surface-2); display: grid; place-items: center; color: var(--sprout-deep); flex: none; }
+.role-opt .ic svg { width: 22px; height: 22px; }
+.role-opt b { display: block; }
+.role-opt span { font-size: 13px; color: var(--ink-2); }
+.phone-box { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px; border-radius: var(--r-md); background: var(--surface-2); }
+.phone-box output { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; user-select: all; }
+.demo-tag { font-size: 12px; color: var(--ink-2); }
+.toast { position: absolute; left: 16px; right: 16px; bottom: 78px; z-index: 50; background: var(--ink); color: var(--bg); padding: 12px 16px; border-radius: 14px; font-weight: 600; font-size: 14px; box-shadow: var(--shadow); display: flex; gap: 10px; align-items: center; animation: slide .2s ease; }
+.toast svg { width: 18px; height: 18px; flex: none; color: var(--lime); }
+.banner { font-size: 12px; color: var(--ink-2); background: var(--surface-2); padding: 6px 16px; text-align: center; border-bottom: 1px solid var(--line); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand" aria-label="i12farm">
+      <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#053B2B"/><path d="M32 10c-9.4 0-17 7.4-17 16.6C15 39 32 54 32 54s17-15 17-27.4C49 17.4 41.4 10 32 10z" fill="#12B76A"/><path d="M32 40V27" stroke="#053B2B" stroke-width="3.2" stroke-linecap="round"/><path d="M32 29c0-6 4.2-9.6 10-9.6 0 6-4.4 9.6-10 9.6z" fill="#B6F04A"/><path d="M32 32c0-4.8-3.4-7.8-8.2-7.8 0 4.8 3.6 7.8 8.2 7.8z" fill="#B6F04A"/></svg>
+      <span>i12<b>farm</b></span>
+    </div>
+    <button class="pill" id="roleBtn" type="button"><span class="role-dot"></span><span id="roleLabel"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button class="pill" id="langBtn" type="button"></button>
+  </header>
+  <div class="banner" id="banner"></div>
+
+  <div class="screens">
+    <section class="screen" id="explore" aria-label="Explore">
+      <canvas class="map-canvas" id="map" aria-label="Map of farms"></canvas>
+      <div class="map-top">
+        <div class="search" role="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5" stroke-linecap="round"/></svg>
+          <label for="q" class="sr">Search</label>
+          <input id="q" type="search" autocomplete="off">
+          <label for="countySel" class="sr">County</label>
+          <select id="countySel"></select>
+        </div>
+        <div class="chips" id="chips" role="toolbar" aria-label="Categories"></div>
+      </div>
+      <div class="map-ctrl" id="mapCtrl">
+        <button class="ctrl" id="zin" type="button" aria-label="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button>
+        <button class="ctrl" id="zout" type="button" aria-label="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14" stroke-linecap="round"/></svg></button>
+        <button class="ctrl" id="zall" type="button" aria-label="Show all pilot counties"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4" stroke-linecap="round"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+      <div class="map-attr" id="mapAttr">Map outline simplified · prototype</div>
+      <section class="sheet" id="sheet" aria-label="Farms in this area">
+        <button class="sheet-head" id="sheetHead" type="button" aria-expanded="false">
+          <span class="grip" aria-hidden="true"></span>
+          <span class="sheet-title"><h2 id="sheetTitle"></h2><span id="sheetToggle"></span></span>
+        </button>
+        <div class="carousel" id="carousel"></div>
+        <div class="sheet-list" id="sheetList"></div>
+      </section>
+    </section>
+    <section class="screen pad" id="inbox" hidden aria-label="Inbox"></section>
+    <section class="screen pad" id="me" hidden aria-label="Me"></section>
+  </div>
+
+  <nav class="nav" aria-label="Main">
+    <button type="button" data-tab="explore" aria-current="page"><span class="ic" data-ic="compass"></span><span data-t="explore"></span></button>
+    <button type="button" data-tab="inbox"><span class="ic" data-ic="inbox"></span><span data-t="inbox"></span></button>
+    <button type="button" data-tab="me"><span class="ic" data-ic="sprout"></span><span id="meTab"></span></button>
+  </nav>
+  <div id="layer"></div>
+</div>
+
+<script>
+'use strict';
+/* ===================== Icons ===================== */
+const IC = {
+  drop: 'M12 3c3 4.5 6 7.6 6 11a6 6 0 0 1-12 0c0-3.4 3-6.5 6-11z',
+  egg: 'M12 3c3.5 0 6 5.2 6 10a6 6 0 0 1-12 0c0-4.8 2.5-10 6-10z',
+  paw: 'M12 12.5c-3 0-5.5 3-5.5 5.2 0 1.7 1.6 2.3 3 2.3h5c1.4 0 3-.6 3-2.3 0-2.2-2.5-5.2-5.5-5.2zM6 7.5a2 2.4 0 1 0 0 .01zM18 7.5a2 2.4 0 1 0 0 .01zM9.5 4a2 2.4 0 1 0 0 .01zM14.5 4a2 2.4 0 1 0 0 .01z',
+  fish: 'M3 12c3-4 7-5.5 11-5.5 3 0 5.5 2.5 7 5.5-1.5 3-4 5.5-7 5.5-4 0-8-1.5-11-5.5zM3 12L1.5 8.5M3 12l-1.5 3.5M16 11v.01',
+  hex: 'M12 3l7.5 4.3v9.4L12 21l-7.5-4.3V7.3zM12 8l3.5 2v4L12 16l-3.5-2v-4z',
+  leaf: 'M5 19C5 11 11 5 19 5c0 8-6 14-14 14zM5 19l8-8',
+  fruit: 'M12 8.5c-4 0-6.5 2.6-6.5 6S8 21 12 21s6.5-3 6.5-6.5-2.5-6-6.5-6zM12 8.5C12 6 13.5 4 16 3.5',
+  grain: 'M12 21V8M12 8c-1.8-.8-3-2.6-3-5 1.8.4 3 1.6 3 3.6 0-2 1.2-3.2 3-3.6 0 2.4-1.2 4.2-3 5zM12 13c-2-.4-3.8-1.8-4.2-4 2 .2 3.6 1.4 4.2 3M12 13c2-.4 3.8-1.8 4.2-4-2 .2-3.6 1.4-4.2 3M12 18c-2-.4-3.8-1.8-4.2-4 2 .2 3.6 1.4 4.2 3M12 18c2-.4 3.8-1.8 4.2-4-2 .2-3.6 1.4-4.2 3',
+  sprout: 'M12 21v-9M12 12c0-4 3-6.5 7-6.5 0 4-3 6.5-7 6.5zM12 14c0-3.4-2.5-5.5-6-5.5 0 3.4 2.6 5.5 6 5.5z',
+  sack: 'M9 3.5h6L13.5 7c3 1.4 5 4.6 5 8 0 3.4-2.6 5.5-6 5.5h-1c-3.4 0-6-2.1-6-5.5 0-3.4 2-6.6 5-8z',
+  cross: 'M9.5 3.5h5v6h6v5h-6v6h-5v-6h-6v-5h6z',
+  book: 'M3.5 5.5h6a2.5 2.5 0 0 1 2.5 2.5v12a2 2 0 0 0-2-2H3.5zM20.5 5.5h-6A2.5 2.5 0 0 0 12 8v12a2 2 0 0 1 2-2h6.5z',
+  compass: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM15.5 8.5l-2 5-5 2 2-5z',
+  inbox: 'M4 5h16v14H4zM4 13h5l1.5 2.5h3L15 13h5',
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-3.5-3.5',
+  back: 'M15 5l-7 7 7 7',
+  heart: 'M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z',
+  share: 'M12 3v12M7.5 7.5L12 3l4.5 4.5M5 13v6.5h14V13',
+  phone: 'M6.5 3.5h3l1.5 4-2 1.5c1 2.2 2.8 4 5 5l1.5-2 4 1.5v3a2 2 0 0 1-2.2 2C10.5 18 6 13.5 4.5 5.7a2 2 0 0 1 2-2.2z',
+  chat: 'M4.5 19.5l1.2-3.6A8 8 0 1 1 8.4 18.6z',
+  pin: 'M12 21s-6.5-6-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 15 12 21 12 21zM12 7.5a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 0 0 0-4.6z',
+  plus: 'M12 5v14M5 12h14',
+  check: 'M5 12.5l4.5 4.5L19 7.5',
+  close: 'M6 6l12 12M18 6L6 18',
+  camera: 'M4 8h3l2-2.5h6L17 8h3v11H4zM12 10.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z',
+  route: 'M6 19a2 2 0 1 0 0-.01zM18 7a2 2 0 1 0 0-.01zM6 17V9.5A3.5 3.5 0 0 1 9.5 6H13M18 9v5.5a3.5 3.5 0 0 1-3.5 3.5H11',
+  user: 'M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM4.5 20.5c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6',
+  badge: 'M12 3l2.4 1.8 3 .1.9 2.9 2.2 2-1 2.9.4 3-2.6 1.5-1.3 2.7-3-.4L12 21l-2.4-1.5-3 .4-1.3-2.7L2.7 15.7l.4-3-1-2.9 2.2-2 .9-2.9 3-.1zM8.5 12l2.5 2.5 4.5-5',
+  clipboard: 'M9 4h6v3H9zM7 5.5H5.5v15h13v-15H17',
+  chart: 'M4 20V4M4 20h16M8 16v-4M12 16V8M16 16v-6',
+  globe: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9s1.3-6.4 3.8-9z',
+};
+function svg(name, extra = '') {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ${extra}><path d="${IC[name]}"/></svg>`;
+}
+
+/* ===================== Reference data ===================== */
+const CATS = [
+  ['dairy','Dairy','Maziwa','drop'], ['poultry','Poultry','Kuku','egg'], ['goats','Goats','Mbuzi','paw'],
+  ['sheep','Sheep','Kondoo','paw'], ['pigs','Pigs','Nguruwe','paw'], ['rabbits','Rabbits','Sungura','paw'],
+  ['fish','Fish','Samaki','fish'], ['bees','Bees and honey','Nyuki na asali','hex'], ['vegetables','Vegetables','Mboga','leaf'],
+  ['fruits','Fruits','Matunda','fruit'], ['grains','Grains','Nafaka','grain'], ['seedlings','Seedlings','Miche','sprout'],
+  ['inputs','Feeds and inputs','Chakula na pembejeo','sack'], ['vet-services','Vet services','Huduma za mifugo','cross'],
+  ['training','Training and tours','Mafunzo na ziara','book'],
+].map(([slug, en, sw, icon]) => ({ slug, en, sw, icon }));
+const CAT = Object.fromEntries(CATS.map(c => [c.slug, c]));
+const CAT_HUE = { dairy: 200, poultry: 38, goats: 26, sheep: 30, pigs: 345, rabbits: 300, fish: 192, bees: 45, vegetables: 140, fruits: 90, grains: 48, seedlings: 128, inputs: 30, 'vet-services': 160, training: 260 };
+
+const PRODUCTS = [
+  ['fresh-milk','dairy','Fresh milk','Maziwa fresh','litre'], ['dairy-heifer','dairy','Dairy heifer','Mtamba wa maziwa','head'],
+  ['eggs','poultry','Eggs','Mayai','tray-30'], ['broiler-chicken','poultry','Broiler chicken','Kuku wa nyama','bird'],
+  ['kienyeji-chicken','poultry','Kienyeji chicken','Kuku wa kienyeji','bird'], ['day-old-chicks','poultry','Day-old chicks','Vifaranga','chick'],
+  ['dairy-goat','goats','Dairy goat','Mbuzi wa maziwa','head'], ['meat-goat','goats','Meat goat','Mbuzi wa nyama','head'],
+  ['sheep','sheep','Sheep','Kondoo','head'], ['piglets','pigs','Weaned piglets','Watoto wa nguruwe','head'],
+  ['rabbits','rabbits','Rabbits','Sungura','head'], ['tilapia','fish','Tilapia','Ngege','kg'], ['catfish','fish','Catfish','Kambale','kg'],
+  ['fingerlings','fish','Fingerlings','Vifaranga vya samaki','piece'], ['honey','bees','Honey','Asali','kg'],
+  ['kale-sukuma','vegetables','Sukuma wiki','Sukuma wiki','kg'], ['tomatoes','vegetables','Tomatoes','Nyanya','kg'],
+  ['cabbage','vegetables','Cabbage','Kabichi','head'], ['african-leafy-veg','vegetables','African leafy vegetables','Mboga za kienyeji','bunch'],
+  ['mangoes','fruits','Mangoes','Maembe','piece'], ['avocados','fruits','Avocados','Parachichi','piece'],
+  ['maize','grains','Maize','Mahindi','bag-90kg'], ['beans','grains','Beans','Maharagwe','kg'],
+  ['tree-seedlings','seedlings','Tree seedlings','Miche ya miti','piece'], ['vegetable-seedlings','seedlings','Vegetable seedlings','Miche ya mboga','tray'],
+  ['hay','inputs','Hay','Nyasi kavu','bale'], ['layers-mash','inputs','Layers mash','Chakula cha kuku','bag-70kg'],
+  ['vet-visit','vet-services','Vet farm visit','Ziara ya daktari wa mifugo','visit'], ['artificial-insemination','vet-services','Artificial insemination','Uhamilishaji','service'],
+  ['farm-training','training','Farm training','Mafunzo ya shamba','person'], ['farm-tour','training','Farm tour','Ziara ya shamba','person'],
+].map(([slug, cat, en, sw, unit]) => ({ slug, cat, en, sw, unit }));
+const PROD = Object.fromEntries(PRODUCTS.map(p => [p.slug, p]));
+const UNITS = {
+  litre: ['litre','lita'], head: ['animal','mnyama'], 'tray-30': ['tray of 30','trei ya 30'], bird: ['bird','ndege'], chick: ['chick','kifaranga'],
+  kg: ['kg','kg'], piece: ['piece','kipande'], bunch: ['bunch','kicha'], 'bag-90kg': ['90 kg bag','gunia la kg 90'], 'bag-70kg': ['70 kg bag','mfuko wa kg 70'],
+  tray: ['tray','trei'], bale: ['bale','robota'], visit: ['visit','ziara'], service: ['service','huduma'], person: ['person','mtu'],
+};
+
+const COUNTIES = {
+  43: { name: 'Homa Bay', c: [34.52, -0.58], subs: ['Kasipul','Kabondo Kasipul','Karachuonyo','Rangwe','Homa Bay Town','Ndhiwa','Suba North','Suba South'] },
+  44: { name: 'Migori', c: [34.45, -1.02], subs: ['Rongo','Awendo','Suna East','Suna West','Uriri','Nyatike','Kuria West','Kuria East'] },
+  42: { name: 'Kisumu', c: [34.85, -0.13], subs: ['Kisumu East','Kisumu West','Kisumu Central','Seme','Nyando','Muhoroni','Nyakach'] },
+  22: { name: 'Kiambu', c: [36.84, -1.10], subs: ['Gatundu South','Gatundu North','Juja','Thika Town','Ruiru','Githunguri','Kiambu','Kiambaa','Kabete','Kikuyu','Limuru','Lari'] },
+  47: { name: 'Nairobi', c: [36.84, -1.28], subs: ['Westlands','Dagoretti North','Dagoretti South',"Lang'ata",'Kibra','Roysambu','Kasarani','Ruaraka','Embakasi South','Embakasi North','Embakasi Central','Embakasi East','Embakasi West','Makadara','Kamukunji','Starehe','Mathare'] },
+};
+const PILOT_ORDER = [43, 44, 42, 22, 47];
+
+/* ===================== Strings ===================== */
+const T = {
+  en: {
+    explore: 'Explore', inbox: 'Inbox', me_buyer: 'Saved', me_farmer: 'My Farm', me_agent: 'Agent',
+    search: 'Search farms or produce', allCounties: 'All counties', all: 'All',
+    inArea: '{n} farms in this area', inArea1: '1 farm in this area', noneArea: 'No farms in view. Zoom out or clear filters.',
+    showList: 'List', showMap: 'Map', verified: 'Verified', verifiedLong: 'Verified by a field agent',
+    approxNote: 'Approximate location, within about 1 km. The farmer shares the exact spot when you call.',
+    exactNote: 'Exact location shared by the farmer.', hiddenNote: 'This farm is not shown on the map.',
+    call: 'Call', whatsapp: 'WhatsApp', directions: 'Directions', share: 'Share', save: 'Save farm',
+    offers: 'What this farm offers', about: 'About the farm', farmer: 'Farmer', since: 'Since', size: 'Size', acres: '{n} acres',
+    available: '{n} available', per: 'per {u}', onRequest: 'Price on request', from: 'from',
+    contactTitle: 'Contact {name}', copy: 'Copy number', copied: 'Number copied', openDialer: 'Open phone app', openWa: 'Open WhatsApp',
+    contactLogged: 'Tap recorded. Tell them you found them on i12farm.', demoNumber: 'Sample number for this prototype',
+    location: 'Location', back: 'Back', viewingAs: 'Viewing as',
+    role_buyer: 'Buyer', role_farmer: 'Farmer', role_agent: 'Field agent',
+    roleD_buyer: 'Find farms near you and contact them', roleD_farmer: 'Manage your farm page and prices', roleD_agent: 'Enrol farmers towards the 100-farm pilot',
+    reset: 'Reset sample data', resetDone: 'Sample data restored',
+    banner: 'Prototype with sample farms. Names and phone numbers are made up.',
+    pinTitle: 'Pin your farm', enrolTitle: 'Enrol a farm', step: 'Step {a} of {b}', next: 'Continue', skip: 'Skip', publish: 'Publish farm', cancel: 'Cancel',
+    s1: 'About the farm', farmName: 'Farm name', farmNameHint: 'For example, Lakeview Dairy', farmerName: "Farmer's name", phone: 'Phone number',
+    waSame: 'Same number on WhatsApp', desc: 'Short description', descHint: 'What do you grow or keep? What should buyers know?',
+    s2: 'What do you farm?', s2hint: 'Pick all that apply.',
+    s3: 'Where is the farm?', county: 'County', subcounty: 'Sub-county', place: 'Village or landmark', placeHint: 'For example, Kanyadoto',
+    moveMap: 'Drag the map until the pin sits on the farm.', visibility: 'Who sees the location?',
+    visApprox: 'Approximate (recommended)', visApproxD: 'Buyers see the area, within about 1 km.',
+    visExact: 'Exact', visExactD: 'Best for shops, clinics and farm tours.', visHidden: 'Hidden', visHiddenD: 'Not on the map. Buyers find the farm by search.',
+    s4: 'Add photos', s4hint: 'Up to 4 photos. Each one is shrunk on this phone before upload, to save data.', choose: 'Choose photos', removePhoto: 'Remove photo',
+    s5: 'What are you selling?', s5hint: 'Add at least one product or service. You can change prices any time.',
+    product: 'Product', price: 'Price (KES)', qty: 'Quantity', addProduct: 'Add another product', remove: 'Remove',
+    review: 'Check and publish', published: 'The farm is on the map', enrolled: 'Farm enrolled and on the map',
+    err1: 'Add the farm name, farmer and phone number.', errPhone: 'Use a Kenyan number, like 0712 345 678.', err2: 'Pick at least one.', err3: 'Choose the county and sub-county.', err5: 'Add at least one product with a price.',
+    myFarms: 'Your farms', addFarm: 'Add a farm', views: 'Page views', calls: 'Calls', was: 'WhatsApp',
+    products: 'Products and prices', savePrice: 'Save', priceSaved: 'Price updated. The old price stays in the history.', history: 'History',
+    viewPublic: 'View public page', pinCta: 'Put your farm on the map', pinCtaD: 'Five short steps. Buyers in your county find you and call you directly.',
+    savedTitle: 'Saved farms', savedEmpty: 'Tap the heart on a farm to keep it here.', contactedTitle: 'Farms you contacted', contactedEmpty: 'Farms you call or WhatsApp appear here.',
+    haveFarm: 'Have a farm?', haveFarmD: 'Switch to Farmer to put it on the map.', switchFarmer: 'Switch to Farmer',
+    target: '{n} of 100 farms enrolled', pilot: 'Pilot target', byCounty: 'Enrolled by county', recentEnrol: 'Recent enrolments', enrolCta: 'Enrol a farm',
+    dataTitle: 'Data captured so far', dataD: 'Every view, tap, price and enrolment is saved with a time and county, ready for analysis.',
+    events: 'Events', contacts: 'Contact taps', priceRecs: 'Price records', copyCsv: 'Copy events as CSV', copiedCsv: 'Copied {n} events',
+    demand: 'Most-contacted products', noDemand: 'Contact a farm from Explore and it shows up here.',
+    inboxTitle: 'Inbox', inboxD: 'Chat with buyers arrives in the next phase. For now buyers call or WhatsApp the farm directly, and every tap is recorded.',
+    savedToast: 'Saved', unsavedToast: 'Removed from saved', linkCopied: 'Link copied', enrolledOn: 'Enrolled {d}', today: 'today', daysAgo: '{n} days ago',
+    langName: 'Kiswahili', lake: 'Lake Victoria', you: 'You', listingsCount: '{n} products',
+  },
+  sw: {
+    explore: 'Gundua', inbox: 'Ujumbe', me_buyer: 'Vipendwa', me_farmer: 'Shamba Langu', me_agent: 'Afisa',
+    search: 'Tafuta mashamba au mazao', allCounties: 'Kaunti zote', all: 'Zote',
+    inArea: 'Mashamba {n} katika eneo hili', inArea1: 'Shamba 1 katika eneo hili', noneArea: 'Hakuna mashamba hapa. Punguza ukubwa au ondoa vichujio.',
+    showList: 'Orodha', showMap: 'Ramani', verified: 'Limethibitishwa', verifiedLong: 'Limethibitishwa na afisa wa nyanjani',
+    approxNote: 'Mahali takriban, ndani ya kilomita 1 hivi. Mkulima atakuelekeza ukipiga simu.',
+    exactNote: 'Mahali halisi yaliyotolewa na mkulima.', hiddenNote: 'Shamba hili halionyeshwi kwenye ramani.',
+    call: 'Piga simu', whatsapp: 'WhatsApp', directions: 'Maelekezo', share: 'Shiriki', save: 'Hifadhi shamba',
+    offers: 'Shamba hili linatoa', about: 'Kuhusu shamba', farmer: 'Mkulima', since: 'Tangu', size: 'Ukubwa', acres: 'ekari {n}',
+    available: '{n} zinapatikana', per: 'kwa {u}', onRequest: 'Bei kwa ombi', from: 'kuanzia',
+    contactTitle: 'Wasiliana na {name}', copy: 'Nakili namba', copied: 'Namba imenakiliwa', openDialer: 'Fungua simu', openWa: 'Fungua WhatsApp',
+    contactLogged: 'Imerekodiwa. Mwambie umewapata kupitia i12farm.', demoNumber: 'Namba ya mfano kwa majaribio haya',
+    location: 'Mahali', back: 'Rudi', viewingAs: 'Unatazama kama',
+    role_buyer: 'Mnunuzi', role_farmer: 'Mkulima', role_agent: 'Afisa wa nyanjani',
+    roleD_buyer: 'Tafuta mashamba karibu nawe na uwasiliane nao', roleD_farmer: 'Simamia ukurasa wa shamba na bei', roleD_agent: 'Sajili wakulima kufikia lengo la mashamba 100',
+    reset: 'Rudisha data ya mfano', resetDone: 'Data ya mfano imerudishwa',
+    banner: 'Mfano wa majaribio wenye mashamba ya mfano. Majina na namba si halisi.',
+    pinTitle: 'Weka shamba lako', enrolTitle: 'Sajili shamba', step: 'Hatua {a} kati ya {b}', next: 'Endelea', skip: 'Ruka', publish: 'Chapisha shamba', cancel: 'Ghairi',
+    s1: 'Kuhusu shamba', farmName: 'Jina la shamba', farmNameHint: 'Kwa mfano, Lakeview Dairy', farmerName: 'Jina la mkulima', phone: 'Namba ya simu',
+    waSame: 'Namba hiyo hiyo kwenye WhatsApp', desc: 'Maelezo mafupi', descHint: 'Unalima au kufuga nini? Wanunuzi wajue nini?',
+    s2: 'Unalima nini?', s2hint: 'Chagua zote zinazohusika.',
+    s3: 'Shamba liko wapi?', county: 'Kaunti', subcounty: 'Kaunti ndogo', place: 'Kijiji au alama', placeHint: 'Kwa mfano, Kanyadoto',
+    moveMap: 'Sogeza ramani hadi alama ikae juu ya shamba.', visibility: 'Nani anaona mahali?',
+    visApprox: 'Takriban (inapendekezwa)', visApproxD: 'Wanunuzi wanaona eneo, ndani ya kilomita 1 hivi.',
+    visExact: 'Halisi', visExactD: 'Bora kwa maduka, kliniki na ziara za shamba.', visHidden: 'Imefichwa', visHiddenD: 'Haionekani kwenye ramani. Wanunuzi wanalipata kwa kutafuta.',
+    s4: 'Ongeza picha', s4hint: 'Hadi picha 4. Kila picha inapunguzwa kwenye simu hii kabla ya kupakiwa, ili kuokoa bando.', choose: 'Chagua picha', removePhoto: 'Ondoa picha',
+    s5: 'Unauza nini?', s5hint: 'Ongeza angalau bidhaa au huduma moja. Unaweza kubadilisha bei wakati wowote.',
+    product: 'Bidhaa', price: 'Bei (KES)', qty: 'Kiasi', addProduct: 'Ongeza bidhaa nyingine', remove: 'Ondoa',
+    review: 'Hakiki na uchapishe', published: 'Shamba liko kwenye ramani', enrolled: 'Shamba limesajiliwa na liko kwenye ramani',
+    err1: 'Weka jina la shamba, mkulima na namba ya simu.', errPhone: 'Tumia namba ya Kenya, kama 0712 345 678.', err2: 'Chagua angalau moja.', err3: 'Chagua kaunti na kaunti ndogo.', err5: 'Ongeza angalau bidhaa moja yenye bei.',
+    myFarms: 'Mashamba yako', addFarm: 'Ongeza shamba', views: 'Waliotazama', calls: 'Simu', was: 'WhatsApp',
+    products: 'Bidhaa na bei', savePrice: 'Hifadhi', priceSaved: 'Bei imesasishwa. Bei ya zamani inabaki kwenye historia.', history: 'Historia',
+    viewPublic: 'Tazama ukurasa wa umma', pinCta: 'Weka shamba lako kwenye ramani', pinCtaD: 'Hatua tano fupi. Wanunuzi wa kaunti yako wanakupata na kukupigia moja kwa moja.',
+    savedTitle: 'Mashamba uliyohifadhi', savedEmpty: 'Gusa moyo kwenye shamba ili kulihifadhi hapa.', contactedTitle: 'Mashamba uliyowasiliana nayo', contactedEmpty: 'Mashamba unayopigia au kutumia WhatsApp yanaonekana hapa.',
+    haveFarm: 'Una shamba?', haveFarmD: 'Badilisha kuwa Mkulima ili uliweke kwenye ramani.', switchFarmer: 'Badilisha kuwa Mkulima',
+    target: 'Mashamba {n} kati ya 100 yamesajiliwa', pilot: 'Lengo la majaribio', byCounty: 'Usajili kwa kaunti', recentEnrol: 'Usajili wa karibuni', enrolCta: 'Sajili shamba',
+    dataTitle: 'Data iliyokusanywa', dataD: 'Kila utazamaji, mguso, bei na usajili huhifadhiwa pamoja na saa na kaunti, tayari kwa uchambuzi.',
+    events: 'Matukio', contacts: 'Mawasiliano', priceRecs: 'Rekodi za bei', copyCsv: 'Nakili matukio kama CSV', copiedCsv: 'Matukio {n} yamenakiliwa',
+    demand: 'Bidhaa zinazotafutwa zaidi', noDemand: 'Wasiliana na shamba kutoka Gundua na itaonekana hapa.',
+    inboxTitle: 'Ujumbe', inboxD: 'Mazungumzo na wanunuzi yanakuja awamu ijayo. Kwa sasa wanunuzi wanapiga simu au kutuma WhatsApp moja kwa moja, na kila mguso unarekodiwa.',
+    savedToast: 'Imehifadhiwa', unsavedToast: 'Imeondolewa kwenye vipendwa', linkCopied: 'Kiungo kimenakiliwa', enrolledOn: 'Imesajiliwa {d}', today: 'leo', daysAgo: 'siku {n} zilizopita',
+    langName: 'English', lake: 'Ziwa Victoria', you: 'Wewe', listingsCount: 'bidhaa {n}',
+  },
+};
+function t(key, vars = {}) {
+  const s = (T[S.lang] && T[S.lang][key]) ?? T.en[key] ?? key;
+  return s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+}
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const catName = slug => CAT[slug] ? CAT[slug][S.lang] : slug;
+const prodName = slug => PROD[slug] ? PROD[slug][S.lang] : slug;
+const unitName = u => (UNITS[u] || [u, u])[S.lang === 'sw' ? 1 : 0];
+const kes = n => 'KES ' + Number(n).toLocaleString('en-KE', { maximumFractionDigits: 0 });
+
+/* ===================== Seed farms ===================== */
+// [name, farmer, cats, county, sub, place, lng, lat, vis, verified, listings[[product, price, qty]], size, since, desc]
+const SEED = [
+  ['Lakeview Dairy','Grace Achieng',['dairy','training'],43,'Homa Bay Town','Kanyabala',34.49,-0.56,'approximate',1,[['fresh-milk',60,80],['farm-training',500,null]],6,2014,'Twelve Friesian cows milked twice a day. Saturday training on zero-grazing and fodder.'],
+  ['Kendu Bay Layers','Rose Anyango',['poultry'],43,'Karachuonyo','Kendu Bay',34.645,-0.362,'approximate',1,[['eggs',450,40],['kienyeji-chicken',900,25]],2,2019,'Improved kienyeji layers on free range. Eggs collected daily.'],
+  ['Rangwe Bee Farm','Kennedy Otieno',['bees'],43,'Rangwe','Rangwe',34.592,-0.611,'exact',0,[['honey',800,30]],3,2017,'Sixty Langstroth hives. Raw honey in 1 kg and 500 g jars.'],
+  ['Ndhiwa Goat Unit','Mary Adhiambo',['goats','sheep'],43,'Ndhiwa','Ndhiwa',34.367,-0.729,'approximate',0,[['dairy-goat',12000,4],['sheep',8500,6]],5,2016,'Toggenburg cross dairy goats and Dorper sheep.'],
+  ['Mbita Fish Ponds','Joseph Ouma',['fish'],43,'Suba North','Mbita',34.215,-0.445,'approximate',1,[['tilapia',450,120],['fingerlings',10,2000]],1.5,2018,'Four lined ponds. Fresh tilapia every Friday and certified fingerlings.'],
+  ['Oyugis Greens','Beatrice Akinyi',['vegetables','seedlings'],43,'Kasipul','Oyugis',34.735,-0.508,'approximate',0,[['kale-sukuma',50,200],['vegetable-seedlings',300,40]],1,2020,'Drip-irrigated sukuma, spinach and seedlings for home gardens.'],
+  ['Kabondo Pig Farm','Samuel Okoth',['pigs'],43,'Kabondo Kasipul','Kadel',34.80,-0.45,'approximate',0,[['piglets',4500,10]],2,2015,'Large White and Landrace crosses. Weaned piglets every two months.'],
+  ['Rodi Mango Orchard','Peter Nyangweso',['fruits'],43,'Rangwe','Rodi Kopany',34.52,-0.63,'approximate',0,[['mangoes',15,3000]],8,2009,'Apple and Ngowe mangoes. Season runs November to February.'],
+  ['Rongo Dairy Farm','Lilian Odero',['dairy'],44,'Rongo','Rongo',34.60,-0.765,'approximate',1,[['fresh-milk',55,150]],10,2012,'Ayrshire herd. Milk chilled on the farm and collected at 7 am.'],
+  ['Awendo Beans and Maize','Tom Owino',['grains'],44,'Awendo','Awendo',34.53,-0.90,'approximate',0,[['beans',120,500],['maize',3800,40]],12,2011,'Rosecoco beans and dried maize, stored in hermetic bags.'],
+  ['Uriri Kienyeji Hub','Faith Atieno',['poultry'],44,'Uriri','Uriri',34.50,-0.985,'approximate',0,[['kienyeji-chicken',850,40],['day-old-chicks',110,300]],1,2021,'Hatchery with vaccinated day-old chicks every week.'],
+  ['Migori Vet Point','Dr. Daniel Chacha',['vet-services'],44,'Suna East','Migori Town',34.47,-1.065,'exact',1,[['vet-visit',1500,null],['artificial-insemination',2500,null]],null,2013,'Licensed vet. Farm visits within 30 km, AI for dairy cattle.'],
+  ['Isebania Hay Supply','Joseph Mwita',['inputs'],44,'Kuria West','Isebania',34.48,-1.24,'approximate',0,[['hay',350,400]],15,2010,'Rhodes grass hay, baled after the long rains.'],
+  ['Nyatike Fish Farm','Paul Onyango',['fish'],44,'Nyatike','Macalder',34.27,-1.10,'approximate',0,[['tilapia',420,300]],2,2019,'Tilapia ponds fed by the Kuja river.'],
+  ['Suna Avocado Gardens','Esther Auma',['fruits','seedlings'],44,'Suna West','Masara',34.40,-1.03,'approximate',0,[['avocados',15,2000],['tree-seedlings',50,500]],4,2016,'Hass avocados and grafted seedlings.'],
+  ['Kombewa Greens','Pamela Achieng',['vegetables','seedlings'],42,'Seme','Kombewa',34.505,-0.104,'approximate',1,[['kale-sukuma',50,200],['tomatoes',80,300]],2,2018,'Tomatoes under shade net, sukuma all year.'],
+  ['Ahero Rice and Pigs','Tobias Odhiambo',['pigs','grains'],42,'Nyando','Ahero',34.918,-0.173,'approximate',0,[['piglets',4500,10]],6,2014,'Pigs fed on rice bran from our own paddies.'],
+  ['Maseno Vet Point','Dr. Lydia Were',['vet-services'],42,'Kisumu West','Maseno',34.603,-0.004,'exact',1,[['vet-visit',1500,null]],null,2015,'Small and large animal vet. Vaccination days every month.'],
+  ['Kibos Dairy Goats','Martin Ochieng',['goats'],42,'Kisumu East','Kibos',34.82,-0.065,'approximate',0,[['dairy-goat',14000,3]],2,2017,'Saanen and Alpine dairy goats, does and young bucks.'],
+  ['Muhoroni Honey Collective','Alice Kiprono',['bees'],42,'Muhoroni','Muhoroni',35.195,-0.155,'approximate',0,[['honey',750,60]],null,2016,'Twenty beekeepers pooling honey for bulk buyers.'],
+  ['Katito Fish Farm','Vincent Opiyo',['fish'],42,'Nyakach','Katito',34.97,-0.27,'approximate',0,[['catfish',500,80],['fingerlings',12,1500]],1,2020,'Catfish and tilapia fingerlings for new pond owners.'],
+  ['Awasi Training Farm','Jane Omondi',['training','vegetables'],42,'Nyando','Awasi',35.07,-0.17,'exact',1,[['farm-tour',300,null],['farm-training',800,null]],5,2010,'Demonstration farm. School visits and weekend courses.'],
+  ['Githunguri Highland Dairy','Mary Wanjiku',['dairy'],22,'Githunguri','Githunguri',36.78,-1.06,'approximate',1,[['fresh-milk',50,400],['dairy-heifer',85000,2]],8,2008,'Friesian herd, in-calf heifers available.'],
+  ['Limuru Greens','Peter Kamau',['vegetables'],22,'Limuru','Limuru',36.64,-1.105,'approximate',0,[['cabbage',40,500],['kale-sukuma',40,300]],3,2015,'Highland cabbage and kale for Nairobi markets.'],
+  ['Kikuyu Rabbitry','James Njoroge',['rabbits'],22,'Kikuyu','Kikuyu',36.665,-1.245,'approximate',0,[['rabbits',1200,30]],0.5,2021,'New Zealand White and California rabbits.'],
+  ['Ruiru Broilers','Esther Mwangi',['poultry'],22,'Ruiru','Ruiru',36.96,-1.15,'approximate',0,[['broiler-chicken',550,200],['eggs',420,100]],1,2019,'Broilers ready every five weeks.'],
+  ['Juja Fish and Greens','Daniel Kariuki',['fish','vegetables'],22,'Juja','Juja Farm',37.01,-1.10,'approximate',0,[['tilapia',500,80]],2,2020,'Aquaponics: tilapia with lettuce and herbs.'],
+  ['Gatundu Avocado Farm','Ann Njeri',['fruits'],22,'Gatundu North','Kamwangi',36.91,-0.985,'approximate',0,[['avocados',20,5000]],6,2012,'Hass and Fuerte avocados, export grade.'],
+  ['Lari Seedlings Nursery','Lucy Wambui',['seedlings'],22,'Lari','Kimende',36.62,-0.985,'exact',1,[['tree-seedlings',40,3000],['vegetable-seedlings',250,100]],1,2014,'Grevillea, fruit trees and vegetable seedlings.'],
+  ['Karen Urban Bees','Brian Otieno',['bees','training'],47,"Lang'ata",'Karen',36.71,-1.32,'approximate',0,[['honey',1000,40],['farm-training',1500,null]],null,2018,'Rooftop and garden hives. Beginner beekeeping classes.'],
+  ['Kasarani Leafy Greens','Faith Mutua',['vegetables'],47,'Kasarani','Mwiki',36.92,-1.22,'approximate',0,[['african-leafy-veg',50,150]],0.5,2021,'Managu, terere and kunde from sack gardens.'],
+  ['Ruai Poultry Farm','Daniel Kiptoo',['poultry','inputs'],47,'Embakasi East','Ruai',37.00,-1.27,'approximate',0,[['eggs',430,200],['layers-mash',3400,50]],2,2017,'Layers and our own feed mix.'],
+  ['Riruta Dairy Unit','John Waweru',['dairy'],47,'Dagoretti South','Riruta',36.73,-1.29,'approximate',0,[['fresh-milk',70,60]],0.5,2016,'Zero-grazing unit in the city. Morning milk by 8 am.'],
+  ['Nairobi Mobile Vet','Dr. Susan Kamau',['vet-services'],47,'Westlands','Kangemi',36.75,-1.265,'exact',1,[['vet-visit',2000,null],['artificial-insemination',3000,null]],null,2011,'Mobile vet for Nairobi and Kiambu farms.'],
+];
+
+const DAY = 864e5;
+function seedFarms() {
+  const now = Date.now();
+  return SEED.map((r, i) => {
+    const [name, farmer, cats, county, sub, place, lng, lat, vis, verified, listings, size, since, desc] = r;
+    const id = 'f' + (i + 1);
+    return {
+      id, name, farmer, cats, county, sub, place, lng, lat, vis, verified: !!verified, size, since, desc,
+      phone: '0700 ' + String(100 + i * 3).padStart(3, '0') + ' ' + String(400 + ((i * 37) % 600)).padStart(3, '0'),
+      owner: i === 0 ? 'farmer' : null, agent: i === 0 ? null : 'agent', photos: [],
+      createdAt: now - ((i * 5) % 29 + 1) * DAY - i * 3600e3,
+      stats: { views: 24 + ((i * 37) % 140), call: (i * 7) % 9, whatsapp: (i * 11) % 13 },
+      listings: listings.map(([p, price, qty], j) => ({ id: id + 'l' + j, product: p, price, qty, unit: PROD[p].unit })),
+    };
+  });
+}
+
+/* ===================== State ===================== */
+const STORE = 'i12farm-prototype-v1';
+let S;
+function freshState() {
+  const farms = seedFarms();
+  const ph = [];
+  farms.forEach(f => f.listings.forEach(l => ph.push({ at: f.createdAt, farm: f.id, listing: l.id, product: l.product, county: f.county, price: l.price })));
+  return { v: 1, role: 'buyer', lang: 'en', farms, events: [], priceHistory: ph, saved: [], contacted: [], cat: null, q: '', county: '' };
+}
+function load() {
+  try { const raw = localStorage.getItem(STORE); if (raw) { const s = JSON.parse(raw); if (s && s.v === 1) return s; } } catch (e) {}
+  return freshState();
+}
+function persist() {
+  try { localStorage.setItem(STORE, JSON.stringify(S)); }
+  catch (e) { try { const lite = { ...S, farms: S.farms.map(f => ({ ...f, photos: [] })) }; localStorage.setItem(STORE, JSON.stringify(lite)); } catch (e2) {} }
+}
+S = load();
+const farmById = id => S.farms.find(f => f.id === id);
+
+function track(name, props = {}) {
+  const ev = { at: Date.now(), name, role: S.role, county: props.county ?? null, props };
+  S.events.push(ev);
+  if (S.events.length > 400) S.events = S.events.slice(-400);
+  persist();
+}
+
+/* ===================== Geometry ===================== */
+const KENYA = [[34.07,-1.0],[34.4,-1.15],[35.1,-1.55],[36.0,-2.05],[37.6,-2.95],[37.7,-3.6],[38.6,-4.2],[39.2,-4.68],[39.6,-4.35],[39.75,-3.95],[40.05,-3.3],[40.2,-2.8],[40.9,-2.2],[41.56,-1.68],[40.99,-0.86],[40.99,2.8],[41.9,3.98],[40.8,4.25],[39.85,3.84],[39.56,3.42],[38.1,3.6],[36.85,4.45],[35.95,4.62],[35.5,5.0],[33.98,4.23],[34.4,3.7],[34.6,3.0],[35.0,1.9],[34.6,1.1],[34.1,0.35],[33.92,0.1]];
+const LAKE = [[32.0,0.3],[33.0,0.42],[33.92,0.1],[34.05,0.0],[34.4,-0.05],[34.62,-0.06],[34.76,-0.10],[34.82,-0.2],[34.72,-0.28],[34.6,-0.3],[34.45,-0.38],[34.3,-0.36],[34.16,-0.38],[34.16,-0.47],[34.3,-0.5],[34.44,-0.52],[34.38,-0.6],[34.24,-0.62],[34.12,-0.78],[34.1,-0.95],[34.0,-1.03],[33.8,-1.6],[33.4,-2.1],[32.9,-2.5],[32.4,-2.4],[31.8,-2.0],[31.6,-1.4],[31.7,-0.6],[31.85,0.0]];
+const OCEAN = [[39.2,-4.68],[39.6,-4.35],[39.75,-3.95],[40.05,-3.3],[40.2,-2.8],[40.9,-2.2],[41.56,-1.68],[42.5,-0.8],[44,1.5],[50,3],[50,-12],[39.3,-12],[39.3,-6.5],[38.9,-5.2]];
+const TOWNS = [
+  ['Kisumu',34.76,-0.09,6], ['Homa Bay',34.457,-0.527,7], ['Migori',34.473,-1.063,7], ['Nairobi',36.82,-1.286,5.5], ['Kiambu',36.835,-1.171,8],
+  ['Thika',37.07,-1.04,7.5], ['Kisii',34.767,-0.682,8], ['Nakuru',36.08,-0.30,6], ['Eldoret',35.27,0.51,6], ['Mombasa',39.67,-4.04,5.5],
+  ['Kakamega',34.75,0.28,7.5], ['Kericho',35.28,-0.37,8], ['Naivasha',36.43,-0.72,8], ['Mbita',34.2,-0.43,9], ['Rongo',34.6,-0.76,9.5], ['Limuru',36.64,-1.11,9.5], ['Ruiru',36.96,-1.15,9.5],
+];
+function snap(v) { return Math.round((v - 0.005) / 0.01) * 0.01 + 0.005; }
+function publicPos(f) {
+  if (f.vis === 'hidden') return null;
+  if (f.vis === 'exact') return [f.lng, f.lat];
+  return [snap(f.lng), snap(f.lat)];
+}
+
+/* ===================== Map ===================== */
+function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+const ICON_PATHS = {};
+function iconPath(name) { return ICON_PATHS[name] || (ICON_PATHS[name] = new Path2D(IC[name])); }
+
+class FarmMap {
+  constructor(canvas, opts = {}) {
+    this.cv = canvas; this.ctx = canvas.getContext('2d');
+    this.lng = opts.lng ?? 36; this.lat = opts.lat ?? -0.6; this.z = opts.z ?? 6.2;
+    this.interactive = opts.interactive !== false; this.onTap = opts.onTap; this.onMove = opts.onMove;
+    this.points = []; this.selected = null; this.clusters = []; this.minZ = 5.2; this.maxZ = 15;
+    this.pointers = new Map(); this.raf = 0; this.anim = null;
+    this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(canvas.parentElement);
+    if (this.interactive) this.bind();
+    this.resize();
+  }
+  destroy() { this.ro.disconnect(); cancelAnimationFrame(this.raf); this.dead = true; }
+  resize() {
+    const r = this.cv.parentElement.getBoundingClientRect();
+    this.W = Math.max(1, r.width); this.H = Math.max(1, r.height); this.dpr = Math.min(2.5, window.devicePixelRatio || 1);
+    this.cv.width = Math.round(this.W * this.dpr); this.cv.height = Math.round(this.H * this.dpr);
+    this.draw();
+  }
+  scale() { return 256 * Math.pow(2, this.z); }
+  world(lng, lat, s = this.scale()) {
+    const sin = Math.sin(lat * Math.PI / 180);
+    return [(lng + 180) / 360 * s, (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * s];
+  }
+  unworld(x, y, s = this.scale()) {
+    const lng = x / s * 360 - 180;
+    const n = Math.PI - 2 * Math.PI * y / s;
+    return [lng, 180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)))];
+  }
+  toScreen(lng, lat) { const s = this.scale(); const [x, y] = this.world(lng, lat, s); const [cx, cy] = this.world(this.lng, this.lat, s); return [x - cx + this.W / 2, y - cy + this.H / 2]; }
+  fromScreen(px, py) { const s = this.scale(); const [cx, cy] = this.world(this.lng, this.lat, s); return this.unworld(cx + px - this.W / 2, cy + py - this.H / 2, s); }
+  bounds() { const [w, n] = this.fromScreen(0, 0); const [e, s] = this.fromScreen(this.W, this.H); return { w, e, n, s }; }
+  zoomAt(nz, px, py) {
+    nz = Math.max(this.minZ, Math.min(this.maxZ, nz));
+    const [alng, alat] = this.fromScreen(px, py); this.z = nz;
+    const s = this.scale(); const [ax, ay] = this.world(alng, alat, s);
+    [this.lng, this.lat] = this.unworld(ax - (px - this.W / 2), ay - (py - this.H / 2), s);
+    this.changed();
+  }
+  panBy(dx, dy) { const s = this.scale(); const [cx, cy] = this.world(this.lng, this.lat, s); [this.lng, this.lat] = this.unworld(cx - dx, cy - dy, s); this.lat = Math.max(-12, Math.min(8, this.lat)); this.lng = Math.max(28, Math.min(46, this.lng)); this.changed(); }
+  setView(lng, lat, z) { this.anim = null; this.lng = lng; this.lat = lat; this.z = z; this.changed(); }
+  flyTo(lng, lat, z, ms = 700) {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return this.setView(lng, lat, z);
+    const a = { lng: this.lng, lat: this.lat, z: this.z }, t0 = performance.now();
+    this.anim = { a, b: { lng, lat, z }, t0, ms };
+    const step = now => {
+      if (!this.anim || this.dead) return;
+      const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      this.lng = a.lng + (lng - a.lng) * e; this.lat = a.lat + (lat - a.lat) * e; this.z = a.z + (z - a.z) * e;
+      this.changed(k === 1);
+      if (k < 1) requestAnimationFrame(step); else this.anim = null;
+    };
+    requestAnimationFrame(step);
+  }
+  fit(pts, maxZ = 12, pad = 60) {
+    if (!pts.length) return;
+    let w = 180, e = -180, n = -90, s = 90;
+    pts.forEach(([x, y]) => { w = Math.min(w, x); e = Math.max(e, x); n = Math.max(n, y); s = Math.min(s, y); });
+    const W = this.W - pad * 2, H = this.H - pad * 2 - (this.bottomInset || 0) - (this.topInset || 0);
+    let z = this.maxZ;
+    for (; z > this.minZ; z -= 0.1) {
+      const sc = 256 * Math.pow(2, z); const [x1, y1] = this.world(w, n, sc); const [x2, y2] = this.world(e, s, sc);
+      if (x2 - x1 <= W && y2 - y1 <= H) break;
+    }
+    z = Math.min(z, maxZ);
+    const sc = 256 * Math.pow(2, z); const [x1, y1] = this.world(w, n, sc); const [x2, y2] = this.world(e, s, sc);
+    const shift = ((this.bottomInset || 0) - (this.topInset || 0)) / 2;
+    const [lng, lat] = this.unworld((x1 + x2) / 2, (y1 + y2) / 2 + shift, sc);
+    this.flyTo(lng, lat, z);
+  }
+  changed(final = true) { this.draw(); clearTimeout(this.mt); this.mt = setTimeout(() => this.onMove && this.onMove(this), final ? 120 : 250); }
+  draw() { if (this.raf) return; this.raf = requestAnimationFrame(() => { this.raf = 0; this.paint(); }); }
+  bind() {
+    const cv = this.cv; let down = null, pinch = null;
+    cv.addEventListener('pointerdown', e => {
+      cv.setPointerCapture(e.pointerId); this.anim = null;
+      this.pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
+      if (this.pointers.size === 1) down = { x: e.offsetX, y: e.offsetY, t: performance.now(), moved: 0, lx: e.offsetX, ly: e.offsetY };
+      if (this.pointers.size === 2) { const [a, b] = [...this.pointers.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: this.z }; down = null; }
+    });
+    cv.addEventListener('pointermove', e => {
+      if (!this.pointers.has(e.pointerId)) return;
+      this.pointers.set(e.pointerId, [e.offsetX, e.offsetY]);
+      if (pinch && this.pointers.size === 2) {
+        const [a, b] = [...this.pointers.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+        this.zoomAt(pinch.z + Math.log2(d / pinch.d), (a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+      } else if (down) {
+        const dx = e.offsetX - down.lx, dy = e.offsetY - down.ly; down.lx = e.offsetX; down.ly = e.offsetY;
+        down.moved += Math.abs(dx) + Math.abs(dy); this.panBy(dx, dy);
+      }
+    });
+    const up = e => {
+      if (!this.pointers.has(e.pointerId)) return;
+      this.pointers.delete(e.pointerId);
+      if (down && down.moved < 8 && performance.now() - down.t < 400) this.tap(e.offsetX, e.offsetY);
+      if (this.pointers.size < 2) pinch = null;
+      down = null;
+    };
+    cv.addEventListener('pointerup', up); cv.addEventListener('pointercancel', up);
+    cv.addEventListener('wheel', e => { e.preventDefault(); this.zoomAt(this.z - e.deltaY * 0.0022, e.offsetX, e.offsetY); }, { passive: false });
+    cv.addEventListener('dblclick', e => this.zoomAt(this.z + 1, e.offsetX, e.offsetY));
+  }
+  tap(x, y) {
+    let best = null, bd = 1e9;
+    for (const c of this.clusters) {
+      const d = c.n > 1 ? Math.hypot(c.x - x, c.y - y) : Math.hypot(c.x - x, c.y - 20 - y);
+      const r = c.n > 1 ? c.r + 6 : 22;
+      if (d < r && d < bd) { bd = d; best = c; }
+    }
+    if (!best) return this.onTap && this.onTap(null);
+    if (best.n > 1) {
+      const pts = best.items.map(p => [p.lng, p.lat]);
+      const spread = Math.max(...pts.map(p => p[0])) - Math.min(...pts.map(p => p[0])) + Math.max(...pts.map(p => p[1])) - Math.min(...pts.map(p => p[1]));
+      if (spread < 0.002) return this.onTap && this.onTap(best.items[0].id);
+      this.fit(pts, Math.min(this.maxZ, this.z + 4), 70);
+    } else this.onTap && this.onTap(best.items[0].id);
+  }
+  poly(pts) { const c = this.ctx; c.beginPath(); pts.forEach(([lng, lat], i) => { const [x, y] = this.toScreen(lng, lat); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.closePath(); }
+  paint() {
+    const c = this.ctx, W = this.W, H = this.H;
+    c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    c.fillStyle = cssVar('--land-out'); c.fillRect(0, 0, W, H);
+    // grid
+    const step = this.z < 7 ? 1 : this.z < 9 ? 0.5 : this.z < 11 ? 0.1 : 0.02;
+    const b = this.bounds();
+    c.strokeStyle = cssVar('--map-grid'); c.lineWidth = 1; c.beginPath();
+    for (let x = Math.ceil(b.w / step) * step; x < b.e; x += step) { const [sx] = this.toScreen(x, 0); c.moveTo(sx, 0); c.lineTo(sx, H); }
+    for (let y = Math.ceil(b.s / step) * step; y < b.n; y += step) { const [, sy] = this.toScreen(0, y); c.moveTo(0, sy); c.lineTo(W, sy); }
+    c.stroke();
+    c.fillStyle = cssVar('--land'); this.poly(KENYA); c.fill();
+    c.strokeStyle = cssVar('--map-border'); c.lineWidth = 1.5; c.setLineDash([6, 4]); c.stroke(); c.setLineDash([]);
+    c.fillStyle = cssVar('--water'); this.poly(OCEAN); c.fill(); this.poly(LAKE); c.fill();
+    // pilot county halos
+    const sprout = cssVar('--sprout');
+    PILOT_ORDER.forEach(code => {
+      const k = COUNTIES[code]; const [x, y] = this.toScreen(k.c[0], k.c[1]);
+      const r = Math.max(10, 0.22 * this.scale() / 360 * 1.0);
+      c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fillStyle = sprout; c.globalAlpha = 0.07; c.fill(); c.globalAlpha = 1;
+    });
+    // labels
+    c.textAlign = 'center'; c.font = '600 12px ' + cssVar('--font');
+    const halo = cssVar('--halo'), lab = cssVar('--map-label');
+    if (this.z >= 5.8 && this.z < 11) { const [lx, ly] = this.toScreen(33.1, -1.0); c.font = 'italic 600 12px ' + cssVar('--font'); c.fillStyle = cssVar('--map-label'); c.globalAlpha = .6; c.fillText(t('lake'), lx, ly); c.globalAlpha = 1; }
+    c.font = '600 12px ' + cssVar('--font');
+    TOWNS.forEach(([n, lng, lat, mz]) => {
+      if (this.z < mz) return; const [x, y] = this.toScreen(lng, lat); if (x < -40 || x > W + 40 || y < -20 || y > H + 20) return;
+      c.fillStyle = lab; c.beginPath(); c.arc(x, y, 2.5, 0, Math.PI * 2); c.fill();
+      c.lineWidth = 3; c.strokeStyle = halo; c.strokeText(n, x, y - 7); c.fillText(n, x, y - 7);
+    });
+    this.paintPins();
+  }
+  paintPins() {
+    const c = this.ctx, cell = this.z >= 12.5 ? 0 : 62;
+    const vis = [];
+    for (const p of this.points) { const [x, y] = this.toScreen(p.lng, p.lat); if (x < -60 || x > this.W + 60 || y < -60 || y > this.H + 60) continue; vis.push({ ...p, x, y }); }
+    const groups = new Map();
+    for (const p of vis) {
+      if (p.id === this.selected || !cell) { groups.set('s' + p.id, { items: [p], x: p.x, y: p.y }); continue; }
+      const k = Math.floor(p.x / cell) + ':' + Math.floor(p.y / cell);
+      const g = groups.get(k) || { items: [], x: 0, y: 0 }; g.items.push(p); groups.set(k, g);
+    }
+    this.clusters = [];
+    const pin = cssVar('--pin'), pinIcon = cssVar('--pin-icon'), lime = cssVar('--lime'), cbg = cssVar('--cluster-bg'), cfg = cssVar('--cluster-fg'), ink = cssVar('--ink'), sprout = cssVar('--sprout');
+    const list = [...groups.values()];
+    list.sort((a, b) => (a.items[0].id === this.selected) - (b.items[0].id === this.selected));
+    for (const g of list) {
+      const n = g.items.length;
+      g.x = g.items.reduce((s, p) => s + p.x, 0) / n; g.y = g.items.reduce((s, p) => s + p.y, 0) / n;
+      if (n > 1) {
+        g.r = 15 + Math.min(10, Math.log2(n) * 3.2);
+        c.beginPath(); c.arc(g.x, g.y, g.r + 5, 0, Math.PI * 2); c.fillStyle = sprout; c.globalAlpha = .28; c.fill(); c.globalAlpha = 1;
+        c.beginPath(); c.arc(g.x, g.y, g.r, 0, Math.PI * 2); c.fillStyle = cbg; c.fill();
+        c.fillStyle = cfg; c.font = '800 13px ' + cssVar('--font'); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(n), g.x, g.y + 0.5); c.textBaseline = 'alphabetic';
+      } else {
+        const p = g.items[0], sel = p.id === this.selected, s = sel ? 1.25 : 1;
+        c.save(); c.translate(p.x, p.y); c.scale(s, s);
+        c.shadowColor = 'rgba(0,0,0,.25)'; c.shadowBlur = 6; c.shadowOffsetY = 2;
+        c.beginPath(); c.moveTo(0, 0); c.bezierCurveTo(-4, -8, -15, -12, -15, -22); c.arc(0, -22, 15, Math.PI, 0); c.bezierCurveTo(15, -12, 4, -8, 0, 0); c.closePath();
+        c.fillStyle = sel ? ink : pin; c.fill(); c.shadowColor = 'transparent';
+        c.save(); c.translate(-8.5, -30.5); c.scale(17 / 24, 17 / 24); c.strokeStyle = sel ? lime : pinIcon; c.lineWidth = 2.4; c.lineCap = 'round'; c.lineJoin = 'round'; c.stroke(iconPath(p.icon)); c.restore();
+        if (p.verified) { c.beginPath(); c.arc(11, -34, 5, 0, Math.PI * 2); c.fillStyle = lime; c.fill(); c.lineWidth = 1.5; c.strokeStyle = sel ? lime : ink; c.stroke(); }
+        c.restore();
+      }
+      this.clusters.push({ ...g, n });
+    }
+  }
+}
+
+/* ===================== Covers ===================== */
+function rnd(seed) { let x = 0; for (const ch of seed) x = (x * 31 + ch.charCodeAt(0)) >>> 0; return () => ((x = (x * 1664525 + 1013904223) >>> 0) / 4294967296); }
+let coverSeq = 0;
+function coverSVG(f) {
+  if (f.photos && f.photos.length) return `<div class="cover"><img src="${f.photos[0].src}" alt="${esc(f.name)}"></div>`;
+  const gid = 'g' + (++coverSeq), cat = f.cats[0] || 'vegetables', hue = CAT_HUE[cat] ?? 140, r = rnd(f.id + f.name);
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches && document.documentElement.dataset.theme !== 'light' || document.documentElement.dataset.theme === 'dark';
+  const l1 = dark ? 22 : 82, l2 = dark ? 14 : 70;
+  let lines = '';
+  for (let i = 0; i < 7; i++) {
+    const y = 20 + i * 18 + r() * 8, a = 6 + r() * 10;
+    lines += `<path d="M-10 ${y.toFixed(1)} C 60 ${(y - a).toFixed(1)}, 120 ${(y + a).toFixed(1)}, 210 ${(y - a / 2).toFixed(1)}" />`;
+  }
+  return `<svg class="cover" viewBox="0 0 200 140" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${esc(f.name)}">
+    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue} 55% ${l1}%)"/><stop offset="1" stop-color="hsl(${(hue + 40) % 360} 45% ${l2}%)"/></linearGradient></defs>
+    <rect width="200" height="140" fill="url(#${gid})"/>
+    <g fill="none" stroke="hsl(${hue} 40% ${dark ? 40 : 45}%)" stroke-opacity=".35" stroke-width="1.2">${lines}</g>
+    <g transform="translate(118 46) scale(3.1)" fill="none" stroke="hsl(${hue} 50% ${dark ? 60 : 28}%)" stroke-opacity=".55" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[CAT[cat].icon]}"/></g>
+  </svg>`;
+}
+
+/* ===================== Shell ===================== */
+const $ = s => document.querySelector(s);
+let tab = 'explore', map, sheetOpen = false, overlay = null;
+
+function toast(msg) {
+  const old = document.querySelector('.toast'); if (old) old.remove();
+  const el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status');
+  el.innerHTML = svg('check') + '<span>' + esc(msg) + '</span>';
+  $('#app').appendChild(el); clearTimeout(toast.t); toast.t = setTimeout(() => el.remove(), 2600);
+}
+function renderChrome() {
+  document.documentElement.lang = S.lang;
+  $('#roleLabel').textContent = t('role_' + S.role);
+  $('#langBtn').textContent = S.lang === 'en' ? 'SW' : 'EN';
+  $('#langBtn').setAttribute('aria-label', t('langName'));
+  $('#banner').textContent = t('banner');
+  document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
+  document.querySelectorAll('[data-ic]').forEach(el => el.innerHTML = svg(el.dataset.ic));
+  $('#meTab').textContent = t('me_' + S.role);
+  $('#q').placeholder = t('search');
+  $('#countySel').innerHTML = `<option value="">${esc(t('allCounties'))}</option>` + PILOT_ORDER.map(c => `<option value="${c}">${esc(COUNTIES[c].name)}</option>`).join('');
+  $('#countySel').value = S.county;
+  renderChips();
+}
+function renderChips() {
+  $('#chips').innerHTML = `<button class="chip" type="button" data-cat="" aria-pressed="${!S.cat}">${esc(t('all'))}</button>` +
+    CATS.map(c => `<button class="chip" type="button" data-cat="${c.slug}" aria-pressed="${S.cat === c.slug}">${svg(c.icon)}${esc(c[S.lang])}</button>`).join('');
+}
+function setTab(name) {
+  tab = name;
+  document.querySelectorAll('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === name ? 'page' : 'false'));
+  ['explore', 'inbox', 'me'].forEach(id => $('#' + id).hidden = id !== name);
+  if (name === 'inbox') renderInbox();
+  if (name === 'me') renderMe();
+  if (name === 'explore' && map) map.resize();
+  track('page.view', { screen: name });
+}
+
+/* ===================== Explore ===================== */
+function matches(f) {
+  if (S.cat && !f.cats.includes(S.cat)) return false;
+  if (S.county && String(f.county) !== String(S.county)) return false;
+  const q = S.q.trim().toLowerCase();
+  if (q) {
+    const hay = [f.name, f.place, f.farmer, f.sub, COUNTIES[f.county].name, ...f.cats.map(c => CAT[c].en + ' ' + CAT[c].sw), ...f.listings.map(l => PROD[l.product].en + ' ' + PROD[l.product].sw)].join(' ').toLowerCase();
+    if (!q.split(/\s+/).every(w => hay.includes(w))) return false;
+  }
+  return true;
+}
+function filtered() { return S.farms.filter(matches); }
+function updatePins() {
+  map.points = filtered().map(f => { const p = publicPos(f); return p && { id: f.id, lng: p[0], lat: p[1], icon: CAT[f.cats[0]].icon, verified: f.verified }; }).filter(Boolean);
+  map.draw();
+}
+function inView() {
+  const b = map.bounds(); const list = filtered();
+  const vis = list.filter(f => { const p = publicPos(f); return p && p[0] >= b.w && p[0] <= b.e && p[1] <= b.n && p[1] >= b.s; });
+  const hidden = S.q.trim() ? list.filter(f => f.vis === 'hidden') : [];
+  return [...vis, ...hidden];
+}
+function lowestPrice(f) { const priced = f.listings.filter(l => l.price != null); if (!priced.length) return null; return priced.reduce((a, b) => a.price <= b.price ? a : b); }
+function priceLine(f) {
+  const l = lowestPrice(f); if (!l) return `<span class="meta">${esc(t('onRequest'))}</span>`;
+  return `<span class="price num">${kes(l.price)} <small>${esc(t('per', { u: unitName(l.unit) }))}</small></span>`;
+}
+function renderSheet() {
+  const farms = inView();
+  $('#sheetTitle').textContent = farms.length === 1 ? t('inArea1') : t('inArea', { n: farms.length });
+  $('#sheetToggle').textContent = sheetOpen ? t('showMap') : t('showList');
+  $('#sheetHead').setAttribute('aria-expanded', String(sheetOpen));
+  if (!farms.length) { $('#carousel').innerHTML = `<p class="empty-note">${esc(t('noneArea'))}</p>`; $('#sheetList').innerHTML = $('#carousel').innerHTML; return; }
+  const order = farms.slice().sort((a, b) => (b.id === map.selected) - (a.id === map.selected) || b.verified - a.verified);
+  $('#carousel').innerHTML = order.map(f => `
+    <button class="fcard${f.id === map.selected ? ' sel' : ''}" type="button" data-open="${f.id}">
+      <span class="thumb">${coverSVG(f)}</span>
+      <span class="body">
+        <span class="h3">${esc(f.name)}</span>
+        <span class="meta">${esc(f.place)} · ${esc(COUNTIES[f.county].name)}</span>
+        <span class="meta">${f.cats.map(catName).map(esc).join(', ')}</span>
+        ${priceLine(f)}
+        ${f.verified ? `<span><span class="badge">${svg('check')}${esc(t('verified'))}</span></span>` : ''}
+      </span>
+    </button>`).join('');
+  $('#sheetList').innerHTML = order.map(f => `
+    <div class="lcard">
+      <div class="thumb">
+        <button type="button" data-open="${f.id}" style="all:unset;display:block;width:100%;height:100%;cursor:pointer" aria-label="${esc(f.name)}">${coverSVG(f)}</button>
+        ${f.verified ? `<span class="badge">${svg('check')}${esc(t('verified'))}</span>` : ''}
+        <button class="heart" type="button" data-save="${f.id}" aria-pressed="${S.saved.includes(f.id)}" aria-label="${esc(t('save'))}">${svg('heart')}</button>
+      </div>
+      <button type="button" data-open="${f.id}" style="all:unset;cursor:pointer;display:flex;flex-direction:column;gap:2px">
+        <span class="row" style="display:flex;justify-content:space-between;gap:8px"><span class="h3">${esc(f.name)}</span>${priceLine(f)}</span>
+        <span class="meta">${esc(f.place)}, ${esc(f.sub)} · ${esc(COUNTIES[f.county].name)}</span>
+        <span class="meta">${f.cats.map(catName).map(esc).join(' · ')} · ${esc(t('listingsCount', { n: f.listings.length }))}</span>
+      </button>
+    </div>`).join('');
+  const sel = $('#carousel .fcard.sel'); if (sel) sel.scrollIntoView({ inline: 'start', block: 'nearest' });
+}
+function layoutMapInsets() {
+  const sh = $('#sheet').getBoundingClientRect().height;
+  const collapsed = sheetOpen ? 214 : sh;
+  $('#mapCtrl').style.bottom = (collapsed + 12) + 'px';
+  $('#mapAttr').style.bottom = (collapsed + 10) + 'px';
+  map.bottomInset = collapsed; map.topInset = 110;
+}
+function fitAll(list = filtered()) {
+  const pts = list.map(publicPos).filter(Boolean);
+  if (!pts.length) return;
+  map.fit(pts, 12.5, 52);
+}
+function initExplore() {
+  map = new FarmMap($('#map'), {
+    lng: 35.6, lat: -0.7, z: 6.6,
+    onTap: id => { map.selected = id; map.draw(); renderSheet(); if (id) { const f = farmById(id); track('map.pin_tapped', { farm: id, county: f.county }); } },
+    onMove: () => { renderSheet(); track('map.moved', { z: +map.z.toFixed(1) }); },
+  });
+  updatePins();
+  requestAnimationFrame(() => { layoutMapInsets(); fitAll(); });
+  $('#zin').onclick = () => map.zoomAt(map.z + 1, map.W / 2, map.H / 2);
+  $('#zout').onclick = () => map.zoomAt(map.z - 1, map.W / 2, map.H / 2);
+  $('#zall').onclick = () => { map.selected = null; fitAll(); };
+  $('#sheetHead').onclick = () => { sheetOpen = !sheetOpen; $('#sheet').classList.toggle('open', sheetOpen); renderSheet(); };
+  let qt; $('#q').addEventListener('input', e => {
+    S.q = e.target.value; updatePins(); renderSheet();
+    clearTimeout(qt); qt = setTimeout(() => { if (S.q.trim()) { track('search.performed', { q: S.q.trim().slice(0, 40), results: filtered().length }); fitAll(); } }, 600);
+  });
+  $('#countySel').addEventListener('change', e => {
+    S.county = e.target.value; persist(); updatePins();
+    if (S.county) { track('explore.county_selected', { county: +S.county }); fitAll(); } else fitAll();
+    renderSheet();
+  });
+  $('#chips').addEventListener('click', e => {
+    const b = e.target.closest('[data-cat]'); if (!b) return;
+    S.cat = b.dataset.cat || null; persist(); renderChips(); updatePins(); renderSheet();
+    if (S.cat) { track('explore.category_tapped', { category: S.cat }); fitAll(); }
+  });
+}
+
+/* ===================== Farm page ===================== */
+function openFarm(id) {
+  const f = farmById(id); if (!f) return;
+  f.stats.views++; track('farm.viewed', { farm: id, county: f.county }); persist();
+  let photo = 0;
+  const pos = publicPos(f);
+  const el = document.createElement('section'); el.className = 'overlay'; el.setAttribute('aria-label', f.name);
+  const paint = () => {
+    const saved = S.saved.includes(id);
+    el.innerHTML = `
+      <div class="ov-scroll">
+        <div class="hero">${f.photos.length ? `<div class="cover"><img src="${f.photos[photo].src}" alt="${esc(f.name)}"></div>` : coverSVG(f)}
+          <div class="float l"><button class="icon-btn" type="button" data-act="close" aria-label="${esc(t('back'))}">${svg('back')}</button></div>
+          <div class="float r">
+            <button class="icon-btn" type="button" data-act="share" aria-label="${esc(t('share'))}">${svg('share')}</button>
+            <button class="icon-btn" type="button" data-save="${id}" aria-pressed="${saved}" aria-label="${esc(t('save'))}">${svg('heart')}</button>
+          </div>
+          ${f.photos.length > 1 ? `<div class="photo-dots">${f.photos.map((_, i) => `<button type="button" data-photo="${i}" aria-current="${i === photo}" aria-label="Photo ${i + 1}"></button>`).join('')}</div>` : ''}
+        </div>
+        <div class="farm-body">
+          <div class="farm-head">
+            ${f.verified ? `<span><span class="badge">${svg('check')}${esc(t('verifiedLong'))}</span></span>` : ''}
+            <h1>${esc(f.name)}</h1>
+            <p class="meta">${esc(f.place)}, ${esc(f.sub)} · ${esc(COUNTIES[f.county].name)} County</p>
+            <div class="tags">${f.cats.map(c => `<span class="tag">${svg(CAT[c].icon)}${esc(catName(c))}</span>`).join('')}</div>
+          </div>
+          <dl class="facts">
+            <div class="fact"><dt>${esc(t('farmer'))}</dt><dd>${esc(f.farmer)}</dd></div>
+            <div class="fact"><dt>${esc(t('since'))}</dt><dd class="num">${f.since ?? '–'}</dd></div>
+            <div class="fact"><dt>${esc(t('size'))}</dt><dd class="num">${f.size ? esc(t('acres', { n: f.size })) : '–'}</dd></div>
+          </dl>
+          <div class="section"><h2>${esc(t('offers'))}</h2>
+            ${f.listings.map(l => `<div class="offer"><div class="l"><span class="ic">${svg(CAT[PROD[l.product].cat].icon)}</span><div><h3>${esc(prodName(l.product))}</h3>${l.qty ? `<p class="meta num">${esc(t('available', { n: Number(l.qty).toLocaleString('en-KE') + ' ' + unitName(l.unit) }))}</p>` : ''}</div></div>
+              <div class="r">${l.price != null ? `<div class="price num">${kes(l.price)}</div><div class="meta">${esc(t('per', { u: unitName(l.unit) }))}</div>` : `<div class="meta">${esc(t('onRequest'))}</div>`}</div></div>`).join('')}
+          </div>
+          ${f.desc ? `<div class="section"><h2>${esc(t('about'))}</h2><p>${esc(f.desc)}</p></div>` : ''}
+          <div class="section"><h2>${esc(t('location'))}</h2>
+            ${pos ? `<div class="mini-map"><canvas class="map-canvas" id="miniMap"></canvas></div>` : ''}
+            <p class="loc-note">${svg('pin')}<span>${esc(f.vis === 'exact' ? t('exactNote') : f.vis === 'hidden' ? t('hiddenNote') : t('approxNote'))}</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="actionbar">
+        <button class="btn primary" type="button" data-contact="call">${svg('phone')}${esc(t('call'))}</button>
+        <button class="btn secondary" type="button" data-contact="whatsapp">${svg('chat')}${esc(t('whatsapp'))}</button>
+        <button class="icon-btn" type="button" data-contact="directions" aria-label="${esc(t('directions'))}">${svg('route')}</button>
+      </div>`;
+    if (pos) {
+      const mm = new FarmMap(el.querySelector('#miniMap'), { lng: pos[0], lat: pos[1], z: f.vis === 'exact' ? 11.5 : 11, interactive: false });
+      mm.points = [{ id: f.id, lng: pos[0], lat: pos[1], icon: CAT[f.cats[0]].icon, verified: f.verified }]; mm.selected = f.id; mm.draw();
+      el._mm && el._mm.destroy(); el._mm = mm;
+    }
+  };
+  el.addEventListener('click', e => {
+    const a = e.target.closest('[data-act],[data-contact],[data-photo]'); if (!a) return;
+    if (a.dataset.act === 'close') closeOverlay();
+    else if (a.dataset.act === 'share') {
+      const text = `${f.name} on i12farm: i12farm.app/f/${f.id}`;
+      navigator.clipboard?.writeText(text).then(() => toast(t('linkCopied')), () => toast(text));
+      track('contact.tapped', { farm: id, channel: 'share', county: f.county });
+    } else if (a.dataset.photo) { photo = +a.dataset.photo; paint(); }
+    else if (a.dataset.contact) contactSheet(f, a.dataset.contact);
+  });
+  paint();
+  showOverlay(el);
+}
+function contactSheet(f, channel) {
+  const listing = lowestPrice(f) || f.listings[0];
+  track('contact.tapped', { farm: f.id, channel, county: f.county, product: listing?.product ?? null });
+  f.stats[channel] = (f.stats[channel] || 0) + 1;
+  if (!S.contacted.includes(f.id)) S.contacted.unshift(f.id);
+  persist();
+  if (channel === 'directions') {
+    const p = publicPos(f) || [f.lng, f.lat];
+    modal(`<h2>${esc(t('directions'))}</h2><p class="lead">${esc(f.place)}, ${esc(f.sub)}, ${esc(COUNTIES[f.county].name)}</p>
+      <div class="phone-box"><output class="num" style="font-size:16px">${p[1].toFixed(3)}, ${p[0].toFixed(3)}</output></div>
+      <p class="demo-tag">${esc(f.vis === 'exact' ? t('exactNote') : t('approxNote'))}</p>
+      <a class="btn secondary block" href="https://www.openstreetmap.org/?mlat=${p[1]}&mlon=${p[0]}#map=14/${p[1]}/${p[0]}" target="_blank" rel="noopener">${svg('globe')}OpenStreetMap</a>`);
+    return;
+  }
+  const intl = '254' + f.phone.replace(/\D/g, '').replace(/^0/, '');
+  modal(`<h2>${esc(t('contactTitle', { name: f.farmer }))}</h2>
+    <p class="lead">${esc(f.name)} · ${esc(f.place)}</p>
+    <div class="phone-box"><output class="num" id="phoneOut">${esc(f.phone)}</output>
+      <button class="btn secondary" type="button" id="copyPhone">${svg('clipboard')}${esc(t('copy'))}</button></div>
+    <p class="demo-tag">${esc(t('demoNumber'))}</p>
+    <a class="btn primary block" href="${channel === 'call' ? 'tel:+' + intl : 'https://wa.me/' + intl}" target="_blank" rel="noopener">${svg(channel === 'call' ? 'phone' : 'chat')}${esc(channel === 'call' ? t('openDialer') : t('openWa'))}</a>
+    <p class="meta">${esc(t('contactLogged'))}</p>`, m => {
+    m.querySelector('#copyPhone').onclick = () => navigator.clipboard?.writeText(f.phone).then(() => toast(t('copied')), () => { const r = document.createRange(); r.selectNodeContents(m.querySelector('#phoneOut')); getSelection().removeAllRanges(); getSelection().addRange(r); });
+  });
+}
+function toggleSave(id) {
+  const i = S.saved.indexOf(id);
+  if (i >= 0) { S.saved.splice(i, 1); toast(t('unsavedToast')); } else { S.saved.unshift(id); toast(t('savedToast')); }
+  track('farm.saved', { farm: id, saved: i < 0, county: farmById(id).county }); persist();
+  document.querySelectorAll(`[data-save="${id}"]`).forEach(b => b.setAttribute('aria-pressed', String(i < 0)));
+  if (tab === 'me') renderMe();
+}
+function showOverlay(el) { closeOverlay(true); overlay = el; $('#layer').appendChild(el); const f = el.querySelector('button'); f && f.focus({ preventScroll: true }); }
+function closeOverlay(silent) {
+  if (!overlay) return; overlay._mm && overlay._mm.destroy(); overlay._wm && overlay._wm.destroy(); overlay.remove(); overlay = null;
+  if (!silent) { renderSheet(); if (tab === 'me') renderMe(); }
+}
+function modal(html, after) {
+  const s = document.createElement('div'); s.className = 'scrim';
+  s.innerHTML = `<div class="modal" role="dialog" aria-modal="true"><span class="grip" aria-hidden="true"></span>${html}<button class="btn ghost" type="button" data-close>${esc(t('cancel'))}</button></div>`;
+  s.addEventListener('click', e => { if (e.target === s || e.target.closest('[data-close]')) s.remove(); });
+  $('#app').appendChild(s); after && after(s);
+  return s;
+}
+
+/* ===================== Wizard ===================== */
+function openWizard() {
+  const agent = S.role === 'agent';
+  const county = S.county ? +S.county : 43;
+  const W = { step: 1, name: '', farmer: agent ? '' : 'Grace Achieng', phone: agent ? '' : '0712 345 678', waSame: true, desc: '', cats: [], county, sub: '', place: '', vis: 'approximate', lng: COUNTIES[county].c[0], lat: COUNTIES[county].c[1], photos: [], items: [], err: '' };
+  const TOTAL = 6;
+  const el = document.createElement('section'); el.className = 'overlay';
+  track('farm.pin_started', { as: S.role });
+  const title = agent ? t('enrolTitle') : t('pinTitle');
+
+  const stepHTML = () => {
+    const err = W.err ? `<p class="error" role="alert">${esc(W.err)}</p>` : '';
+    if (W.step === 1) return `<h1>${esc(t('s1'))}</h1>${err}
+      <div class="field"><label for="w-name">${esc(t('farmName'))}</label><input class="input" id="w-name" value="${esc(W.name)}" placeholder="${esc(t('farmNameHint'))}" autocomplete="off"></div>
+      <div class="field"><label for="w-farmer">${esc(t('farmerName'))}</label><input class="input" id="w-farmer" value="${esc(W.farmer)}" autocomplete="name"></div>
+      <div class="field"><label for="w-phone">${esc(t('phone'))}</label><input class="input num" id="w-phone" type="tel" inputmode="tel" value="${esc(W.phone)}" placeholder="0712 345 678" autocomplete="tel"></div>
+      <label class="check"><input type="checkbox" id="w-wa" ${W.waSame ? 'checked' : ''}>${esc(t('waSame'))}</label>
+      <div class="field"><label for="w-desc">${esc(t('desc'))}</label><textarea class="input" id="w-desc" placeholder="${esc(t('descHint'))}" maxlength="400">${esc(W.desc)}</textarea></div>`;
+    if (W.step === 2) return `<h1>${esc(t('s2'))}</h1><p class="lead">${esc(t('s2hint'))}</p>${err}
+      <div class="cat-grid">${CATS.map(c => `<button class="cat-opt" type="button" data-wcat="${c.slug}" aria-pressed="${W.cats.includes(c.slug)}">${svg(c.icon)}${esc(c[S.lang])}</button>`).join('')}</div>`;
+    if (W.step === 3) return `<h1>${esc(t('s3'))}</h1>${err}
+      <div class="grid2">
+        <div class="field"><label for="w-county">${esc(t('county'))}</label><select class="input" id="w-county">${PILOT_ORDER.map(c => `<option value="${c}" ${c === W.county ? 'selected' : ''}>${esc(COUNTIES[c].name)}</option>`).join('')}</select></div>
+        <div class="field"><label for="w-sub">${esc(t('subcounty'))}</label><select class="input" id="w-sub"><option value="">–</option>${COUNTIES[W.county].subs.map(s => `<option ${s === W.sub ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+      </div>
+      <div class="field"><label for="w-place">${esc(t('place'))}</label><input class="input" id="w-place" value="${esc(W.place)}" placeholder="${esc(t('placeHint'))}"></div>
+      <div class="field"><span class="lbl">${esc(t('moveMap'))}</span>
+        <div class="pick-map"><canvas class="map-canvas" id="pickMap" aria-label="${esc(t('moveMap'))}"></canvas>
+          <svg class="center-pin" viewBox="0 0 40 52" aria-hidden="true"><path d="M20 51C14 42 2 33 2 20a18 18 0 0 1 36 0c0 13-12 22-18 31z" fill="var(--ink)"/><circle cx="20" cy="20" r="7" fill="var(--lime)"/></svg>
+          <span class="coords num" id="coords"></span></div></div>
+      <fieldset class="field" style="border:0;padding:0;margin:0"><legend class="lbl" style="margin-bottom:6px">${esc(t('visibility'))}</legend>
+        ${[['approximate', 'visApprox', 'visApproxD'], ['exact', 'visExact', 'visExactD'], ['hidden', 'visHidden', 'visHiddenD']].map(([v, a, d]) => `<label class="vis-opt" style="margin-bottom:8px"><input type="radio" name="w-vis" value="${v}" ${W.vis === v ? 'checked' : ''}><span><b>${esc(t(a))}</b><span>${esc(t(d))}</span></span></label>`).join('')}
+      </fieldset>`;
+    if (W.step === 4) return `<h1>${esc(t('s4'))}</h1><p class="lead">${esc(t('s4hint'))}</p>
+      <div class="photos">${W.photos.map((p, i) => `<figure><img src="${p.src}" alt="Photo ${i + 1}"><figcaption>${fmtKB(p.before)} → ${fmtKB(p.after)}</figcaption><button class="x" type="button" data-rmphoto="${i}" aria-label="${esc(t('removePhoto'))}">${svg('close')}</button></figure>`).join('')}
+      ${W.photos.length < 4 ? `<label class="upload" for="w-files">${svg('camera')}${esc(t('choose'))}<input id="w-files" type="file" accept="image/*" multiple class="sr"></label>` : ''}</div>`;
+    if (W.step === 5) {
+      if (!W.items.length) W.items.push(newItem());
+      const prods = PRODUCTS.filter(p => W.cats.includes(p.cat));
+      return `<h1>${esc(t('s5'))}</h1><p class="lead">${esc(t('s5hint'))}</p>${err}
+      ${W.items.map((it, i) => `<div class="prod-row">
+        <div class="field"><label for="w-p${i}">${esc(t('product'))}</label><select class="input" id="w-p${i}" data-item="${i}" data-k="product">${prods.map(p => `<option value="${p.slug}" ${p.slug === it.product ? 'selected' : ''}>${esc(p[S.lang])} (${esc(unitName(p.unit))})</option>`).join('')}</select></div>
+        <button class="icon-btn" type="button" data-rmitem="${i}" aria-label="${esc(t('remove'))}" style="align-self:end">${svg('close')}</button>
+        <div class="grid2">
+          <div class="field"><label for="w-pr${i}">${esc(t('price'))}</label><input class="input num" id="w-pr${i}" inputmode="numeric" data-item="${i}" data-k="price" value="${it.price ?? ''}"></div>
+          <div class="field"><label for="w-q${i}">${esc(t('qty'))}</label><input class="input num" id="w-q${i}" inputmode="numeric" data-item="${i}" data-k="qty" value="${it.qty ?? ''}"></div>
+        </div></div>`).join('')}
+      <button class="btn secondary block" type="button" data-additem>${svg('plus')}${esc(t('addProduct'))}</button>`;
+    }
+    return `<h1>${esc(t('review'))}</h1>
+      <div class="card" style="padding:0;overflow:hidden;gap:0"><div style="aspect-ratio:16/9;max-width:100%">${coverSVG({ id: 'new', name: W.name, cats: W.cats, photos: W.photos })}</div>
+        <div style="padding:16px"><dl class="review">
+          <div><dt>${esc(t('farmName'))}</dt><dd>${esc(W.name)}</dd></div>
+          <div><dt>${esc(t('farmerName'))}</dt><dd>${esc(W.farmer)}</dd></div>
+          <div><dt>${esc(t('phone'))}</dt><dd class="num">${esc(W.phone)}</dd></div>
+          <div><dt>${esc(t('s2'))}</dt><dd>${W.cats.map(catName).map(esc).join(', ')}</dd></div>
+          <div><dt>${esc(t('location'))}</dt><dd>${esc([W.place, W.sub, COUNTIES[W.county].name].filter(Boolean).join(', '))}</dd></div>
+          <div><dt>${esc(t('visibility'))}</dt><dd>${esc(t(W.vis === 'approximate' ? 'visApprox' : W.vis === 'exact' ? 'visExact' : 'visHidden'))}</dd></div>
+          ${W.items.map(it => `<div><dt>${esc(prodName(it.product))}</dt><dd class="num">${kes(it.price)} / ${esc(unitName(PROD[it.product].unit))}</dd></div>`).join('')}
+        </dl></div></div>`;
+  };
+  const newItem = () => { const p = PRODUCTS.find(p => W.cats.includes(p.cat)); return { product: p ? p.slug : 'fresh-milk', price: null, qty: null }; };
+
+  const paint = () => {
+    el.innerHTML = `
+      <div class="ov-bar"><button class="icon-btn" type="button" data-wback aria-label="${esc(t('back'))}">${svg(W.step === 1 ? 'close' : 'back')}</button>
+        <h2>${esc(title)}</h2><span class="meta num">${esc(t('step', { a: W.step, b: TOTAL }))}</span></div>
+      <div style="padding:10px 16px 0;background:var(--surface)"><div class="steps">${Array.from({ length: TOTAL }, (_, i) => `<i class="${i < W.step ? 'on' : ''}"></i>`).join('')}</div><div style="height:10px"></div></div>
+      <div class="ov-scroll"><div class="wiz-body">${stepHTML()}</div></div>
+      <div class="wiz-foot">
+        ${W.step === 4 && !W.photos.length ? `<button class="btn secondary" type="button" data-wnext>${esc(t('skip'))}</button>` : ''}
+        <button class="btn primary" type="button" data-wnext>${W.step === TOTAL ? svg('pin') + esc(t('publish')) : esc(t('next'))}</button>
+      </div>`;
+    if (W.step === 3) {
+      el._wm && el._wm.destroy();
+      const pm = new FarmMap(el.querySelector('#pickMap'), { lng: W.lng, lat: W.lat, z: 11, onMove: m => { W.lng = m.lng; W.lat = m.lat; showCoords(); } });
+      pm.minZ = 7; pm.points = S.farms.map(f => { const p = publicPos(f); return p && { id: f.id, lng: p[0], lat: p[1], icon: CAT[f.cats[0]].icon, verified: false }; }).filter(Boolean);
+      const showCoords = () => { const c = el.querySelector('#coords'); if (c) c.textContent = `${W.lat.toFixed(4)}, ${W.lng.toFixed(4)}`; };
+      showCoords(); el._wm = pm;
+      pm.onMove = m => { W.lng = m.lng; W.lat = m.lat; showCoords(); };
+      const origPan = pm.panBy.bind(pm); pm.panBy = (dx, dy) => { origPan(dx, dy); W.lng = pm.lng; W.lat = pm.lat; showCoords(); };
+    }
+    const first = el.querySelector('.wiz-body input, .wiz-body select, .wiz-body button'); if (first && W.step !== 3) first.focus({ preventScroll: true });
+  };
+  const read = () => {
+    const v = id => el.querySelector('#' + id)?.value ?? '';
+    if (W.step === 1) { W.name = v('w-name').trim(); W.farmer = v('w-farmer').trim(); W.phone = v('w-phone').trim(); W.waSame = el.querySelector('#w-wa').checked; W.desc = v('w-desc').trim(); }
+    if (W.step === 3) { W.sub = v('w-sub'); W.place = v('w-place').trim(); W.vis = el.querySelector('input[name="w-vis"]:checked').value; }
+  };
+  const validate = () => {
+    if (W.step === 1) { if (!W.name || !W.farmer || !W.phone) return t('err1'); if (!/^(\+?254|0)(7|1)\d{8}$/.test(W.phone.replace(/[\s-]/g, ''))) return t('errPhone'); }
+    if (W.step === 2 && !W.cats.length) return t('err2');
+    if (W.step === 3 && !W.sub) return t('err3');
+    if (W.step === 5 && !W.items.some(it => it.product && Number(it.price) > 0)) return t('err5');
+    return '';
+  };
+  const publish = () => {
+    const id = 'u' + Date.now().toString(36);
+    const farm = {
+      id, name: W.name, farmer: W.farmer, cats: W.cats, county: W.county, sub: W.sub, place: W.place || W.sub, lng: +W.lng.toFixed(5), lat: +W.lat.toFixed(5),
+      vis: W.vis, verified: agent, size: null, since: new Date().getFullYear(), desc: W.desc, phone: W.phone,
+      owner: agent ? null : 'farmer', agent: agent ? 'agent' : null, photos: W.photos.map(p => ({ src: p.src })), createdAt: Date.now(), stats: { views: 0, call: 0, whatsapp: 0 },
+      listings: W.items.filter(it => Number(it.price) > 0).map((it, j) => ({ id: id + 'l' + j, product: it.product, price: Math.round(+it.price), qty: it.qty ? Math.round(+it.qty) : null, unit: PROD[it.product].unit })),
+    };
+    S.farms.push(farm);
+    farm.listings.forEach(l => S.priceHistory.push({ at: Date.now(), farm: id, listing: l.id, product: l.product, county: farm.county, price: l.price }));
+    track('farm.published', { farm: id, county: farm.county, by: S.role, visibility: farm.vis, photos: farm.photos.length, categories: farm.cats.join('|') });
+    farm.listings.forEach(l => track('listing.created', { farm: id, product: l.product, price: l.price, county: farm.county }));
+    persist(); closeOverlay(true);
+    S.cat = null; S.q = ''; $('#q').value = ''; renderChips(); updatePins();
+    setTab('explore'); const p = publicPos(farm);
+    if (p) { map.selected = id; map.flyTo(p[0], p[1] - 0.004, 13); } renderSheet();
+    toast(agent ? t('enrolled') : t('published'));
+  };
+  el.addEventListener('click', e => {
+    const c = e.target.closest('[data-wcat]'); if (c) { const s = c.dataset.wcat; W.cats = W.cats.includes(s) ? W.cats.filter(x => x !== s) : [...W.cats, s]; c.setAttribute('aria-pressed', String(W.cats.includes(s))); W.items = []; return; }
+    if (e.target.closest('[data-wback]')) { if (W.step === 1) return closeOverlay(); read(); W.err = ''; W.step--; return paint(); }
+    if (e.target.closest('[data-wnext]')) {
+      read(); W.err = validate(); if (W.err) return paint();
+      track('farm.pin_step_completed', { step: W.step });
+      if (W.step === TOTAL) return publish();
+      W.step++; return paint();
+    }
+    const rp = e.target.closest('[data-rmphoto]'); if (rp) { W.photos.splice(+rp.dataset.rmphoto, 1); return paint(); }
+    const ri = e.target.closest('[data-rmitem]'); if (ri) { W.items.splice(+ri.dataset.rmitem, 1); if (!W.items.length) W.items.push(newItem()); return paint(); }
+    if (e.target.closest('[data-additem]')) { W.items.push(newItem()); return paint(); }
+  });
+  el.addEventListener('input', e => { const i = e.target.dataset.item; if (i != null) W.items[+i][e.target.dataset.k] = e.target.value.replace(/[^\d.]/g, '') || null; });
+  el.addEventListener('change', async e => {
+    if (e.target.id === 'w-county') { read(); W.county = +e.target.value; W.sub = ''; [W.lng, W.lat] = COUNTIES[W.county].c; return paint(); }
+    if (e.target.id === 'w-files') {
+      const files = [...e.target.files].slice(0, 4 - W.photos.length);
+      for (const file of files) { try { W.photos.push(await compress(file)); } catch (err) {} }
+      paint();
+    }
+  });
+  paint(); showOverlay(el);
+}
+const fmtKB = b => b >= 1e6 ? (b / 1e6).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+function compress(file) {
+  return new Promise((res, rej) => {
+    const img = new Image(); const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const max = 1280, k = Math.min(1, max / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas'); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(url);
+      let src = cv.toDataURL('image/webp', 0.72); if (!src.startsWith('data:image/webp')) src = cv.toDataURL('image/jpeg', 0.72);
+      res({ src, before: file.size, after: Math.round((src.length - src.indexOf(',') - 1) * 0.75) });
+    };
+    img.onerror = rej; img.src = url;
+  });
+}
+
+/* ===================== Inbox and Me ===================== */
+function renderInbox() {
+  $('#inbox').innerHTML = `<h1 class="page-title">${esc(t('inboxTitle'))}</h1><div class="card"><span style="width:44px;height:44px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;color:var(--sprout-deep)">${svg('chat', 'width="24" height="24"')}</span><p class="lead">${esc(t('inboxD'))}</p></div>`;
+}
+function farmRow(f, sub) {
+  return `<button class="rowi" type="button" data-open="${f.id}"><span class="thumb">${coverSVG(f)}</span><span class="grow"><span class="h3">${esc(f.name)}</span><span class="meta">${sub ?? esc(f.place + ' · ' + COUNTIES[f.county].name)}</span></span>${f.verified ? `<span class="badge">${svg('check')}</span>` : ''}</button>`;
+}
+function ago(ts) { const d = Math.floor((Date.now() - ts) / DAY); return d <= 0 ? t('today') : t('daysAgo', { n: d }); }
+function renderMe() {
+  const me = $('#me');
+  if (S.role === 'buyer') {
+    const saved = S.saved.map(farmById).filter(Boolean), cont = S.contacted.map(farmById).filter(Boolean);
+    me.innerHTML = `<h1 class="page-title">${esc(t('savedTitle'))}</h1>
+      <div class="card">${saved.length ? `<div class="rows">${saved.map(f => farmRow(f)).join('')}</div>` : `<p class="lead">${esc(t('savedEmpty'))}</p>`}</div>
+      <div class="card"><h2>${esc(t('contactedTitle'))}</h2>${cont.length ? `<div class="rows">${cont.map(f => farmRow(f)).join('')}</div>` : `<p class="lead">${esc(t('contactedEmpty'))}</p>`}</div>
+      <div class="card ink"><h2>${esc(t('haveFarm'))}</h2><p class="meta">${esc(t('haveFarmD'))}</p><button class="btn lime" type="button" data-role="farmer">${svg('sprout')}${esc(t('switchFarmer'))}</button></div>`;
+    return;
+  }
+  if (S.role === 'farmer') {
+    const mine = S.farms.filter(f => f.owner === 'farmer');
+    me.innerHTML = `<h1 class="page-title">${esc(t('myFarms'))}</h1>
+      ${mine.map(f => `<div class="card">
+        <div style="display:flex;gap:12px;align-items:center"><span style="width:64px;height:64px;border-radius:14px;overflow:hidden;flex:none">${coverSVG(f)}</span>
+          <div style="min-width:0;flex:1"><h2>${esc(f.name)}</h2><p class="meta">${esc(f.place)} · ${esc(COUNTIES[f.county].name)}</p></div></div>
+        <div class="stats"><div class="stat"><b>${f.stats.views}</b><span>${esc(t('views'))}</span></div><div class="stat"><b>${f.stats.call || 0}</b><span>${esc(t('calls'))}</span></div><div class="stat"><b>${f.stats.whatsapp || 0}</b><span>${esc(t('was'))}</span></div></div>
+        <h2 style="font-size:16px">${esc(t('products'))}</h2>
+        <div>${f.listings.map(l => {
+          const hist = S.priceHistory.filter(h => h.listing === l.id).slice(-4);
+          return `<div class="edit-row"><div class="t"><h3>${esc(prodName(l.product))}</h3><span class="meta">${esc(t('per', { u: unitName(l.unit) }))}</span></div>
+            <label class="sr" for="pe-${l.id}">${esc(t('price'))}</label><input class="input num" id="pe-${l.id}" inputmode="numeric" value="${l.price ?? ''}" style="min-height:42px">
+            <button class="btn secondary" type="button" data-saveprice="${f.id}|${l.id}" style="min-height:42px;padding:0 14px">${esc(t('savePrice'))}</button>
+            ${hist.length > 1 ? `<div class="hist">${esc(t('history'))}: ${hist.map(h => kes(h.price)).join(' → ')}</div>` : ''}</div>`;
+        }).join('')}</div>
+        <button class="btn secondary block" type="button" data-open="${f.id}">${esc(t('viewPublic'))}</button>
+      </div>`).join('')}
+      <div class="card ink"><h2>${esc(t('pinCta'))}</h2><p class="meta">${esc(t('pinCtaD'))}</p><button class="btn lime" type="button" data-wizard>${svg('plus')}${esc(t('addFarm'))}</button></div>`;
+    return;
+  }
+  // agent
+  const enrolled = S.farms.filter(f => f.agent === 'agent');
+  const n = enrolled.length, pct = Math.min(100, n);
+  const byC = PILOT_ORDER.map(c => [c, enrolled.filter(f => f.county === c).length]);
+  const maxC = Math.max(1, ...byC.map(x => x[1]));
+  const contacts = S.events.filter(e => e.name === 'contact.tapped');
+  const demand = {}; contacts.forEach(e => { if (e.props.product) demand[e.props.product] = (demand[e.props.product] || 0) + 1; });
+  const top = Object.entries(demand).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const recent = enrolled.slice().sort((a, b) => b.createdAt - a.createdAt).slice(0, 6);
+  const log = S.events.slice(-14).reverse();
+  me.innerHTML = `<h1 class="page-title">${esc(t('role_agent'))}</h1>
+    <div class="card ink"><span class="meta">${esc(t('pilot'))}</span><h2 class="num" style="font-size:22px">${esc(t('target', { n }))}</h2>
+      <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${n}"><i style="width:${pct}%"></i></div>
+      <button class="btn lime" type="button" data-wizard>${svg('plus')}${esc(t('enrolCta'))}</button></div>
+    <div class="card"><h2>${esc(t('byCounty'))}</h2><div class="bars">${byC.map(([c, k]) => `<div class="bar-row"><span>${esc(COUNTIES[c].name)}</span><span class="track"><i style="width:${k / maxC * 100}%"></i></span><b>${k}</b></div>`).join('')}</div></div>
+    <div class="card"><h2>${esc(t('recentEnrol'))}</h2><div class="rows">${recent.map(f => farmRow(f, esc(COUNTIES[f.county].name + ' · ' + t('enrolledOn', { d: ago(f.createdAt) })))).join('')}</div></div>
+    <div class="card"><h2>${esc(t('dataTitle'))}</h2><p class="lead">${esc(t('dataD'))}</p>
+      <div class="stats"><div class="stat"><b>${S.events.length}</b><span>${esc(t('events'))}</span></div><div class="stat"><b>${contacts.length}</b><span>${esc(t('contacts'))}</span></div><div class="stat"><b>${S.priceHistory.length}</b><span>${esc(t('priceRecs'))}</span></div></div>
+      <h2 style="font-size:16px">${esc(t('demand'))}</h2>
+      ${top.length ? `<div class="bars">${top.map(([p, k]) => `<div class="bar-row" style="grid-template-columns:minmax(0,1fr) 90px 28px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(prodName(p))}</span><span class="track"><i style="width:${k / top[0][1] * 100}%"></i></span><b>${k}</b></div>`).join('')}</div>` : `<p class="meta">${esc(t('noDemand'))}</p>`}
+      <div class="log" aria-label="Event log">${log.length ? log.map(e => `<div><time>${new Date(e.at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time> <b>${esc(e.name)}</b> ${esc(Object.entries(e.props).filter(([k]) => k !== 'county').map(([k, v]) => k + '=' + v).join(' '))}${e.county ? ' county=' + e.county : ''}</div>`).join('') : '<div>–</div>'}</div>
+      <button class="btn secondary block" type="button" data-csv>${svg('clipboard')}${esc(t('copyCsv'))}</button></div>`;
+}
+
+/* ===================== Global events ===================== */
+document.addEventListener('click', e => {
+  const o = e.target.closest('[data-open]'); if (o) { e.preventDefault(); openFarm(o.dataset.open); return; }
+  const s = e.target.closest('[data-save]'); if (s) { e.preventDefault(); toggleSave(s.dataset.save); return; }
+  const nav = e.target.closest('.nav [data-tab]'); if (nav) { closeOverlay(true); setTab(nav.dataset.tab); return; }
+  if (e.target.closest('[data-wizard]')) { openWizard(); return; }
+  const r = e.target.closest('[data-role]'); if (r && !r.classList.contains('role-opt')) { setRole(r.dataset.role); return; }
+  const sp = e.target.closest('[data-saveprice]');
+  if (sp) {
+    const [fid, lid] = sp.dataset.saveprice.split('|'); const f = farmById(fid); const l = f.listings.find(x => x.id === lid);
+    const v = Math.round(+document.getElementById('pe-' + lid).value);
+    if (v > 0 && v !== l.price) { l.price = v; S.priceHistory.push({ at: Date.now(), farm: fid, listing: lid, product: l.product, county: f.county, price: v }); track('listing.price_changed', { farm: fid, product: l.product, price: v, county: f.county }); persist(); renderMe(); toast(t('priceSaved')); }
+    return;
+  }
+  if (e.target.closest('[data-csv]')) {
+    const rows = [['time', 'event', 'role', 'county', 'properties'], ...S.events.map(ev => [new Date(ev.at).toISOString(), ev.name, ev.role, ev.county ?? '', JSON.stringify(ev.props).replace(/"/g, '""')])];
+    const csv = rows.map(r => r.map((c, i) => i === 4 ? `"${c}"` : c).join(',')).join('\n');
+    navigator.clipboard?.writeText(csv).then(() => toast(t('copiedCsv', { n: S.events.length })), () => toast('CSV: ' + S.events.length));
+  }
+});
+function setRole(role) { S.role = role; persist(); track('demo.role_changed', { role }); renderChrome(); if (tab === 'me') renderMe(); }
+$('#roleBtn').onclick = () => {
+  const m = modal(`<h2>${esc(t('viewingAs'))}</h2>${['buyer', 'farmer', 'agent'].map(r => `<button class="role-opt" type="button" data-role="${r}" aria-pressed="${S.role === r}"><span class="ic">${svg(r === 'buyer' ? 'search' : r === 'farmer' ? 'sprout' : 'badge')}</span><span><b>${esc(t('role_' + r))}</b><span>${esc(t('roleD_' + r))}</span></span></button>`).join('')}
+    <button class="btn secondary block" type="button" id="resetDemo">${esc(t('reset'))}</button>`, s => {
+    s.addEventListener('click', e => {
+      const r = e.target.closest('.role-opt'); if (r) { setRole(r.dataset.role); s.remove(); setTab('me'); }
+      if (e.target.closest('#resetDemo')) { const lang = S.lang; S = freshState(); S.lang = lang; persist(); s.remove(); renderChrome(); updatePins(); fitAll(); renderSheet(); if (tab === 'me') renderMe(); toast(t('resetDone')); }
+    });
+  });
+};
+$('#langBtn').onclick = () => { const from = S.lang; S.lang = S.lang === 'en' ? 'sw' : 'en'; track('locale.changed', { from, to: S.lang }); persist(); renderChrome(); renderSheet(); if (tab !== 'explore') setTab(tab); map.draw(); };
+const themeObs = () => { map && map.draw(); renderSheet(); };
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeObs);
+new MutationObserver(themeObs).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { const s = document.querySelector('.scrim'); if (s) s.remove(); else closeOverlay(); } });
+
+renderChrome();
+initExplore();
+renderSheet();
+track('page.view', { screen: 'explore' });
+if (document.fonts) document.fonts.ready.then(() => map.draw());
+</script>

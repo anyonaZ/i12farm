@@ -49,6 +49,9 @@
   .btn-secondary {
     @apply inline-flex min-h-tap w-full items-center justify-center gap-2 rounded-full border border-line bg-surface px-5 text-base font-semibold text-forest transition active:scale-[0.98];
   }
+  .input {
+    @apply min-h-tap w-full rounded-xl border border-line bg-surface px-3.5 text-base outline-none focus:border-sprout focus:ring-3 focus:ring-sprout/25;
+  }
   .card {
     @apply rounded-card border border-line bg-surface p-5;
   }

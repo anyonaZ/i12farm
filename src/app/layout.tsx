@@ -42,7 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale} className={jakarta.variable}>
       <body className="antialiased">
         <NextIntlClientProvider>
-          <div className="mx-auto min-h-dvh max-w-md pb-24">{children}</div>
+          <div className="mx-auto min-h-dvh max-w-md">{children}</div>
           <BottomNav />
           <AppRuntime />
         </NextIntlClientProvider>

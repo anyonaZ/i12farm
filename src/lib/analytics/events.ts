@@ -21,6 +21,10 @@ export const EVENT_NAMES = [
   'contact.tapped',
   'search.performed',
   'map.moved',
+  'map.pin_tapped',
+  'explore.county_selected',
+  'farm.saved',
+  'listing.price_changed',
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];
