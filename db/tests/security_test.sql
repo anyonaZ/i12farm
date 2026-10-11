@@ -19,7 +19,7 @@ values ('10000000-0000-4000-8000-0000000000d1', 'produce', 'Draft greens', 'kg',
 -- Anonymous visitor
 -- ===========================================================================
 set role anon;
-select set_config('request.jwt.claims', '', false);
+select set_config('app.user_id', '', false);
 
 do $$ begin
   if (select count(*) from public.farms) <> 8 then
@@ -123,7 +123,7 @@ end $$;
 -- Signed-in farmer (owns farm1, nothing else)
 -- ===========================================================================
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000000f1","role":"authenticated"}', false);
+select set_config('app.user_id', '00000000-0000-4000-8000-0000000000f1', false);
 
 do $$ begin
   if not exists (select 1 from public.farms where name = 'Draft Shamba') then
@@ -252,21 +252,37 @@ exception when foreign_key_violation then
 end $$;
 
 do $$ begin
-  insert into storage.objects (bucket_id, name) values ('farm-media', 'farms/10000000-0000-4000-8000-000000000001/a.webp');
-  raise notice 'ok  owner uploads photos to own farm folder';
+  insert into public.farm_media (farm_id, storage_path, width, height, bytes)
+  values ('10000000-0000-4000-8000-000000000001', 'farms/10000000-0000-4000-8000-000000000001/a.webp', 1280, 960, 180000);
+  raise notice 'ok  owner adds photos to own farm';
 end $$;
 
 do $$ begin
-  insert into storage.objects (bucket_id, name) values ('farm-media', 'farms/10000000-0000-4000-8000-000000000002/b.webp');
-  raise exception 'FAIL: farmer uploaded into another farm''s folder';
+  insert into public.farm_media (farm_id, storage_path)
+  values ('10000000-0000-4000-8000-000000000002', 'farms/10000000-0000-4000-8000-000000000002/b.webp');
+  raise exception 'FAIL: farmer added a photo to another farm';
 exception when insufficient_privilege or with_check_option_violation then
-  raise notice 'ok  photo uploads are limited to farms you manage';
+  raise notice 'ok  photos can only be added to farms you manage';
+end $$;
+
+do $$ begin
+  perform 1 from auth.users;
+  raise exception 'FAIL: a signed-in user can read auth.users';
+exception when insufficient_privilege then
+  raise notice 'ok  auth tables (users, sessions, passwords) are not readable by users';
+end $$;
+
+do $$ begin
+  perform 1 from auth.sessions;
+  raise exception 'FAIL: a signed-in user can read sessions';
+exception when insufficient_privilege then
+  raise notice 'ok  sessions are not readable by users';
 end $$;
 
 -- ===========================================================================
 -- Field agent (manages farms 2–8, has the agent role)
 -- ===========================================================================
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000000a1","role":"authenticated"}', false);
+select set_config('app.user_id', '00000000-0000-4000-8000-0000000000a1', false);
 
 do $$
 declare fid uuid;
@@ -302,7 +318,7 @@ end $$;
 -- Phase 1: map, search, dashboard, pilot progress, saved farms, create_farm
 -- ===========================================================================
 set role anon;
-select set_config('request.jwt.claims', '', false);
+select set_config('app.user_id', '', false);
 
 do $$
 declare r record;
@@ -345,7 +361,7 @@ exception when insufficient_privilege then
 end $$;
 
 set role authenticated;
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000000f1","role":"authenticated"}', false);
+select set_config('app.user_id', '00000000-0000-4000-8000-0000000000f1', false);
 
 do $$
 declare r record;
@@ -397,7 +413,7 @@ exception when insufficient_privilege or with_check_option_violation then
   raise notice 'ok  only agents enrol farms for other farmers';
 end $$;
 
-select set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-0000000000a1","role":"authenticated"}', false);
+select set_config('app.user_id', '00000000-0000-4000-8000-0000000000a1', false);
 
 do $$
 declare r record;
@@ -412,7 +428,7 @@ end $$;
 -- Nightly rollup (runs as the database owner via pg_cron)
 -- ===========================================================================
 reset role;
-select set_config('request.jwt.claims', '', false);
+select set_config('app.user_id', '', false);
 
 do $$
 declare n integer;

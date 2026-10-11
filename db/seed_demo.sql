@@ -1,5 +1,5 @@
 -- i12farm · demo seed for local development (never run against production)
--- 26 sample farms across the five pilot counties, matching the clickable prototype.
+-- 27 sample farms across the five pilot counties, matching the clickable prototype.
 -- Managed by the dev field agent from seed.sql. Names and numbers are made up.
 
 do $$
@@ -208,6 +208,18 @@ begin
     insert into public.farm_locations (farm_id, location, source) values (fid, 'SRID=4326;POINT(36.75 -1.265)', 'agent');
     insert into public.listings (farm_id, type, product_slug, title, unit, price_kes, quantity) select fid, case when category_slug = 'vet-services' then 'service' when category_slug = 'training' then 'experience' when default_unit in ('head','bird','chick') then 'livestock' when category_slug = 'inputs' then 'input' else 'produce' end::public.listing_type, slug, name_en, default_unit, 2000, null from public.products where slug = 'vet-visit';
     insert into public.listings (farm_id, type, product_slug, title, unit, price_kes, quantity) select fid, case when category_slug = 'vet-services' then 'service' when category_slug = 'training' then 'experience' when default_unit in ('head','bird','chick') then 'livestock' when category_slug = 'inputs' then 'input' else 'produce' end::public.listing_type, slug, name_en, default_unit, 3000, null from public.products where slug = 'artificial-insemination';
+  end if;
+  -- Homa Organica: pig farming and racing pigeons in Lang'ata (requested by Zacc).
+  -- Fixed slug so the page is always /f/homa-organica. Phone, prices and
+  -- quantities are placeholders until Benedict confirms them.
+  insert into public.farms (slug, owner_id, managed_by, created_by, name, farmer_name, description, categories, county_code, sub_county_id, place_name, visibility, size_acres, year_started, phone_public, whatsapp, status, verified_at)
+  values ('homa-organica', null, agent, agent, 'Homa Organica', 'Benedict Kotonya', 'Pig farm and racing pigeon loft in Lang''ata. Weaned piglets, finished pigs for pork, and trained racing pigeons from proven lines.', array['pigs','poultry']::text[], 47, (select id from public.sub_counties where county_code = 47 and name = 'Lang''ata'), 'Lang''ata', 'approximate', null, null, '+254700190836', '+254700190836', 'published', null)
+  on conflict (slug) do nothing returning id into fid;
+  if fid is not null then
+    insert into public.farm_locations (farm_id, location, source) values (fid, 'SRID=4326;POINT(36.748 -1.343)', 'agent');
+    insert into public.listings (farm_id, type, product_slug, title, unit, price_kes, quantity) select fid, case when category_slug = 'vet-services' then 'service' when category_slug = 'training' then 'experience' when default_unit in ('head','bird','chick') then 'livestock' when category_slug = 'inputs' then 'input' else 'produce' end::public.listing_type, slug, name_en, default_unit, 5000, '12' from public.products where slug = 'piglets';
+    insert into public.listings (farm_id, type, product_slug, title, unit, price_kes, quantity) select fid, case when category_slug = 'vet-services' then 'service' when category_slug = 'training' then 'experience' when default_unit in ('head','bird','chick') then 'livestock' when category_slug = 'inputs' then 'input' else 'produce' end::public.listing_type, slug, name_en, default_unit, 25000, '4' from public.products where slug = 'pork-pig';
+    insert into public.listings (farm_id, type, product_slug, title, unit, price_kes, quantity) select fid, case when category_slug = 'vet-services' then 'service' when category_slug = 'training' then 'experience' when default_unit in ('head','bird','chick') then 'livestock' when category_slug = 'inputs' then 'input' else 'produce' end::public.listing_type, slug, name_en, default_unit, 2500, '30' from public.products where slug = 'racing-pigeon';
   end if;
 end;
 $$;

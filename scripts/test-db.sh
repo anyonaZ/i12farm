@@ -1,14 +1,17 @@
 #!/usr/bin/env bash
 # Apply every migration + the dev seed to a throwaway database, then run the
-# security tests.
+# schema and security tests.
 #
-#   DATABASE_URL=postgres://... scripts/test-db.sh   # real Postgres + PostGIS (CI)
+#   DATABASE_URL=postgres://... scripts/test-db.sh   # real Postgres + PostGIS (CI, local)
 #   scripts/test-db.sh --standin                     # no PostGIS available: temp cluster + text stand-in
+#
+# DATABASE_URL must point at a server where you may create databases; the
+# tests run in a fresh database called i12farm_test that is dropped first.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-MIG="$ROOT/supabase/migrations"
-TESTS="$ROOT/supabase/tests"
+MIG="$ROOT/db/migrations"
+TESTS="$ROOT/db/tests"
 WORK="$(mktemp -d)"
 trap 'cleanup' EXIT
 cleanup() {
@@ -37,20 +40,17 @@ fi
 : "${DATABASE_URL:?set DATABASE_URL or pass --standin}"
 
 if [[ $STANDIN -eq 0 ]]; then
-  # Use a fresh database: some PostGIS images pre-install the extension into
-  # the default database's public schema, but Supabase keeps it in "extensions".
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -X -c 'drop database if exists i12farm_test' -c 'create database i12farm_test'
   DATABASE_URL="$(python3 -c 'import sys,urllib.parse as u; p=u.urlsplit(sys.argv[1]); print(u.urlunsplit(p._replace(path="/i12farm_test")))' "$DATABASE_URL")"
+  # Some PostGIS images pre-install the extension into public; we keep it in "extensions".
   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -X -c 'drop extension if exists postgis cascade'
 fi
 
 PSQL=(psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -X)
 
-echo "→ Supabase stand-ins (roles, auth, storage)"
-"${PSQL[@]}" -f "$TESTS/supabase_stubs.sql"
-
 if [[ $STANDIN -eq 1 ]]; then
   echo "→ PostGIS text stand-in (local only)"
+  "${PSQL[@]}" -c 'create schema if not exists extensions'
   "${PSQL[@]}" -f "$TESTS/postgis_standin.sql"
 fi
 
@@ -64,16 +64,21 @@ for f in "$MIG"/*.sql; do
       "$f" > "$WORK/m.sql"
     "${PSQL[@]}" -f "$WORK/m.sql"
   else
-    "${PSQL[@]}" -f "$f"
+    "${PSQL[@]}" -1 -f "$f"
   fi
 done
 
 echo "→ seed.sql"
-"${PSQL[@]}" -f "$ROOT/supabase/seed.sql"
+"${PSQL[@]}" -f "$ROOT/db/seed.sql"
 
 echo "→ security tests"
 "${PSQL[@]}" -f "$TESTS/security_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
 
+if [[ -f "$TESTS/trade_test.sql" ]]; then
+  echo "→ trade tests"
+  "${PSQL[@]}" -f "$TESTS/trade_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
+fi
+
 echo "→ seed_demo.sql (applies cleanly on top)"
-"${PSQL[@]}" -f "$ROOT/supabase/seed_demo.sql"
+"${PSQL[@]}" -f "$ROOT/db/seed_demo.sql"
 "${PSQL[@]}" -t -c "select 'published farms: ' || count(*) from public.farms where status = 'published'"

@@ -1,5 +1,5 @@
 -- i12farm · Phase 0 · Identity
--- One profile per auth user. Roles are an array so one person can be a
+-- One profile per user (auth.users, see the platform migration). Roles are an array so one person can be a
 -- farmer and a buyer at once. Users cannot grant themselves roles: only the
 -- listed self-service columns are updatable by the authenticated role.
 
@@ -35,11 +35,12 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name, preferred_language)
+  insert into public.profiles (id, full_name, phone, preferred_language)
   values (
     new.id,
-    nullif(coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name'), ''),
-    case when new.raw_user_meta_data ->> 'locale' = 'sw' then 'sw' else 'en' end
+    nullif(trim(coalesce(new.meta ->> 'full_name', new.meta ->> 'name')), ''),
+    case when new.phone is null then null else '+' || new.phone end,
+    case when new.meta ->> 'locale' = 'sw' then 'sw' else 'en' end
   )
   on conflict (id) do nothing;
   return new;

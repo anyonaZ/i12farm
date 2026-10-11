@@ -1,13 +1,29 @@
 -- i12farm · local development seed (never run against production)
--- One field agent, one farmer, and eight sample farms around Homa Bay and
+-- A field agent, a farmer, a buyer, an admin, and eight sample farms around Homa Bay and
 -- Kisumu so every developer sees a populated map. Names are invented.
 
-insert into auth.users (id, email, raw_user_meta_data)
+-- Dev accounts. Password for all three: i12farm-dev
+-- Sign in with the email or the phone number (0700 000 001 etc.).
+insert into auth.users (id, email, phone, password_hash, password_changed_at, meta)
 values
-  ('00000000-0000-4000-8000-0000000000a1', 'agent@dev.i12farm.local',  '{"full_name":"Dev Field Agent"}'),
-  ('00000000-0000-4000-8000-0000000000f1', 'farmer@dev.i12farm.local', '{"full_name":"Dev Farmer"}')
+  ('00000000-0000-4000-8000-0000000000a1', 'agent@dev.i12farm.local',  '254700000001',
+   'scrypt$16384$8$1$aTEyZmFybS1kZXYtc2FsdA==$PwrQdfhbuoymqj2cIs3cn6nM4w+t98x3wp5kH9Te1Yd6h5ZXND7rjEgNGj7m29xVU+tdzDuaGP8N3RIcCTrS7A==',
+   now(), '{"full_name":"Dev Field Agent"}'),
+  ('00000000-0000-4000-8000-0000000000f1', 'farmer@dev.i12farm.local', '254700000002',
+   'scrypt$16384$8$1$aTEyZmFybS1kZXYtc2FsdA==$PwrQdfhbuoymqj2cIs3cn6nM4w+t98x3wp5kH9Te1Yd6h5ZXND7rjEgNGj7m29xVU+tdzDuaGP8N3RIcCTrS7A==',
+   now(), '{"full_name":"Dev Farmer"}'),
+  ('00000000-0000-4000-8000-0000000000b1', 'buyer@dev.i12farm.local',  '254700000003',
+   'scrypt$16384$8$1$aTEyZmFybS1kZXYtc2FsdA==$PwrQdfhbuoymqj2cIs3cn6nM4w+t98x3wp5kH9Te1Yd6h5ZXND7rjEgNGj7m29xVU+tdzDuaGP8N3RIcCTrS7A==',
+   now(), '{"full_name":"Dev Buyer"}'),
+  ('00000000-0000-4000-8000-0000000000ad', 'admin@dev.i12farm.local',  '254700000009',
+   'scrypt$16384$8$1$aTEyZmFybS1kZXYtc2FsdA==$PwrQdfhbuoymqj2cIs3cn6nM4w+t98x3wp5kH9Te1Yd6h5ZXND7rjEgNGj7m29xVU+tdzDuaGP8N3RIcCTrS7A==',
+   now(), '{"full_name":"Dev Admin"}')
 on conflict (id) do nothing;
 
+update public.profiles set roles = array['admin','buyer']::public.user_role[], county_code = 47
+  where id = '00000000-0000-4000-8000-0000000000ad';
+update public.profiles set county_code = 47
+  where id = '00000000-0000-4000-8000-0000000000b1';
 update public.profiles set roles = array['agent','buyer']::public.user_role[], county_code = 43, joined_via = 'self'
   where id = '00000000-0000-4000-8000-0000000000a1';
 update public.profiles set roles = array['farmer','buyer']::public.user_role[], county_code = 43
