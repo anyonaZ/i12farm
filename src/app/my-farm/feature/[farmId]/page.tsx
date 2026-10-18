@@ -31,7 +31,7 @@ export default async function FeaturePage({ params }: { params: Promise<{ farmId
   const current = until[farm.id];
 
   return (
-    <main className="flex flex-col gap-4 px-4 pb-28 pt-6">
+    <main className="mx-auto w-full flex flex-col gap-4 px-4 pb-28 pt-6 lg:max-w-2xl lg:px-8 lg:pb-16 lg:pt-10">
       <header className="flex items-center gap-3">
         <Link
           href="/my-farm"

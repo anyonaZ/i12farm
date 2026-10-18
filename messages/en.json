@@ -165,7 +165,8 @@
     "back": "Back",
     "signInToSave": "Sign in to save farms",
     "products": "{n, plural, one {1 product} other {# products}}",
-    "waGreeting": "Hello {farmer}, I found {farm} on i12farm."
+    "waGreeting": "Hello {farmer}, I found {farm} on i12farm.",
+    "from": "and up"
   },
   "wizard": {
     "pinTitle": "Pin your farm",

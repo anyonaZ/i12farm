@@ -16,7 +16,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
   if (await getViewer()) redirect(safeNext);
 
   return (
-    <main className="flex flex-col gap-6 px-4 pb-24 pt-6">
+    <main className="mx-auto w-full flex flex-col gap-6 px-4 pb-24 pt-6 lg:max-w-md lg:px-8 lg:pb-16 lg:pt-10">
       <div className="flex justify-end">
         <LanguageSwitch />
       </div>

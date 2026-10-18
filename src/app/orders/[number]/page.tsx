@@ -26,7 +26,7 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
   const buyerPhone = toInternational(order.buyer_phone);
 
   return (
-    <main className="flex flex-col gap-4 px-4 pb-28 pt-6">
+    <main className="mx-auto w-full flex flex-col gap-4 px-4 pb-28 pt-6 lg:max-w-3xl lg:px-8 lg:pb-16 lg:pt-10">
       <header className="flex items-start gap-3">
         <Link
           href="/orders"

@@ -6,6 +6,7 @@ import { FarmMap, type Bounds } from '@/components/map/FarmMap';
 import { FarmCard } from '@/components/farm/FarmCard';
 import { Icon, CATEGORY_ICON } from '@/components/Icon';
 import { track } from '@/lib/analytics/track';
+import { DESKTOP, useMedia } from '@/lib/use-media';
 import type { FarmSummary } from '@/domains/farms/types';
 
 interface Props {
@@ -24,6 +25,9 @@ export function ExploreClient({ categories, counties }: Props) {
   const [cat, setCat] = useState<string | null>(null);
   const [county, setCounty] = useState<number | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const desktop = useMedia(DESKTOP);
+  const listRef = useRef<HTMLDivElement>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [view, setView] = useState(KENYA_VIEW);
   const [flyKey, setFlyKey] = useState(0);
@@ -96,9 +100,27 @@ export function ExploreClient({ categories, counties }: Props) {
 
   const list = results ?? visibleInBounds;
   const sorted = useMemo(
-    () => [...list].sort((a, b) => Number(b.id === selected) - Number(a.id === selected) || Number(b.featured) - Number(a.featured) || Number(b.verified) - Number(a.verified)),
+    () =>
+      [...list].sort(
+        (a, b) =>
+          Number(b.id === selected) - Number(a.id === selected) ||
+          Number(b.featured) - Number(a.featured) ||
+          Number(b.verified) - Number(a.verified),
+      ),
     [list, selected],
   );
+  // Desktop keeps a stable order (the list must not jump while the mouse moves over it).
+  const desktopSorted = useMemo(
+    () => [...list].sort((a, b) => Number(b.featured) - Number(a.featured) || Number(b.verified) - Number(a.verified)),
+    [list],
+  );
+
+  // A pin clicked on the desktop map scrolls its farm into view in the list.
+  useEffect(() => {
+    if (!desktop || !selected) return;
+    listRef.current?.querySelector(`[data-farm-id="${selected}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [desktop, selected]);
+
   const points = useMemo(
     () =>
       (results ?? inView)
@@ -123,91 +145,143 @@ export function ExploreClient({ categories, counties }: Props) {
 
   const padding = { top: 130, bottom: SHEET_COLLAPSED + 24, left: 32, right: 64 };
 
+  const searchBar = (
+    <div
+      role="search"
+      className="pointer-events-auto flex min-h-13 items-center gap-2.5 rounded-full border border-line bg-surface pl-4 pr-2 shadow-lg lg:shadow-sm"
+    >
+      <Icon name="search" className="shrink-0 text-soil" />
+      <label htmlFor="explore-q" className="sr-only">
+        {t('searchPlaceholder')}
+      </label>
+      <input
+        id="explore-q"
+        type="search"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder={t('searchPlaceholder')}
+        autoComplete="off"
+        className="h-12 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-soil"
+      />
+      <label htmlFor="explore-county" className="sr-only">
+        {t('allCounties')}
+      </label>
+      <select
+        id="explore-county"
+        value={county ?? ''}
+        onChange={(e) => chooseCounty(e.target.value)}
+        className="h-9 max-w-[38%] rounded-full bg-mint px-2.5 text-sm font-semibold"
+      >
+        <option value="">{t('allCounties')}</option>
+        {counties.map((c) => (
+          <option key={c.code} value={c.code}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
+  const chips = (
+    <div
+      className="pointer-events-auto -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:px-0"
+      role="toolbar"
+      aria-label="Categories"
+    >
+      <Chip pressed={cat === null} onClick={() => setCat(null)}>
+        {t('all')}
+      </Chip>
+      {categories.map((c) => (
+        <Chip
+          key={c.slug}
+          pressed={cat === c.slug}
+          onClick={() => {
+            setCat(c.slug);
+            track('explore.category_tapped', { category: c.slug });
+          }}
+        >
+          <Icon name={CATEGORY_ICON[c.slug] ?? 'leaf'} size={16} />
+          {c.name}
+        </Chip>
+      ))}
+    </div>
+  );
+
+  const heading = results ? t('results', { n: list.length }) : t('inArea', { n: list.length });
+
+  const map = (mapPadding: typeof padding) => (
+    <FarmMap
+      className="absolute inset-0"
+      label="Map of farms"
+      center={view.center}
+      zoom={view.zoom}
+      flyKey={flyKey}
+      fitKey={fitKey}
+      fitPoints={fitPoints}
+      padding={mapPadding}
+      points={points}
+      selectedId={hovered ?? selected}
+      onSelect={(id) => {
+        setSelected(id);
+        if (id) track('map.pin_tapped', { farm: id });
+      }}
+      onMoveEnd={(b, zoom) => {
+        bounds.current = b;
+        loadInView();
+        track('map.moved', { zoom: Math.round(zoom * 10) / 10 });
+      }}
+    />
+  );
+
+  // Laptop and desktop: Airbnb-style list beside a large map. Hovering a farm
+  // lights up its pin; clicking a pin scrolls to the farm in the list.
+  if (desktop) {
+    return (
+      <div className="grid h-[calc(100dvh-4rem)] grid-cols-[minmax(440px,46%)_1fr] xl:grid-cols-[minmax(600px,52%)_1fr]">
+        <section aria-label={heading} className="flex min-h-0 flex-col border-r border-line">
+          <div className="flex flex-col gap-3 border-b border-line bg-surface px-6 pb-4 pt-5">
+            {searchBar}
+            {chips}
+          </div>
+          <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-6 pb-10 pt-4">
+            <h2 className="mb-4 text-lg font-bold">{heading}</h2>
+            {list.length === 0 ? (
+              <p className="text-soil">{t('emptyArea')}</p>
+            ) : (
+              <div className="grid grid-cols-1 gap-x-5 gap-y-8 xl:grid-cols-2">
+                {desktopSorted.map((f) => (
+                  <div
+                    key={f.id}
+                    data-farm-id={f.id}
+                    onMouseEnter={() => setHovered(f.id)}
+                    onMouseLeave={() => setHovered(null)}
+                    onFocus={() => setHovered(f.id)}
+                    onBlur={() => setHovered(null)}
+                    className={`rounded-2xl transition-shadow ${f.id === selected ? 'shadow-[0_0_0_3px_var(--color-sprout)]' : ''}`}
+                  >
+                    <FarmCard farm={f} layout="wide" categoryName={categoryName} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+        <div className="relative min-h-0">{map({ top: 48, bottom: 48, left: 48, right: 48 })}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative h-[calc(100dvh-4rem-env(safe-area-inset-bottom))] overflow-hidden">
-      <FarmMap
-        className="absolute inset-0"
-        label="Map of farms"
-        center={view.center}
-        zoom={view.zoom}
-        flyKey={flyKey}
-        fitKey={fitKey}
-        fitPoints={fitPoints}
-        padding={padding}
-        points={points}
-        selectedId={selected}
-        onSelect={(id) => {
-          setSelected(id);
-          if (id) track('map.pin_tapped', { farm: id });
-        }}
-        onMoveEnd={(b, zoom) => {
-          bounds.current = b;
-          loadInView();
-          track('map.moved', { zoom: Math.round(zoom * 10) / 10 });
-        }}
-      />
+      {map(padding)}
 
       <div className="pointer-events-none absolute inset-x-4 top-[max(0.75rem,env(safe-area-inset-top))] z-10 flex flex-col gap-2.5">
-        <div
-          role="search"
-          className="pointer-events-auto flex min-h-13 items-center gap-2.5 rounded-full border border-line bg-surface pl-4 pr-2 shadow-lg"
-        >
-          <Icon name="search" className="shrink-0 text-soil" />
-          <label htmlFor="explore-q" className="sr-only">
-            {t('searchPlaceholder')}
-          </label>
-          <input
-            id="explore-q"
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder={t('searchPlaceholder')}
-            autoComplete="off"
-            className="h-12 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-soil"
-          />
-          <label htmlFor="explore-county" className="sr-only">
-            {t('allCounties')}
-          </label>
-          <select
-            id="explore-county"
-            value={county ?? ''}
-            onChange={(e) => chooseCounty(e.target.value)}
-            className="h-9 max-w-[38%] rounded-full bg-mint px-2.5 text-sm font-semibold"
-          >
-            <option value="">{t('allCounties')}</option>
-            {counties.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div
-          className="pointer-events-auto -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]"
-          role="toolbar"
-          aria-label="Categories"
-        >
-          <Chip pressed={cat === null} onClick={() => setCat(null)}>
-            {t('all')}
-          </Chip>
-          {categories.map((c) => (
-            <Chip
-              key={c.slug}
-              pressed={cat === c.slug}
-              onClick={() => {
-                setCat(c.slug);
-                track('explore.category_tapped', { category: c.slug });
-              }}
-            >
-              <Icon name={CATEGORY_ICON[c.slug] ?? 'leaf'} size={16} />
-              {c.name}
-            </Chip>
-          ))}
-        </div>
+        {searchBar}
+        {chips}
       </div>
 
       <section
-        aria-label={t('inArea', { n: list.length })}
+        aria-label={heading}
         className="absolute inset-x-0 bottom-0 z-10 flex flex-col rounded-t-[22px] border-t border-line bg-surface shadow-[0_-6px_24px_rgba(5,59,43,0.12)] transition-[height] duration-300"
         style={{ height: sheetOpen ? 'calc(100% - 4rem)' : SHEET_COLLAPSED }}
       >
@@ -219,7 +293,7 @@ export function ExploreClient({ categories, counties }: Props) {
         >
           <span className="h-1.5 w-10 rounded-full bg-line" aria-hidden="true" />
           <span className="flex w-full items-center justify-between">
-            <span className="text-base font-bold">{results ? t('results', { n: list.length }) : t('inArea', { n: list.length })}</span>
+            <span className="text-base font-bold">{heading}</span>
             <span className="text-sm font-bold text-sprout-deep">{sheetOpen ? t('showMap') : t('showList')}</span>
           </span>
         </button>

@@ -42,7 +42,7 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
   const maxCounty = Math.max(1, ...progress.map((r) => Number(r.farms)));
 
   return (
-    <main className="flex flex-col gap-5 px-4 pb-24 pt-8">
+    <main className="mx-auto w-full flex flex-col gap-5 px-4 pb-24 pt-8 lg:max-w-5xl lg:px-8 lg:pb-16 lg:pt-10">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-[26px] font-extrabold tracking-tight">{isAgent ? t('myFarm.agentTitle') : t('myFarm.title')}</h1>
@@ -51,7 +51,7 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
         <LanguageSwitch />
       </header>
 
-      <nav className="grid grid-cols-2 gap-2" aria-label={t('myFarmPlus.account')}>
+      <nav className="grid grid-cols-2 gap-2 lg:grid-cols-4" aria-label={t('myFarmPlus.account')}>
         <Link
           href="/orders"
           className="flex min-h-14 items-center gap-2.5 rounded-2xl border border-line bg-surface px-3.5 text-sm font-bold"
@@ -101,7 +101,7 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
       ) : null}
 
       {isAgent ? (
-        <>
+        <div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:items-start">
           <section className="card gap-3 border-forest bg-forest text-white">
             <span className="text-sm text-white/75">{t('myFarm.pilotTarget')}</span>
             <h2 className="text-[22px] font-extrabold tabular-nums">{t('myFarm.target', { n: total })}</h2>
@@ -134,89 +134,91 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
               ))}
             </ul>
           </section>
-        </>
+        </div>
       ) : null}
 
       {farms.length > 0 ? (
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-bold">{isAgent ? t('myFarm.managed') : t('myFarm.myFarms')}</h2>
-          {farms.map((f) => (
-            <article key={f.id} className="card">
-              <div className="flex items-center gap-3">
-                <span className="size-16 shrink-0 overflow-hidden rounded-2xl">
-                  <FarmCover id={f.id} name={f.name} category={f.categories[0]} coverPath={f.media[0]?.storage_path} sizes="64px" />
-                </span>
-                <div className="min-w-0">
-                  <h3 className="truncate text-lg font-bold">{f.name}</h3>
-                  <p className="truncate text-sm text-soil">{[f.place_name, f.county?.name].filter(Boolean).join(' · ')}</p>
+          <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start">
+            {farms.map((f) => (
+              <article key={f.id} className="card">
+                <div className="flex items-center gap-3">
+                  <span className="size-16 shrink-0 overflow-hidden rounded-2xl">
+                    <FarmCover id={f.id} name={f.name} category={f.categories[0]} coverPath={f.media[0]?.storage_path} sizes="64px" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-lg font-bold">{f.name}</h3>
+                    <p className="truncate text-sm text-soil">{[f.place_name, f.county?.name].filter(Boolean).join(' · ')}</p>
+                  </div>
                 </div>
-              </div>
-              <dl className="grid grid-cols-3 gap-2">
-                <Stat label={t('myFarm.views')} value={f.stats.views} />
-                <Stat label={t('myFarm.calls')} value={f.stats.calls} />
-                <Stat label={t('myFarm.whatsapps')} value={f.stats.whatsapps} />
-              </dl>
-              {f.balance.pending || f.balance.due || f.balance.paidOut ? (
-                <div className="flex flex-col gap-1.5 rounded-2xl border border-line p-3 text-sm">
-                  <h4 className="flex items-center gap-2 font-bold">
-                    <Icon name="wallet" size={18} className="text-sprout-deep" />
-                    {t('myFarmPlus.earnings')}
-                  </h4>
-                  <Money label={t('myFarmPlus.due')} value={f.balance.due} strong />
-                  <Money label={t('myFarmPlus.pending')} value={f.balance.pending} />
-                  <Money label={t('myFarmPlus.paidOut')} value={f.balance.paidOut} />
-                  <p className="text-xs text-soil">{t('myFarmPlus.payoutNote')}</p>
+                <dl className="grid grid-cols-3 gap-2">
+                  <Stat label={t('myFarm.views')} value={f.stats.views} />
+                  <Stat label={t('myFarm.calls')} value={f.stats.calls} />
+                  <Stat label={t('myFarm.whatsapps')} value={f.stats.whatsapps} />
+                </dl>
+                {f.balance.pending || f.balance.due || f.balance.paidOut ? (
+                  <div className="flex flex-col gap-1.5 rounded-2xl border border-line p-3 text-sm">
+                    <h4 className="flex items-center gap-2 font-bold">
+                      <Icon name="wallet" size={18} className="text-sprout-deep" />
+                      {t('myFarmPlus.earnings')}
+                    </h4>
+                    <Money label={t('myFarmPlus.due')} value={f.balance.due} strong />
+                    <Money label={t('myFarmPlus.pending')} value={f.balance.pending} />
+                    <Money label={t('myFarmPlus.paidOut')} value={f.balance.paidOut} />
+                    <p className="text-xs text-soil">{t('myFarmPlus.payoutNote')}</p>
+                  </div>
+                ) : null}
+                <Link
+                  href={`/my-farm/feature/${f.id}`}
+                  className={`flex min-h-12 items-center justify-between gap-3 rounded-2xl px-3.5 text-sm font-bold ${until[f.id] ? 'bg-lime/40' : 'border border-line'}`}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Icon name="star" size={18} className={until[f.id] ? 'fill-forest text-forest' : 'text-sprout-deep'} />
+                    {until[f.id]
+                      ? t('featured.until', {
+                          date: format.dateTime(new Date(until[f.id] as string), {
+                            day: 'numeric',
+                            month: 'short',
+                            timeZone: 'Africa/Nairobi',
+                          }),
+                        })
+                      : t('featured.cta')}
+                  </span>
+                  <span className="text-sprout-deep">{until[f.id] ? t('featured.extend') : '›'}</span>
+                </Link>
+                {isAgent && !f.claimed && f.managed_by === viewer.id ? <ClaimCode farmId={f.id} /> : null}
+                {f.claimed && f.managed_by === viewer.id && f.owner_id !== viewer.id ? (
+                  <p className="flex items-center gap-2 text-sm text-soil">
+                    <Icon name="check" size={16} className="text-sprout-deep" />
+                    {t('myFarmPlus.claimedBy')}
+                  </p>
+                ) : null}
+                <h4 className="font-bold">{t('myFarm.productsTitle')}</h4>
+                <div>
+                  {f.listings.map((l) => {
+                    const label = l.product ? (locale === 'sw' ? l.product.name_sw : l.product.name_en) : l.title;
+                    return (
+                      <div key={l.id}>
+                        <PriceEditor
+                          listingId={l.id}
+                          name={label}
+                          unitLabel={t('farm.per', { unit: t(`units.${l.unit}`) })}
+                          price={l.price_kes === null ? null : Number(l.price_kes)}
+                          history={f.history[l.id] ?? []}
+                        />
+                        <StockEditor listingId={l.id} quantity={l.quantity === null ? null : Number(l.quantity)} label={label} />
+                      </div>
+                    );
+                  })}
                 </div>
-              ) : null}
-              <Link
-                href={`/my-farm/feature/${f.id}`}
-                className={`flex min-h-12 items-center justify-between gap-3 rounded-2xl px-3.5 text-sm font-bold ${until[f.id] ? 'bg-lime/40' : 'border border-line'}`}
-              >
-                <span className="inline-flex items-center gap-2">
-                  <Icon name="star" size={18} className={until[f.id] ? 'fill-forest text-forest' : 'text-sprout-deep'} />
-                  {until[f.id]
-                    ? t('featured.until', {
-                        date: format.dateTime(new Date(until[f.id] as string), {
-                          day: 'numeric',
-                          month: 'short',
-                          timeZone: 'Africa/Nairobi',
-                        }),
-                      })
-                    : t('featured.cta')}
-                </span>
-                <span className="text-sprout-deep">{until[f.id] ? t('featured.extend') : '›'}</span>
-              </Link>
-              {isAgent && !f.claimed && f.managed_by === viewer.id ? <ClaimCode farmId={f.id} /> : null}
-              {f.claimed && f.managed_by === viewer.id && f.owner_id !== viewer.id ? (
-                <p className="flex items-center gap-2 text-sm text-soil">
-                  <Icon name="check" size={16} className="text-sprout-deep" />
-                  {t('myFarmPlus.claimedBy')}
-                </p>
-              ) : null}
-              <h4 className="font-bold">{t('myFarm.productsTitle')}</h4>
-              <div>
-                {f.listings.map((l) => {
-                  const label = l.product ? (locale === 'sw' ? l.product.name_sw : l.product.name_en) : l.title;
-                  return (
-                    <div key={l.id}>
-                      <PriceEditor
-                        listingId={l.id}
-                        name={label}
-                        unitLabel={t('farm.per', { unit: t(`units.${l.unit}`) })}
-                        price={l.price_kes === null ? null : Number(l.price_kes)}
-                        history={f.history[l.id] ?? []}
-                      />
-                      <StockEditor listingId={l.id} quantity={l.quantity === null ? null : Number(l.quantity)} label={label} />
-                    </div>
-                  );
-                })}
-              </div>
-              <PhotoManager farmId={f.id} photos={f.media} />
-              <Link href={`/f/${f.slug}`} className="btn-secondary">
-                {t('myFarm.viewPublic')}
-              </Link>
-            </article>
-          ))}
+                <PhotoManager farmId={f.id} photos={f.media} />
+                <Link href={`/f/${f.slug}`} className="btn-secondary">
+                  {t('myFarm.viewPublic')}
+                </Link>
+              </article>
+            ))}
+          </div>
         </section>
       ) : null}
 

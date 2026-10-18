@@ -17,11 +17,13 @@ interface Props {
   listingId: string | null;
   lng: number | null;
   lat: number | null;
+  /** bar: fixed above the phone tab bar (hidden on desktop). panel: inside the desktop side panel. */
+  variant?: 'bar' | 'panel';
 }
 
 // Every tap is written to contact_events before the phone app opens. That
 // row is Phase 1's proof that a buyer wanted this farm.
-export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, listingId, lng, lat }: Props) {
+export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, listingId, lng, lat, variant = 'bar' }: Props) {
   const t = useTranslations('farm');
   const [copied, setCopied] = useState(false);
 
@@ -35,6 +37,7 @@ export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, list
     }).catch(() => undefined);
   }
 
+  const panel = variant === 'panel';
   const tel = toInternational(phone);
   const wa = toInternational(whatsapp ?? phone);
   const greeting = encodeURIComponent(t('waGreeting', { farmer: farmerName ?? '', farm: farmName }));
@@ -52,12 +55,23 @@ export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, list
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-surface px-4 py-3">
-      <div className="mx-auto grid max-w-md grid-cols-[1fr_1fr_auto_auto] gap-2.5">
+    <div
+      className={
+        panel
+          ? 'flex flex-col gap-2.5'
+          : 'fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-surface px-4 py-3 lg:hidden'
+      }
+    >
+      <div className={panel ? 'grid grid-cols-2 gap-2.5' : 'mx-auto grid max-w-md grid-cols-[1fr_1fr_auto_auto] gap-2.5'}>
         {tel ? (
-          <a href={`tel:+${tel}`} onClick={() => log('call')} className="btn-primary" aria-label={`${t('call')} ${displayPhone(phone)}`}>
+          <a
+            href={`tel:+${tel}`}
+            onClick={() => log('call')}
+            className={`btn-primary ${panel ? 'col-span-2' : ''}`}
+            aria-label={`${t('call')} ${displayPhone(phone)}`}
+          >
             <Icon name="phone" size={18} />
-            {t('call')}
+            {panel ? `${t('call')} · ${displayPhone(phone)}` : t('call')}
           </a>
         ) : (
           <span />
@@ -68,7 +82,7 @@ export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, list
             target="_blank"
             rel="noopener"
             onClick={() => log('whatsapp')}
-            className="btn-secondary"
+            className={`btn-secondary ${panel ? 'col-span-2' : ''}`}
           >
             <Icon name="chat" size={18} />
             {t('whatsapp')}
@@ -82,19 +96,21 @@ export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, list
             target="_blank"
             rel="noopener"
             onClick={() => log('directions')}
-            className="grid size-12 place-items-center rounded-full border border-line"
+            className={panel ? 'btn-secondary min-h-11 text-sm' : 'grid size-12 place-items-center rounded-full border border-line'}
             aria-label={t('directions')}
           >
             <Icon name="route" />
+            {panel ? t('directions') : null}
           </a>
         ) : null}
         <button
           type="button"
           onClick={share}
-          className="grid size-12 place-items-center rounded-full border border-line"
+          className={panel ? 'btn-secondary min-h-11 text-sm' : 'grid size-12 place-items-center rounded-full border border-line'}
           aria-label={copied ? t('linkCopied') : t('share')}
         >
           <Icon name={copied ? 'check' : 'share'} />
+          {panel ? (copied ? t('linkCopied') : t('share')) : null}
         </button>
       </div>
     </div>

@@ -8,7 +8,7 @@ export default async function LinkPage({ searchParams }: { searchParams: Promise
   const t = await getTranslations('auth');
   const { token = '', next = '' } = await searchParams;
   return (
-    <main className="flex flex-col items-center gap-5 px-4 pb-24 pt-16 text-center">
+    <main className="mx-auto w-full flex flex-col items-center gap-5 px-4 pb-24 pt-16 text-center lg:max-w-md lg:px-8 lg:pb-16 lg:pt-10">
       <LogoMark size={56} />
       <h1 className="text-2xl font-extrabold">{t('linkTitle')}</h1>
       <p className="max-w-[32ch] text-soil">{t('linkBody')}</p>

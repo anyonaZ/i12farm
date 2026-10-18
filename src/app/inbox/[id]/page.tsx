@@ -16,7 +16,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   const t = await getTranslations('inbox');
 
   return (
-    <main className="flex h-[calc(100dvh-4rem-env(safe-area-inset-bottom))] flex-col">
+    <main className="mx-auto flex h-[calc(100dvh-4rem-env(safe-area-inset-bottom))] w-full flex-col lg:h-[calc(100dvh-4rem)] lg:max-w-3xl lg:border-x lg:border-line lg:bg-surface">
       <header className="flex items-center gap-3 border-b border-line bg-surface px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <Link href="/inbox" className="grid size-11 shrink-0 place-items-center rounded-full border border-line" aria-label={t('back')}>
           <Icon name="back" />

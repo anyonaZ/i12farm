@@ -44,7 +44,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const [{ set }, sessions, counties] = await Promise.all([searchParams, listMySessions(viewer), listCounties()]);
 
   return (
-    <main className="flex flex-col gap-5 px-4 pb-24 pt-6">
+    <main className="mx-auto w-full flex flex-col gap-5 px-4 pb-24 pt-6 lg:max-w-2xl lg:px-8 lg:pb-16 lg:pt-10">
       <header className="flex items-center justify-between gap-3">
         <Link href="/my-farm" className="grid size-11 place-items-center rounded-full border border-line bg-surface" aria-label="Back">
           <Icon name="back" />

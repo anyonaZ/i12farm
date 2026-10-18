@@ -12,7 +12,7 @@ export default async function ExplorePage() {
 
   if (!isDbConfigured) {
     return (
-      <main className="px-4 pb-24 pt-10">
+      <main className="mx-auto w-full px-4 pb-24 pt-10 lg:max-w-3xl">
         <h1 className="text-2xl font-extrabold">i12farm</h1>
         <p className="mt-2 text-soil">Set DATABASE_URL in .env.local and run npm run db:migrate (see README).</p>
       </main>

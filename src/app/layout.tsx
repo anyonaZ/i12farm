@@ -4,6 +4,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { BottomNav } from '@/components/BottomNav';
 import { AppRuntime } from '@/components/AppRuntime';
+import { TopNav } from '@/components/TopNav';
+import { displayName, getViewer } from '@/lib/auth/viewer';
 import { siteUrl } from '@/lib/env';
 import './globals.css';
 
@@ -41,11 +43,14 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
+  const viewer = await getViewer().catch(() => null);
   return (
     <html lang={locale} className={jakarta.variable}>
       <body className="antialiased">
         <NextIntlClientProvider>
-          <div className="mx-auto min-h-dvh max-w-md">{children}</div>
+          <TopNav viewer={viewer ? { name: displayName(viewer), admin: viewer.roles.includes('admin') } : null} />
+          {/* Phones: one centred column. Desktop: each page sets its own width. */}
+          <div className="mx-auto min-h-dvh max-w-md lg:min-h-[calc(100dvh-4rem)] lg:max-w-none">{children}</div>
           <BottomNav />
           <AppRuntime />
         </NextIntlClientProvider>

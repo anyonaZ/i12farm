@@ -173,8 +173,8 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
   const productLabel = (s: string) => products.find((p) => p.slug === s);
 
   return (
-    <div className="flex min-h-dvh flex-col pb-[calc(4rem+env(safe-area-inset-bottom))]">
-      <div className="sticky top-0 z-20 border-b border-line bg-surface px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
+    <div className="flex min-h-dvh flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] lg:mx-auto lg:min-h-[calc(100dvh-4rem)] lg:w-full lg:max-w-2xl lg:border-x lg:border-line lg:bg-mint lg:pb-0">
+      <div className="sticky top-0 z-20 border-b border-line bg-surface px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] lg:top-16 lg:px-8">
         <div className="flex items-center gap-2.5">
           <button
             type="button"
@@ -194,7 +194,7 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-4 px-4 py-5">
+      <div className="flex flex-1 flex-col gap-4 px-4 py-5 lg:px-8 lg:py-8">
         {error ? (
           <p role="alert" className="rounded-xl bg-amber/15 px-3 py-2.5 text-sm font-semibold">
             {error}
@@ -493,7 +493,7 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
         ) : null}
       </div>
 
-      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 flex gap-2.5 border-t border-line bg-surface px-4 py-3">
+      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 flex gap-2.5 border-t border-line bg-surface px-4 lg:bottom-0 lg:px-8 py-3">
         {step === 4 && photos.length === 0 ? (
           <button type="button" className="btn-secondary w-auto px-6" onClick={next}>
             {t('skip')}

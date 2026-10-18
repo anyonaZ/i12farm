@@ -165,7 +165,8 @@
     "back": "Rudi",
     "signInToSave": "Ingia ili kuhifadhi mashamba",
     "products": "{n, plural, one {Bidhaa 1} other {Bidhaa #}}",
-    "waGreeting": "Habari {farmer}, nimepata {farm} kupitia i12farm."
+    "waGreeting": "Habari {farmer}, nimepata {farm} kupitia i12farm.",
+    "from": "na zaidi"
   },
   "wizard": {
     "pinTitle": "Weka shamba lako",

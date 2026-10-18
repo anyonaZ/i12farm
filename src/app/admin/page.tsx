@@ -50,7 +50,7 @@ export default async function AdminPage({
   ];
 
   return (
-    <main className="flex flex-col gap-4 px-4 pb-24 pt-6">
+    <main className="mx-auto w-full flex flex-col gap-4 px-4 pb-24 pt-6 lg:max-w-5xl lg:px-8 lg:pb-16 lg:pt-10">
       <header className="flex items-center gap-3">
         <Link href="/my-farm" className="grid size-11 place-items-center rounded-full border border-line bg-surface" aria-label="Back">
           <Icon name="back" />

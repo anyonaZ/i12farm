@@ -20,7 +20,7 @@ export default async function OrdersPage() {
   ]);
 
   return (
-    <main className="flex flex-col gap-5 px-4 pb-24 pt-8">
+    <main className="mx-auto w-full flex flex-col gap-5 px-4 pb-24 pt-8 lg:max-w-3xl lg:px-8 lg:pb-16 lg:pt-10">
       <header className="flex items-center justify-between gap-3">
         <h1 className="text-[26px] font-extrabold tracking-tight">{t('title')}</h1>
         <LanguageSwitch />

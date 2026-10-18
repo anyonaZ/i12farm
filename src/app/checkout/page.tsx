@@ -18,7 +18,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
   const back = `/checkout?farm=${encodeURIComponent(slug)}`;
 
   return (
-    <main className="flex flex-col gap-5 px-4 pb-28 pt-6">
+    <main className="mx-auto w-full flex flex-col gap-5 px-4 pb-28 pt-6 lg:max-w-2xl lg:px-8 lg:pb-16 lg:pt-10">
       <header className="flex items-center gap-3">
         <Link
           href={`/f/${farm.slug}`}
