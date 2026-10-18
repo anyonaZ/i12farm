@@ -146,6 +146,7 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 - Bookings have no farm calendar: the farm accepts or declines the date the buyer picked.
 - A Kiswahili native speaker should review all text.
 - Map tiles are not cached offline; pages and photos are.
+- Map fallbacks (18 Oct): browsers without WebGL get Leaflet with OpenStreetMap image tiles (fine for a minority; OSM's tile policy forbids heavy use, so switch provider if that path grows). If the vector style can't be downloaded, pins draw on a plain background with a Retry notice.
 - National ward list: run `scripts/import-admin-units.mjs` with the IEBC CSV.
 - Migrations were edited in place on 11 Oct 2026 (nothing had been deployed). From the first deploy on, only add new migration files.
 
