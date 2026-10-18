@@ -1,12 +1,46 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import type { GeoJSONSource, Map as MlMap, MapLayerMouseEvent } from 'maplibre-gl';
+import dynamic from 'next/dynamic';
+import { useTranslations } from 'next-intl';
+import { useEffect, useRef, useState } from 'react';
+import type { GeoJSONSource, Map as MlMap, MapLayerMouseEvent, StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 // Free vector tiles, no API key (https://openfreemap.org). Swap for a
 // self-hosted style URL if the pilot needs guaranteed uptime.
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/positron';
+
+// Browsers without WebGL get a plain image-tile map instead (Leaflet).
+const RasterMap = dynamic(() => import('./RasterMap'), { ssr: false });
+
+// When the map style can't be downloaded, pins still draw on a plain background.
+const OFFLINE_STYLE: StyleSpecification = {
+  version: 8,
+  sources: {},
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#e8f3ec' } }],
+};
+
+function webglAvailable(): boolean {
+  try {
+    const canvas = document.createElement('canvas');
+    return Boolean(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+  } catch {
+    return false;
+  }
+}
+
+// One download of the style per page load, shared by every map; 8 s limit.
+let stylePromise: Promise<StyleSpecification | null> | null = null;
+function loadStyle(): Promise<StyleSpecification | null> {
+  stylePromise ??= fetch(STYLE_URL, { signal: AbortSignal.timeout(8000) })
+    .then((r) => (r.ok ? (r.json() as Promise<StyleSpecification>) : null))
+    .catch(() => null)
+    .then((style) => {
+      if (!style) stylePromise = null; // try again on the next map
+      return style;
+    });
+  return stylePromise;
+}
 
 export interface MapPoint {
   id: string;
@@ -21,6 +55,8 @@ export interface Bounds {
   east: number;
   north: number;
 }
+
+export type FarmMapProps = Props;
 
 interface Props {
   center: [number, number];
@@ -64,7 +100,18 @@ function toGeoJSON(points: MapPoint[], selectedId: string | null | undefined) {
   };
 }
 
-export function FarmMap({
+export function FarmMap(props: Props) {
+  const [mode, setMode] = useState<'vector' | 'raster' | null>(null);
+  useEffect(() => {
+    setMode(webglAvailable() ? 'vector' : 'raster');
+  }, []);
+  if (mode === 'raster') return <RasterMap {...props} />;
+  return <VectorMap {...props} active={mode === 'vector'} onFail={() => setMode('raster')} />;
+}
+
+function VectorMap({
+  active,
+  onFail,
   center,
   zoom,
   points = [],
@@ -80,7 +127,9 @@ export function FarmMap({
   padding,
   className,
   label,
-}: Props) {
+}: Props & { active: boolean; onFail: () => void }) {
+  const t = useTranslations('map');
+  const [offline, setOffline] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const ready = useRef(false);
@@ -90,25 +139,34 @@ export function FarmMap({
   // Create the map once. maplibre-gl is loaded on demand so it never weighs
   // down pages that don't show a map.
   useEffect(() => {
+    if (!active) return;
     let cancelled = false;
     (async () => {
-      const maplibregl = (await import('maplibre-gl')).default;
+      const [maplibregl, style] = await Promise.all([import('maplibre-gl').then((m) => m.default), loadStyle()]);
       if (cancelled || !container.current) return;
-      const map = new maplibregl.Map({
-        container: container.current,
-        style: STYLE_URL,
-        center,
-        zoom,
-        interactive,
-        attributionControl: { compact: true },
-        dragRotate: false,
-        pitchWithRotate: false,
-        touchPitch: false,
-        maxBounds: [
-          [28, -12],
-          [46, 8],
-        ],
-      });
+      if (!style) setOffline(true);
+      let map: MlMap;
+      try {
+        map = new maplibregl.Map({
+          container: container.current,
+          style: style ?? OFFLINE_STYLE,
+          center,
+          zoom,
+          interactive,
+          attributionControl: { compact: true },
+          dragRotate: false,
+          pitchWithRotate: false,
+          touchPitch: false,
+          maxBounds: [
+            [28, -12],
+            [46, 8],
+          ],
+        });
+      } catch {
+        // WebGL present but unusable (blocked context, driver issue): use the image-tile map.
+        onFail();
+        return;
+      }
       map.touchZoomRotate.disableRotation();
       mapRef.current = map;
 
@@ -141,19 +199,20 @@ export function FarmMap({
             'circle-radius': ['step', ['get', 'point_count'], 16, 10, 21, 50, 26],
           },
         });
-        map.addLayer({
-          id: 'cluster-count',
-          type: 'symbol',
-          source: 'farms',
-          filter: ['has', 'point_count'],
-          layout: {
-            'text-field': ['get', 'point_count_abbreviated'],
-            'text-font': ['Noto Sans Bold'],
-            'text-size': 13,
-            'text-allow-overlap': true,
-          },
-          paint: { 'text-color': '#ffffff' },
-        });
+        if (style)
+          map.addLayer({
+            id: 'cluster-count',
+            type: 'symbol',
+            source: 'farms',
+            filter: ['has', 'point_count'],
+            layout: {
+              'text-field': ['get', 'point_count_abbreviated'],
+              'text-font': ['Noto Sans Bold'],
+              'text-size': 13,
+              'text-allow-overlap': true,
+            },
+            paint: { 'text-color': '#ffffff' },
+          });
         map.addLayer({
           id: 'farm-points',
           type: 'circle',
@@ -214,7 +273,7 @@ export function FarmMap({
       ready.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [active]);
 
   // Keep the pins in sync with the data.
   useEffect(() => {
@@ -237,8 +296,22 @@ export function FarmMap({
   }, [fitKey]);
 
   return (
-    <div className={`relative ${className ?? ''}`}>
-      <div ref={container} className="absolute inset-0" role="region" aria-label={label} />
+    <div className={positioned(className)}>
+      {/* inline style: maplibre-gl.css sets .maplibregl-map { position: relative }, which would collapse the box */}
+      <div ref={container} style={{ position: 'absolute', inset: 0 }} role="region" aria-label={label} />
+      {offline ? (
+        <div className="absolute inset-x-0 z-10 flex justify-center px-4" style={{ top: (padding?.top ?? 8) + 4 }}>
+          <p
+            role="status"
+            className="flex items-center gap-2 rounded-full bg-surface/95 px-3 py-1.5 text-xs font-semibold text-forest shadow"
+          >
+            {t('offline')}
+            <button type="button" className="font-bold text-sprout-deep underline" onClick={() => window.location.reload()}>
+              {t('retry')}
+            </button>
+          </p>
+        </div>
+      ) : null}
       {centerPin ? (
         <svg
           className="pointer-events-none absolute left-1/2 top-1/2 h-[52px] w-10 -translate-x-1/2 -translate-y-full drop-shadow-md"
@@ -275,4 +348,11 @@ function fit(map: MlMap, pts: [number, number][], padding?: Props['padding']) {
     ],
     { padding: padding ?? 48, maxZoom: 12.5, duration: 700 },
   );
+}
+
+/** The map fills its box with absolutely positioned layers, so the box must be
+ * positioned. Callers that already position it (Explore uses "absolute inset-0")
+ * keep theirs: adding "relative" as well would collapse the box to 0 px high. */
+function positioned(className: string | undefined): string {
+  return /(^|\s)(absolute|fixed|relative|sticky)(\s|$)/.test(className ?? '') ? (className ?? '') : `relative ${className ?? ''}`;
 }

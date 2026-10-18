@@ -560,5 +560,9 @@
       "notPayable": "This plan can no longer be paid. Choose again.",
       "mpesa": "M-Pesa didn't accept the request: {detail}"
     }
+  },
+  "map": {
+    "offline": "Map background didn't load. Farm pins still work.",
+    "retry": "Retry"
   }
 }

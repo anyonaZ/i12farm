@@ -560,5 +560,9 @@
       "notPayable": "Mpango huu hauwezi kulipiwa tena. Chagua upya.",
       "mpesa": "M-Pesa haikukubali ombi: {detail}"
     }
+  },
+  "map": {
+    "offline": "Ramani ya nyuma haikupakia. Alama za mashamba bado zinafanya kazi.",
+    "retry": "Jaribu tena"
   }
 }
