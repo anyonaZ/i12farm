@@ -20,10 +20,13 @@ sessions and photo storage itself. Any Postgres 15+ with PostGIS works
 | Claiming | An agent gets an 8-digit claim code; the farmer signs up with their phone and enters it to own the farm. No SMS cost |
 | Orders | One-farm cart kept on the phone, checkout (pickup or delivery), M-Pesa STK Push, order status history, farm accepts / declines / marks ready, buyer confirms receipt |
 | Money | Commission snapshotted per order (10% by default, admin can change), append-only ledger: payment, commission, farmer share held until completion, payouts and refunds recorded by an admin |
+| Bookings | Training and farm tours: **Book**, choose a visit date and morning/afternoon, pay by M-Pesa; the farm accepts the date |
+| Featured | Farms pay (7 or 30 days, prices are a setting) to appear first on the map and in search with a Featured badge |
+| Upkeep | Ready orders complete after 3 days, unpaid orders cancel after 48 h, silent payment prompts expire; nightly, or from Admin → Settings |
 | Reviews | One per completed order, public on the farm page and map cards |
 | Inbox | Buyer ↔ farm conversations, order updates posted into the thread, unread counts; polls every 5 s while open |
 | My Farm | Views, calls, WhatsApp taps, earnings (held, due, paid out), price and stock editing, photos, claim codes, pilot progress for agents |
-| Admin | `/admin`: people (roles, suspend, one-time sign-in link for a farmer who forgot their password), farms to verify, payouts due, refunds due, commission rate |
+| Admin | `/admin`: Insights (KPIs, weekly paid value, funnel, counties, top products, CSV exports), people (roles, suspend, one-time sign-in links), farms to verify, money (payouts and refunds, payout CSV out and results CSV in), settings (commission, upkeep timings, featured plans) |
 | Analytics | First-party events (`src/lib/analytics`) into `public.events`, rolled up nightly into `events_daily` |
 
 ## Run it locally (Arch Linux)
@@ -60,6 +63,10 @@ order page shows **Simulate: pay**. Then sign in as the agent → Orders →
 accept → mark ready; back as the buyer → I received it → review. The admin
 sees the payout due under `/admin?tab=money`.
 
+**Try a booking:** as the buyer, open Lakeview Dairy, tap **Book** on the
+training, pick a date. **Try featuring:** as the agent, My Farm → Homa
+Organica → Feature this farm → Simulate: pay; Homa now leads Explore.
+
 In `npm run dev`, email sign-in links appear on screen; in production they
 are emailed (or printed to the server log if `SMTP_URL` is unset).
 
@@ -70,7 +77,7 @@ npm run db:migrate      # apply new files in db/migrations (each once, in order)
 npm run db:status       # applied / pending
 npm run db:seed         # dev data (refuses to run against hosted databases)
 npm run db:reset        # drop and rebuild (development only)
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres npm run db:test   # 70 schema/security/trade checks
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres npm run db:test   # 84 schema/security/trade checks
 ```
 
 Security lives in the database: every user-facing query runs inside
@@ -99,7 +106,7 @@ See "Hosting" in `HANDOFF.md` for the recommended free setups. Whatever the host
 3. On hosts without a lasting disk, set the `S3_*` variables (Cloudflare R2) for photos.
 4. Make yourself admin once:
    `psql "$DATABASE_URL" -c "update profiles set roles = roles || '{admin}' where id = (select id from auth.users where phone = '2547XXXXXXXX')"`
-5. Add repository secrets `DATABASE_URL` and `BACKUP_PASSPHRASE` for the nightly backup and rollup workflow.
+5. Add repository secrets `DATABASE_URL` and `BACKUP_PASSPHRASE` for the nightly backup, rollup and order-upkeep workflow (or set `CRON_SECRET` and call `/api/cron/maintenance` hourly from any scheduler).
 
 ## Load all wards
 

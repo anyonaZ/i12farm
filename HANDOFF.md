@@ -1,6 +1,6 @@
 # i12farm handoff
 
-Last updated: 11 October 2026. Read this first when continuing in a new chat.
+Last updated: 18 October 2026. Read this first when continuing in a new chat.
 
 ## 1. What i12farm is
 
@@ -32,7 +32,7 @@ recorded with time and county, because that data is the long-term asset.
 | Pilot counties | Homa Bay (43), Migori (44), Kisumu (42), Kiambu (22), Nairobi (47). Stored as `counties.is_pilot` |
 | Phase 1 target | 100 farms in the pilot counties, enrolled by field agents (progress bar on My Farm) |
 | Domain | Undecided |
-| Languages | English and Kiswahili from day one (426 strings each; a native speaker should review) |
+| Languages | English and Kiswahili from day one (500 strings each; a native speaker should review) |
 | Backend | Next.js server + PostgreSQL 15+ with PostGIS. No Supabase. RLS policies unchanged; `withUser()` sets the role per transaction |
 | Sign-in | Phone or email + password (scrypt). Google optional. Email link for forgotten passwords; admins issue one-time links for farmers without email. **No SMS OTP** (costs money); farm ownership is proven with agent-issued claim codes |
 | Sessions | Random token in an httpOnly cookie, SHA-256 in `auth.sessions`; 30 days idle, 180 days max; revoked rows are kept |
@@ -40,9 +40,14 @@ recorded with time and county, because that data is the long-term asset.
 | Payments | M-Pesa STK Push via Daraja, hand-written client. Money is held until the buyer confirms receipt, then owed to the farmer; payouts and refunds recorded by an admin (manual M-Pesa for now) |
 | Commission | 10% default in `platform_settings` (still an open business decision: deck says 10%, concept doc 5–10%). Each order keeps the rate it was placed with |
 | Location privacy | Exact point is private (`farm_locations`). Public pin is exact, snapped to ~1 km (default), or hidden |
+| Order upkeep | Orders left "ready" complete automatically after 3 days (setting), unpaid orders cancel after 48 hours, silent M-Pesa prompts expire after 1 hour (a late success still counts). `run_maintenance()` runs nightly and from Admin → Settings |
+| Bookings | Training and farm tours go through the same cart and M-Pesa flow, with a visit date (tomorrow to 4 months ahead) and morning/afternoon slot; the farm confirms by accepting |
+| Featured listings | Farms pay by M-Pesa to appear first on the map and in search with a Featured badge. Plans are a setting: 7 days KES 200, 30 days KES 600 (**placeholder prices**). A second plan starts when the first ends |
+| Payouts | Admin downloads a payout CSV, pays farms through M-Pesa bulk payments, uploads the results (farm_id, amount_kes, reference); each row is checked and recorded separately. No B2C API yet |
+| Dashboards | Built into Admin → Insights (no Metabase): KPIs, weekly paid value, view→contact→order funnel, pilot counties, top products, CSV exports |
 | Seed farm | Homa Organica, Benedict Kotonya, Lang'ata (Nairobi): pigs and racing pigeons, `/f/homa-organica`. Phone, prices and stock are placeholders until Benedict confirms |
 
-Still open: commission rate, premium listing price, annual subscription, domain, who sends payouts (manual vs. B2C API).
+Still open: commission rate, featured-listing prices, annual subscription, domain, whether to automate payouts with the B2C API.
 
 ## 4. Status
 
@@ -50,9 +55,17 @@ Still open: commission rate, premium listing price, annual subscription, domain,
 | --- | --- |
 | 0 Foundations | Done |
 | 1 Be seen | Done and now actually built and run: `npm run build` clean, flows walked in a phone-sized browser |
-| 2 Trade | **Built (core).** Own accounts, claim codes, cart, orders, M-Pesa (simulate + Daraja), ledger, reviews, messaging, admin. Not yet: experience bookings, premium listings, Metabase, automatic payouts |
+| 2 Trade | **Built.** Own accounts, claim codes, cart, orders, M-Pesa (simulate + Daraja), ledger, reviews, messaging, admin (11 Oct). Bookings, featured listings, order upkeep, payout file, Insights dashboard, rate limits (18 Oct). Waiting on a real Daraja test (gate below) |
 | 3 Reach | Not started: on-demand vet requests, USSD/SMS, partner broadcast portal |
 | 4 Insight | Not started |
+
+Verified on 18 Oct 2026: 84 database checks (security, trade, phase 2b),
+production build, and a browser walkthrough of the new parts: book a farm
+training with a visit date, pay (simulated), farm accepts and marks ready,
+buyer confirms; agent buys a 30-day featured plan for Homa Organica, which then
+leads Explore with a Featured badge; admin Insights, payout CSV download →
+upload with receipts → recorded, settings, run upkeep, CSV exports. Last
+week's walkthroughs were re-run and still pass.
 
 Verified on 11 Oct 2026 in the build sandbox: 70 database checks on real
 PostGIS (`npm run db:test`), typecheck, production build, and a browser
@@ -81,15 +94,19 @@ src/app/f/[slug]/page.tsx          farm page: cart steppers, reviews, Message, c
 src/app/checkout/                  cart re-pricing, pickup/delivery, M-Pesa number
 src/app/orders/                    order list, order page (payment panel, farm/buyer actions, review)
 src/app/inbox/                     conversations, thread (polling), /inbox/order/<number>
-src/app/my-farm/                   dashboard, PinWizard, FarmTools (claim code, photos, stock)
+src/app/my-farm/                   dashboard, PinWizard, FarmTools (claim code, photos, stock),
+                                   feature/[farmId] (buy a featured plan)
 src/app/account/                   profile, sign-in details, password, devices, claim a farm
-src/app/admin/                     people, farms to verify, payouts, refunds, commission
+src/app/admin/                     insights, people, farms to verify, money (payouts, refunds, CSV),
+                                   settings (commission, upkeep days, featured plans), export/[kind]
 src/app/sign-in, auth/*            sign-in/up forms, Google start/callback, one-time link, sign-out
 src/app/api/                       farms (map box), farms/search, contact, events, farms/[id]/photos,
                                    orders/[number] (status poll), conversations/[id]/messages,
-                                   mpesa/callback/[secret]
+                                   mpesa/callback/[secret], promotions/[id], cron/maintenance
 src/app/media/[...path]            serves locally stored photos
-src/domains/                       farms, reference, identity, orders (+payments.ts), messaging, admin
+src/domains/                       farms, reference, identity, orders (+payments.ts), messaging,
+                                   promotions, admin (+insights.ts)
+src/lib/rate-limit.ts              in-memory limits on events, contact taps, messages, uploads
 src/lib/db.ts                      Postgres pool, withUser() (RLS context), dbMessage()
 src/lib/auth/                      password (scrypt), session, viewer, accounts, google
 src/lib/mpesa.ts                   Daraja client: token, STK push/query, callback parsing, simulate
@@ -98,10 +115,10 @@ src/lib/cart.ts                    one-farm cart in localStorage
 messages/en.json, sw.json          all UI text (keys must match in both)
 db/migrations/                     schema source of truth (platform → foundation → … → trade)
 db/seed.sql, seed_demo.sql         dev accounts + 8 test farms; 28 demo farms incl. Homa Organica
-db/tests/                          security_test.sql, trade_test.sql (+ PostGIS stand-in)
+db/tests/                          security_test.sql, trade_test.sql, phase2b_test.sql (+ PostGIS stand-in)
 scripts/db.mjs                     migrate / status / seed / reset
-scripts/test-db.sh                 fresh database, all migrations, seed, both test files
-.github/workflows/                 ci.yml (build + DB tests), backup.yml (rollup + encrypted dump)
+scripts/test-db.sh                 fresh database, all migrations, seed, all test files
+.github/workflows/                 ci.yml (build + DB tests), backup.yml (rollup + order upkeep + encrypted dump)
 ```
 
 ## 7. Rules the data model enforces
@@ -114,19 +131,21 @@ scripts/test-db.sh                 fresh database, all migrations, seed, both te
 - `events` names must be in `src/lib/analytics/events.ts`. Add names; never rename them.
 - Orders: only `place_order()` creates them (prices from live listings), only `record_payment_result()` marks them paid (server-only, idempotent), only `set_order_status()` moves them (buyer cancels unpaid / confirms receipt; farm accepts, declines, marks ready; admin overrides).
 - `order_status_history`, `ledger_entries`, `messages`, `platform_settings_history`, `auth.audit_log`, `auth.sign_in_attempts` are append-only.
+- `apply_order_status()` is the single place an order moves and its money follows; users reach it through `set_order_status()`, the system through `run_maintenance()`.
+- Featured status is public only as a yes/no (`farm_featured()`); promotion rows and their payments are private to the farm's managers and admins.
 - Admin actions are SECURITY DEFINER functions that check the admin role and write the audit log.
 - Counties, sub-counties and wards use official codes.
 
 ## 8. Known gaps
 
-- Payouts to farmers and refunds are manual (admin sends M-Pesa, records the reference). B2C API automation later.
+- Payouts are semi-manual (bulk payment file in, results file out). B2C API automation needs Safaricom go-live and an initiator certificate.
 - No SMS or push notifications: farms see new orders on My Farm / Orders / Inbox only. Add Africa's Talking SMS for "new paid order" in Phase 3.
-- A buyer who never taps "I received it" leaves money held; an admin can complete the order. Auto-complete after N days is not built.
 - Chat is polling, not push (fine for the pilot; cheap on any host).
-- Rate limiting covers sign-in, email links and claim codes; `/api/events`, `/api/contact` and messages have none yet.
+- Rate limits on events, contact taps, messages and uploads are in memory per server process: solid on one VM, partial on serverless hosts.
+- Farms without a phone number can't be paid from the payout file until one is added.
+- Bookings have no farm calendar: the farm accepts or declines the date the buyer picked.
 - A Kiswahili native speaker should review all text.
 - Map tiles are not cached offline; pages and photos are.
-- Experience bookings, premium listings and Metabase dashboards (Phase 2b).
 - National ward list: run `scripts/import-admin-units.mjs` with the IEBC CSV.
 - Migrations were edited in place on 11 Oct 2026 (nothing had been deployed). From the first deploy on, only add new migration files.
 
@@ -151,13 +170,13 @@ Not recommended: Render's free tier (web service sleeps after 15 minutes idle; f
 
 ## 10. Next phase
 
-**Phase 2b · Trade, finished**
-1. Real Daraja sandbox test, then "Go Live" with Safaricom (paybill or till).
-2. Auto-complete orders N days after "ready" if the buyer is silent; reminders.
-3. B2C payouts (or a weekly payout batch screen) instead of manual references.
-4. Experience bookings (training, tours) using the same order + payment flow.
-5. Premium listings; first Metabase (or SQL) dashboards on `events_daily`, orders and ledger.
+**Gate to Phase 3 (needs you, not code):** a real Daraja sandbox payment
+end to end, then Safaricom "Go Live" on a paybill or till, and one real paid
+order settled with commission and payout recorded.
 
-Gate to Phase 3: real (non-simulated) paid orders settle end to end with commission and payout recorded.
-
-**Phase 3 · Reach:** SMS for new orders and payouts (Africa's Talking), USSD menu for feature phones, on-demand vet requests, partner broadcast portal by county and farm type.
+**Phase 3 · Reach**
+1. SMS through Africa's Talking: "new paid order" to the farm, "ready" to the buyer, payout receipts. Budget per SMS.
+2. USSD menu for feature phones: farmers update prices and stock, see orders.
+3. On-demand vet requests: buyers or farmers request a vet visit; vet-services farms receive and accept.
+4. Partner broadcast portal: NGOs and county offices message farmers by county and farm type (with consent and opt-out).
+5. Optional: B2C payouts after go-live; a farm availability calendar for bookings.
