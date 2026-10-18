@@ -79,6 +79,11 @@ if [[ -f "$TESTS/trade_test.sql" ]]; then
   "${PSQL[@]}" -f "$TESTS/trade_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
 fi
 
+if [[ -f "$TESTS/phase2b_test.sql" ]]; then
+  echo "→ phase 2b tests"
+  "${PSQL[@]}" -f "$TESTS/phase2b_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
+fi
+
 echo "→ seed_demo.sql (applies cleanly on top)"
 "${PSQL[@]}" -f "$ROOT/db/seed_demo.sql"
 "${PSQL[@]}" -t -c "select 'published farms: ' || count(*) from public.farms where status = 'published'"
