@@ -19,6 +19,7 @@ export interface FarmSummary {
   listing_count: number;
   rating: number | null;
   review_count: number;
+  featured: boolean;
 }
 
 export interface Listing {
@@ -58,6 +59,7 @@ export interface FarmDetail {
   media: { id: string; storage_path: string; position: number }[];
   rating: { avg: number | null; count: number } | null;
   created_at?: string;
+  featured: boolean;
 }
 
 export interface NewFarmPayload {

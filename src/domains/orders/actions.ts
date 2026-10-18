@@ -17,6 +17,8 @@ export async function placeOrder(input: {
   deliveryNote: string;
   buyerName: string;
   buyerPhone: string;
+  visitDate?: string | null;
+  visitSlot?: 'morning' | 'afternoon' | null;
 }): Promise<Result<{ number: string; payment: 'requested' | 'failed'; message?: string }>> {
   const viewer = await getViewer();
   if (!viewer) return { ok: false, error: 'signedOut' };
@@ -39,6 +41,8 @@ export async function placeOrder(input: {
           delivery_note: (input.deliveryNote ?? '').slice(0, 500),
           buyer_name: (input.buyerName || viewer.fullName || '').slice(0, 120),
           buyer_phone: phone,
+          visit_date: input.visitDate && /^\d{4}-\d{2}-\d{2}$/.test(input.visitDate) ? input.visitDate : null,
+          visit_slot: input.visitSlot === 'afternoon' ? 'afternoon' : 'morning',
         })})`;
       const [farm] = await tx<{ county_code: number }[]>`select county_code from public.farms where id = ${input.farmId}`;
       await recordEvent(tx, {

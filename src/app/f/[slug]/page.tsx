@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Icon, CATEGORY_ICON } from '@/components/Icon';
 import { FarmCover } from '@/components/farm/FarmCover';
-import { VerifiedBadge } from '@/components/farm/FarmCard';
+import { FeaturedBadge, VerifiedBadge } from '@/components/farm/FarmCard';
 import { ContactBar } from '@/components/farm/ContactBar';
 import { SaveButton } from '@/components/farm/SaveButton';
 import { FarmMiniMap } from '@/components/farm/FarmMiniMap';
@@ -55,7 +55,9 @@ export default async function FarmPage({ params }: Params) {
   const catName = (s: string) => categories?.find((c) => c.slug === s)?.name ?? s;
   const productName = (l: (typeof farm.listings)[number]) =>
     l.product ? (locale === 'sw' ? l.product.name_sw : l.product.name_en) : l.title;
-  const place = [farm.place_name, farm.sub_county?.name, farm.county?.name].filter((v, i, a): v is string => Boolean(v) && a.indexOf(v) === i).join(', ');
+  const place = [farm.place_name, farm.sub_county?.name, farm.county?.name]
+    .filter((v, i, a): v is string => Boolean(v) && a.indexOf(v) === i)
+    .join(', ');
   const hasPin = farm.public_lng !== null && farm.public_lat !== null;
 
   return (
@@ -87,9 +89,10 @@ export default async function FarmPage({ params }: Params) {
 
       <div className="flex flex-col gap-6 px-4 pt-5">
         <header className="flex flex-col gap-2">
-          {farm.verified_at ? (
-            <span>
-              <VerifiedBadge label={t('farm.verifiedLong')} />
+          {farm.verified_at || farm.featured ? (
+            <span className="flex flex-wrap gap-1.5">
+              {farm.featured ? <FeaturedBadge label={t('featured.badge')} /> : null}
+              {farm.verified_at ? <VerifiedBadge label={t('farm.verifiedLong')} /> : null}
             </span>
           ) : null}
           <h1 className="text-[26px] font-extrabold leading-tight tracking-tight">{farm.name}</h1>
@@ -155,6 +158,7 @@ export default async function FarmPage({ params }: Params) {
                   <CartStepper
                     farm={cartFarm}
                     listing={{
+                      booking: l.type === 'experience',
                       id: l.id,
                       title: productName(l),
                       unit: t(`units.${l.unit}`),

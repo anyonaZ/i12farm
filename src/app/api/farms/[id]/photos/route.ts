@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getViewer } from '@/lib/auth/viewer';
 import { withUser } from '@/lib/db';
 import { sameOrigin } from '@/lib/http';
+import { allow } from '@/lib/rate-limit';
 import { MAX_PHOTO_BYTES, MAX_PHOTOS_PER_FARM, putMedia, sniffImage } from '@/lib/media';
 
 const UUID_RE = /^[0-9a-f-]{36}$/;
@@ -14,6 +15,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!sameOrigin(request)) return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   const viewer = await getViewer();
   if (!viewer) return NextResponse.json({ error: 'signed out' }, { status: 401 });
+  if (!allow(`photo:${viewer.id}`, 40, 600_000))
+    return NextResponse.json({ error: 'too many uploads, wait a few minutes' }, { status: 429 });
   const { id: farmId } = await params;
   if (!UUID_RE.test(farmId)) return NextResponse.json({ error: 'bad farm' }, { status: 400 });
 

@@ -4,7 +4,18 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { Icon } from '@/components/Icon';
-import { issueSignInLink, recordPayout, recordRefund, setCommission, setRoles, setUserStatus, verifyFarm } from '@/domains/admin/actions';
+import {
+  importPayouts,
+  issueSignInLink,
+  recordPayout,
+  recordRefund,
+  runUpkeep,
+  saveTradeSettings,
+  setCommission,
+  setRoles,
+  setUserStatus,
+  verifyFarm,
+} from '@/domains/admin/actions';
 
 const ROLES = ['farmer', 'buyer', 'agent', 'provider', 'partner', 'admin'] as const;
 
@@ -243,6 +254,140 @@ export function CommissionForm({ percent }: { percent: number }) {
         </button>
       </div>
       {message ? <p className="text-xs font-semibold text-soil">{message}</p> : null}
+    </div>
+  );
+}
+
+export function PayoutImport() {
+  const t = useTranslations('admin');
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [message, setMessage] = useState<string[]>([]);
+  return (
+    <form
+      className="flex flex-col gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const form = new FormData(e.currentTarget);
+        start(async () => {
+          const r = await importPayouts(form);
+          if (!r.ok) setMessage([t('error', { reason: r.error })]);
+          else
+            setMessage([
+              t('importResult', { ok: r.data.ok, failed: r.data.failed.length }),
+              ...r.data.failed.map((f) => t('importRowError', { row: f.row, reason: f.reason })),
+            ]);
+          router.refresh();
+        });
+      }}
+    >
+      <label htmlFor="payout-file" className="text-sm font-bold">
+        {t('importLabel')}
+      </label>
+      <input id="payout-file" name="file" type="file" accept=".csv,text/csv" required className="text-sm" />
+      <button type="submit" disabled={pending} className="btn-primary min-h-11 text-sm">
+        {t('importButton')}
+      </button>
+      {message.length ? (
+        <ul role="status" className="text-xs font-semibold text-soil">
+          {message.map((m, i) => (
+            <li key={i}>{m}</li>
+          ))}
+        </ul>
+      ) : null}
+    </form>
+  );
+}
+
+export function TradeSettingsForm({
+  autoCompleteDays,
+  unpaidHours,
+  plans,
+}: {
+  autoCompleteDays: number;
+  unpaidHours: number;
+  plans: string;
+}) {
+  const t = useTranslations('admin');
+  const [days, setDays] = useState(String(autoCompleteDays));
+  const [hours, setHours] = useState(String(unpaidHours));
+  const [planText, setPlanText] = useState(plans);
+  const { pending, message, run } = useRun();
+  return (
+    <div className="flex flex-col gap-2.5">
+      <label htmlFor="set-days" className="text-sm font-bold">
+        {t('autoComplete')}
+      </label>
+      <input
+        id="set-days"
+        inputMode="numeric"
+        value={days}
+        onChange={(e) => setDays(e.target.value.replace(/\D/g, ''))}
+        className="input tabular-nums"
+      />
+      <label htmlFor="set-hours" className="text-sm font-bold">
+        {t('unpaidHours')}
+      </label>
+      <input
+        id="set-hours"
+        inputMode="numeric"
+        value={hours}
+        onChange={(e) => setHours(e.target.value.replace(/\D/g, ''))}
+        className="input tabular-nums"
+      />
+      <label htmlFor="set-plans" className="text-sm font-bold">
+        {t('plans')}
+      </label>
+      <textarea id="set-plans" value={planText} onChange={(e) => setPlanText(e.target.value)} rows={3} className="input py-3 font-mono" />
+      <span className="text-xs text-soil">{t('plansHint')}</span>
+      <button
+        type="button"
+        disabled={pending}
+        className="btn-primary"
+        onClick={() => run(() => saveTradeSettings({ autoCompleteDays: Number(days), unpaidHours: Number(hours), plans: planText }))}
+      >
+        {t('save')}
+      </button>
+      {message ? <p className="text-xs font-semibold text-soil">{message}</p> : null}
+    </div>
+  );
+}
+
+export function UpkeepButton() {
+  const t = useTranslations('admin');
+  const router = useRouter();
+  const [pending, start] = useTransition();
+  const [message, setMessage] = useState('');
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        disabled={pending}
+        className="btn-secondary"
+        onClick={() =>
+          start(async () => {
+            const r = await runUpkeep();
+            setMessage(
+              r.ok
+                ? t('upkeepDone', {
+                    completed: r.data.auto_completed ?? 0,
+                    cancelled: r.data.unpaid_cancelled ?? 0,
+                    expired: r.data.payments_expired ?? 0,
+                    ended: r.data.promotions_ended ?? 0,
+                  })
+                : t('error', { reason: r.error }),
+            );
+            router.refresh();
+          })
+        }
+      >
+        {t('runUpkeep')}
+      </button>
+      {message ? (
+        <p role="status" className="text-xs font-semibold text-soil">
+          {message}
+        </p>
+      ) : null}
     </div>
   );
 }

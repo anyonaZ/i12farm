@@ -16,7 +16,9 @@ export const MAX_PHOTO_BYTES = 2_000_000;
 export const MAX_PHOTOS_PER_FARM = 8;
 
 const driver = (process.env.MEDIA_DRIVER ?? (process.env.S3_BUCKET ? 's3' : 'local')) as 'local' | 's3';
-const localRoot = resolve(/*turbopackIgnore: true*/ process.env.MEDIA_DIR ?? join(/*turbopackIgnore: true*/ process.cwd(), 'data', 'media'));
+const localRoot = resolve(
+  /*turbopackIgnore: true*/ process.env.MEDIA_DIR ?? join(/*turbopackIgnore: true*/ process.cwd(), 'data', 'media'),
+);
 
 let s3: AwsClient | null = null;
 function s3Client(): AwsClient {

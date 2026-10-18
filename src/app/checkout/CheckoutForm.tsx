@@ -18,6 +18,13 @@ interface Listing {
   unit: string;
   price_kes: number;
   quantity: number | null;
+  type: string;
+}
+
+/** yyyy-mm-dd, `days` from today in Nairobi time. */
+function nairobiDate(days: number): string {
+  const d = new Date(Date.now() + days * 86_400_000);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Nairobi' }).format(d);
 }
 
 export function CheckoutForm({
@@ -44,6 +51,8 @@ export function CheckoutForm({
   const [phone, setPhone] = useState(defaults.phone);
   const [error, setError] = useState('');
   const [removed, setRemoved] = useState(false);
+  const [visitDate, setVisitDate] = useState('');
+  const [visitSlot, setVisitSlot] = useState<'morning' | 'afternoon'>('morning');
   const [pending, start] = useTransition();
 
   // Re-price the cart from the live listings; drop anything no longer on sale.
@@ -81,6 +90,8 @@ export function CheckoutForm({
     [cart, farm.id, listings],
   );
   const total = lines.reduce((sum, x) => sum + x.line.qty * (x.live?.price_kes ?? 0), 0);
+  const hasBooking = lines.some((x) => x.live?.type === 'experience');
+  const onlyBookings = lines.length > 0 && lines.every((x) => x.live?.type === 'experience');
 
   if (lines.length === 0) {
     return (
@@ -100,6 +111,10 @@ export function CheckoutForm({
       setError(t('errors.phone'));
       return;
     }
+    if (hasBooking && (!visitDate || visitDate < nairobiDate(1))) {
+      setError(t('errors.visit'));
+      return;
+    }
     start(async () => {
       const result = await placeOrder({
         farmId: farm.id,
@@ -108,6 +123,8 @@ export function CheckoutForm({
         deliveryNote: note,
         buyerName: name,
         buyerPhone: phone,
+        visitDate: hasBooking ? visitDate : null,
+        visitSlot: hasBooking ? visitSlot : null,
       });
       if (!result.ok) {
         setError(
@@ -134,7 +151,17 @@ export function CheckoutForm({
                 {live!.quantity !== null ? ` · ${tc('left', { n: live!.quantity })}` : ''}
               </p>
             </div>
-            <CartStepper farm={farm} listing={{ id, title: line.title, unit: line.unit, price: live!.price_kes, max: live!.quantity }} />
+            <CartStepper
+              farm={farm}
+              listing={{
+                id,
+                title: line.title,
+                unit: line.unit,
+                price: live!.price_kes,
+                max: live!.quantity,
+                booking: live!.type === 'experience',
+              }}
+            />
           </div>
         ))}
         <div className="flex items-center justify-between border-t border-line px-4 py-3.5">
@@ -143,12 +170,56 @@ export function CheckoutForm({
         </div>
       </section>
 
+      {hasBooking ? (
+        <fieldset className="card gap-2.5">
+          <legend className="sr-only">{t('visitTitle')}</legend>
+          <h2 className="text-base font-bold" aria-hidden="true">
+            {t('visitTitle')}
+          </h2>
+          <label htmlFor="co-visit" className="text-sm font-bold">
+            {t('visitDate')}
+          </label>
+          <input
+            id="co-visit"
+            type="date"
+            min={nairobiDate(1)}
+            max={nairobiDate(120)}
+            value={visitDate}
+            onChange={(e) => {
+              setVisitDate(e.target.value);
+              track('booking.date_chosen', { farm: farm.id });
+            }}
+            className="input"
+          />
+          <div className="grid grid-cols-2 gap-2">
+            {(['morning', 'afternoon'] as const).map((slot) => (
+              <label
+                key={slot}
+                className={`flex items-center gap-2 rounded-2xl border p-3 text-sm font-semibold ${visitSlot === slot ? 'border-sprout-deep' : 'border-line'}`}
+              >
+                <input
+                  type="radio"
+                  name="visit-slot"
+                  checked={visitSlot === slot}
+                  onChange={() => setVisitSlot(slot)}
+                  className="size-5 accent-sprout-deep"
+                />
+                {t(slot)}
+              </label>
+            ))}
+          </div>
+          <p className="text-xs text-soil">{t('visitHint')}</p>
+        </fieldset>
+      ) : null}
+
       <fieldset className="card gap-2.5">
         <legend className="sr-only">{t('fulfilment')}</legend>
-        <h2 className="text-base font-bold" aria-hidden="true">
-          {t('fulfilment')}
-        </h2>
-        {(['pickup', 'delivery'] as const).map((f) => (
+        {!onlyBookings ? (
+          <h2 className="text-base font-bold" aria-hidden="true">
+            {t('fulfilment')}
+          </h2>
+        ) : null}
+        {(onlyBookings ? [] : (['pickup', 'delivery'] as const)).map((f) => (
           <label
             key={f}
             className={`flex items-center gap-3 rounded-2xl border p-3 text-sm font-semibold ${fulfilment === f ? 'border-sprout-deep' : 'border-line'}`}

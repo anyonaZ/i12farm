@@ -2,7 +2,8 @@ name: Nightly database backup and rollup
 
 # Free Postgres plans keep few or no backups, so we take our own.
 # Runs at 01:15 Nairobi (22:15 UTC):
-#   1. rolls yesterday's raw events into events_daily (works without pg_cron)
+#   1. rolls yesterday's raw events into events_daily (works without pg_cron) and
+#      runs order upkeep: auto-complete, unpaid cancellation, featured expiry
 #   2. dumps the public and auth schemas, encrypted before leaving the runner,
 #      kept as a private workflow artifact for 30 days.
 #
@@ -22,10 +23,12 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: Roll up yesterday's events
+      - name: Roll up yesterday's events and run order upkeep
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: docker run --rm -e DATABASE_URL postgres:17 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'select public.rollup_events()'
+        run: |
+          docker run --rm -e DATABASE_URL postgres:17 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+            -c 'select public.rollup_events()' -c 'select public.run_maintenance()'
       - name: Dump, compress and encrypt
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

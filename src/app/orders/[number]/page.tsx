@@ -28,13 +28,18 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
   return (
     <main className="flex flex-col gap-4 px-4 pb-28 pt-6">
       <header className="flex items-start gap-3">
-        <Link href="/orders" className="grid size-11 shrink-0 place-items-center rounded-full border border-line bg-surface" aria-label={t('back')}>
+        <Link
+          href="/orders"
+          className="grid size-11 shrink-0 place-items-center rounded-full border border-line bg-surface"
+          aria-label={t('back')}
+        >
           <Icon name="back" />
         </Link>
         <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
           <h1 className="text-xl font-extrabold">{t('order', { number: order.number })}</h1>
           <p className="max-w-full truncate text-sm text-soil">
-            {order.i_am_buyer ? order.farm_name : (order.buyer_name ?? t('buyer'))} · {t('placedOn', { when: format.relativeTime(new Date(order.created_at)) })}
+            {order.i_am_buyer ? order.farm_name : (order.buyer_name ?? t('buyer'))} ·{' '}
+            {t('placedOn', { when: format.relativeTime(new Date(order.created_at)) })}
           </p>
           <StatusPill status={order.status} label={t(`status.${order.status}`)} />
         </div>
@@ -101,7 +106,16 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
       </section>
 
       <section className="card gap-2 text-sm">
-        <Row label={order.fulfilment === 'pickup' ? t('pickup') : t('delivery')} value={order.fulfilment === 'pickup' ? (order.farm?.place ?? '') : ''} />
+        <Row
+          label={order.fulfilment === 'pickup' ? t('pickup') : t('delivery')}
+          value={order.fulfilment === 'pickup' ? (order.farm?.place ?? '') : ''}
+        />
+        {order.visit_date ? (
+          <Row
+            label={t('visit')}
+            value={`${format.dateTime(new Date(`${order.visit_date}T12:00:00+03:00`), { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Africa/Nairobi' })}, ${t(`slot.${order.visit_slot ?? 'morning'}`)}`}
+          />
+        ) : null}
         {order.delivery_note ? <Row label={t('note')} value={order.delivery_note} /> : null}
         {order.i_manage && !order.i_am_buyer ? <Row label={t('phone')} value={displayPhone(order.buyer_phone)} /> : null}
         {order.payments

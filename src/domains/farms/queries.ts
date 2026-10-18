@@ -29,7 +29,8 @@ function detailQuery(tx: Tx, where: 'slug' | 'managed', value: string) {
              select json_agg(json_build_object('id', m.id, 'storage_path', m.storage_path, 'position', m.position)
                     order by m.position, m.created_at)
              from public.farm_media m where m.farm_id = f.id), '[]'::json) as media,
-           (select json_build_object('avg', r.avg_rating, 'count', r.reviews) from public.farm_rating(f.id) r) as rating
+           (select json_build_object('avg', r.avg_rating, 'count', r.reviews) from public.farm_rating(f.id) r) as rating,
+           public.farm_featured(f.id) as featured
     from public.farms f
     join public.counties c on c.code = f.county_code
     left join public.sub_counties sc on sc.id = f.sub_county_id
@@ -136,7 +137,7 @@ export async function getPilotProgress() {
 }
 
 const SUMMARY_COLUMNS = `id, slug, name, farmer_name, categories, county_code, county_name, place_name, lng, lat,
-  verified, cover_path, min_price_kes, min_price_unit, listing_count, rating, review_count`;
+  verified, cover_path, min_price_kes, min_price_unit, listing_count, rating, review_count, featured`;
 
 export async function farmsInBox(
   userId: string | null,

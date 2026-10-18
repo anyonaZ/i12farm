@@ -96,7 +96,7 @@ export function ExploreClient({ categories, counties }: Props) {
 
   const list = results ?? visibleInBounds;
   const sorted = useMemo(
-    () => [...list].sort((a, b) => Number(b.id === selected) - Number(a.id === selected) || Number(b.verified) - Number(a.verified)),
+    () => [...list].sort((a, b) => Number(b.id === selected) - Number(a.id === selected) || Number(b.featured) - Number(a.featured) || Number(b.verified) - Number(a.verified)),
     [list, selected],
   );
   const points = useMemo(

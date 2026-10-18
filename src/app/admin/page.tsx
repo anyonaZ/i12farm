@@ -5,20 +5,48 @@ import { adminListFarms, adminListUsers, adminMoney } from '@/domains/admin/quer
 import { requireRole } from '@/lib/auth/viewer';
 import { kes } from '@/lib/format';
 import { displayPhone } from '@/lib/phone';
-import { CommissionForm, FarmVerifyButton, PayoutForm, RefundForm, UserRow } from './AdminControls';
+import { getInsights } from '@/domains/admin/insights';
+import { withUser } from '@/lib/db';
+import {
+  CommissionForm,
+  FarmVerifyButton,
+  PayoutForm,
+  PayoutImport,
+  RefundForm,
+  TradeSettingsForm,
+  UpkeepButton,
+  UserRow,
+} from './AdminControls';
+import { InsightsView } from './Insights';
 
 export const metadata = { title: 'Admin', robots: { index: false } };
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ q?: string; tab?: string; all?: string }> }) {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; tab?: string; all?: string; days?: string }>;
+}) {
   const viewer = await requireRole('admin', '/admin');
-  const { q = '', tab = 'people', all } = await searchParams;
+  const { q = '', tab = 'people', all, days: daysParam } = await searchParams;
+  const days = daysParam === '90' ? 90 : daysParam === '7' ? 7 : 30;
   const t = await getTranslations('admin');
   const format = await getFormatter();
   const money = tab === 'money' ? await adminMoney(viewer) : null;
+  const insights = tab === 'insights' ? await getInsights(viewer, days) : null;
+  const settings =
+    tab === 'settings'
+      ? Object.fromEntries(
+          (await withUser(viewer.id, (tx) => tx<{ key: string; value: unknown }[]>`select key, value from public.platform_settings`)).map(
+            (r) => [r.key, r.value],
+          ),
+        )
+      : null;
   const tabs = [
+    { key: 'insights', label: t('insights'), icon: 'chart' as const },
     { key: 'people', label: t('users'), icon: 'user' as const },
     { key: 'farms', label: t('farms'), icon: 'badge' as const },
     { key: 'money', label: t('money'), icon: 'wallet' as const },
+    { key: 'settings', label: t('settings'), icon: 'clipboard' as const },
   ];
 
   return (
@@ -29,13 +57,13 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         </Link>
         <h1 className="text-2xl font-extrabold">{t('title')}</h1>
       </header>
-      <nav className="grid grid-cols-3 gap-1 rounded-full bg-surface p-1" aria-label={t('title')}>
+      <nav className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" aria-label={t('title')}>
         {tabs.map((x) => (
           <Link
             key={x.key}
             href={`/admin?tab=${x.key}`}
             aria-current={tab === x.key ? 'page' : undefined}
-            className={`flex min-h-10 items-center justify-center gap-1.5 rounded-full text-sm font-bold ${tab === x.key ? 'bg-forest text-white' : 'text-soil'}`}
+            className={`flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border px-3.5 text-sm font-bold ${tab === x.key ? 'border-forest bg-forest text-white' : 'border-line bg-surface text-soil'}`}
           >
             <Icon name={x.icon} size={16} />
             {x.label}
@@ -121,9 +149,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
                 <div className="flex justify-between gap-3">
                   <span className="min-w-0">
                     <b className="block truncate">{p.farm_name}</b>
-                    <span className="text-sm text-soil">
-                      M-Pesa {p.payout_phone ? displayPhone(p.payout_phone) : '—'}
-                    </span>
+                    <span className="text-sm text-soil">M-Pesa {p.payout_phone ? displayPhone(p.payout_phone) : '—'}</span>
                   </span>
                   <b className="tabular-nums">{kes(p.due_kes)}</b>
                 </div>
@@ -150,7 +176,33 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
             ))}
           </section>
           <section className="card gap-3">
-            <CommissionForm percent={money.commissionBps / 100} />
+            <h2 className="text-lg font-bold">{t('csvTitle')}</h2>
+            <p className="text-sm text-soil">{t('csvHint')}</p>
+            <a href="/admin/export/payouts.csv" className="btn-secondary">
+              {t('downloadCsv')}
+            </a>
+            <PayoutImport />
+          </section>
+        </>
+      ) : null}
+      {insights ? <InsightsView data={insights} /> : null}
+
+      {settings ? (
+        <>
+          <section className="card gap-3">
+            <CommissionForm percent={Number(settings.commission_bps ?? 1000) / 100} />
+          </section>
+          <section className="card gap-3">
+            <TradeSettingsForm
+              autoCompleteDays={Number(settings.auto_complete_days ?? 3)}
+              unpaidHours={Number(settings.unpaid_cancel_hours ?? 48)}
+              plans={((settings.premium_plans as { days: number; price: number }[] | undefined) ?? [])
+                .map((p) => `${p.days}, ${p.price}`)
+                .join('\n')}
+            />
+          </section>
+          <section className="card gap-3">
+            <UpkeepButton />
           </section>
         </>
       ) : null}

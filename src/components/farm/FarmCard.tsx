@@ -31,7 +31,10 @@ export function FarmCard({
   const place = [farm.place_name, farm.county_name].filter(Boolean).join(' · ');
   const rating =
     farm.review_count > 0 ? (
-      <span className="inline-flex items-center gap-1 text-sm font-semibold" aria-label={t('farmPage.rating', { avg: String(farm.rating), n: farm.review_count })}>
+      <span
+        className="inline-flex items-center gap-1 text-sm font-semibold"
+        aria-label={t('farmPage.rating', { avg: String(farm.rating), n: farm.review_count })}
+      >
         <Icon name="star" size={13} className="fill-amber text-amber" />
         {farm.rating} <span className="font-normal text-soil">({farm.review_count})</span>
       </span>
@@ -55,6 +58,7 @@ export function FarmCard({
           {price}
           <span className="flex items-center gap-2">
             {rating}
+            {farm.featured ? <FeaturedBadge label={t('featured.badge')} /> : null}
             {farm.verified ? <VerifiedBadge label={t('farm.verified')} /> : null}
           </span>
         </span>
@@ -66,11 +70,10 @@ export function FarmCard({
     <Link href={`/f/${farm.slug}`} className="flex flex-col gap-2.5">
       <span className="relative block aspect-[16/10] overflow-hidden rounded-2xl">
         <FarmCover id={farm.id} name={farm.name} category={farm.categories[0]} coverPath={farm.cover_path} />
-        {farm.verified ? (
-          <span className="absolute left-2.5 top-2.5">
-            <VerifiedBadge label={t('farm.verified')} />
-          </span>
-        ) : null}
+        <span className="absolute left-2.5 top-2.5 flex gap-1.5">
+          {farm.featured ? <FeaturedBadge label={t('featured.badge')} /> : null}
+          {farm.verified ? <VerifiedBadge label={t('farm.verified')} /> : null}
+        </span>
       </span>
       <span className="flex items-baseline justify-between gap-2">
         <span className="min-w-0 truncate text-base font-bold">{farm.name}</span>
@@ -87,6 +90,15 @@ export function FarmCard({
         {farm.categories.map(categoryName).join(' · ')} · {t('farm.products', { n: farm.listing_count })}
       </span>
     </Link>
+  );
+}
+
+export function FeaturedBadge({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-forest px-2 py-0.5 text-xs font-bold text-lime">
+      <Icon name="star" size={12} className="fill-lime" />
+      {label}
+    </span>
   );
 }
 

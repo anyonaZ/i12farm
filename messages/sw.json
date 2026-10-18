@@ -299,7 +299,8 @@
     "empty": "Kikapu chako ni tupu.",
     "left": "Zimebaki {n}",
     "soldOut": "Zimeisha",
-    "browse": "Tafuta mashamba"
+    "browse": "Tafuta mashamba",
+    "book": "Weka nafasi"
   },
   "checkout": {
     "title": "Malipo",
@@ -324,8 +325,14 @@
       "phone": "Tumia nambari ya Safaricom, kama 0712 345 678.",
       "empty": "Kikapu chako ni tupu.",
       "placeFailed": "Oda haikuwekwa: {detail}",
-      "signedOut": "Ingia kwanza."
-    }
+      "signedOut": "Ingia kwanza.",
+      "visit": "Chagua tarehe ya ziara kuanzia kesho."
+    },
+    "visitTitle": "Utatembelea lini?",
+    "visitDate": "Tarehe ya ziara",
+    "morning": "Asubuhi (saa 2 – saa 6)",
+    "afternoon": "Mchana (saa 8 – saa 11)",
+    "visitHint": "Shamba linathibitisha tarehe linapokubali nafasi yako."
   },
   "orders": {
     "title": "Oda",
@@ -404,7 +411,13 @@
     "note": "Ujumbe",
     "error": "Haikufanyika: {reason}",
     "refundDue": "Oda hii ililipwa kisha ikaghairiwa. i12farm itamrudishia mnunuzi pesa.",
-    "viewAll": "Oda zote"
+    "viewAll": "Oda zote",
+    "visit": "Ziara",
+    "slot": {
+      "morning": "asubuhi",
+      "afternoon": "mchana"
+    },
+    "booking": "Nafasi"
   },
   "farmPage": {
     "message": "Ujumbe",
@@ -475,6 +488,77 @@
     "commissionHint": "Kinatumika kwa oda mpya. Kila oda inabaki na kiwango ilichowekwa nacho.",
     "save": "Hifadhi",
     "done": "Imefanyika.",
-    "error": "Haikufanyika: {reason}"
+    "error": "Haikufanyika: {reason}",
+    "insights": "Takwimu",
+    "settings": "Mipangilio",
+    "csvTitle": "Lipa mashamba mengi kwa pamoja",
+    "csvHint": "Pakua faili, lipa mashamba kupitia malipo ya pamoja ya M-Pesa, kisha pakia matokeo yakiwa na risiti ya kila malipo kwenye safu ya kumbukumbu.",
+    "downloadCsv": "Pakua faili ya malipo (CSV)",
+    "importLabel": "Faili ya matokeo (CSV: farm_id, amount_kes, reference)",
+    "importButton": "Rekodi malipo kutoka faili",
+    "importResult": "{ok} yamerekodiwa, {failed} hayakurekodiwa.",
+    "importRowError": "Mstari {row}: {reason}",
+    "autoComplete": "Siku kabla oda iliyo tayari ikamilike yenyewe",
+    "unpaidHours": "Saa kabla oda isiyolipwa ighairiwe",
+    "plans": "Mipango ya kuangazia",
+    "plansHint": "Mpango mmoja kwa kila mstari: siku, bei kwa KES.",
+    "runUpkeep": "Endesha usafishaji wa oda sasa",
+    "upkeepDone": "{completed} zimekamilishwa, {cancelled} zimeghairiwa, maombi {expired} ya malipo yameisha muda, vipindi {ended} vya kuangazia vimeisha.",
+    "promotionRevenue": "Kuangazia mashamba",
+    "kpi": {
+      "orders": "Oda zilizowekwa",
+      "paid": "Oda zilizolipwa",
+      "gmv": "Thamani iliyolipwa",
+      "commission": "Kamisheni",
+      "farms": "Mashamba yaliyochapishwa",
+      "people": "Akaunti mpya",
+      "views": "Waliotazama mashamba",
+      "contacts": "Simu na WhatsApp"
+    },
+    "period": "Siku {days} zilizopita",
+    "weekly": "Thamani iliyolipwa kwa wiki (KES)",
+    "funnel": "Kutoka kutazama shamba hadi oda iliyolipwa",
+    "funnelSteps": {
+      "views": "Waliotazama mashamba",
+      "contacts": "Mawasiliano",
+      "placed": "Oda zilizowekwa",
+      "paid": "Oda zilizolipwa"
+    },
+    "byCounty": "Kwa kaunti za majaribio",
+    "county": "Kaunti",
+    "topProducts": "Kinachouzika",
+    "product": "Bidhaa",
+    "qty": "Kiasi",
+    "value": "Thamani",
+    "export": "Pakua data (CSV)",
+    "exportOrders": "Oda",
+    "exportContacts": "Mawasiliano",
+    "exportDaily": "Idadi ya matukio kwa siku",
+    "noData": "Bado hakuna data kwa kipindi hiki."
+  },
+  "featured": {
+    "badge": "Linaangaziwa",
+    "title": "Angazia shamba lako",
+    "intro": "Mashamba yanayoangaziwa yanaonekana kwanza kwenye ramani na utafutaji, yakiwa na beji ya Linaangaziwa, kwa siku utakazochagua.",
+    "plan": "Siku {days}",
+    "choose": "Chagua mpango",
+    "phone": "Nambari ya M-Pesa",
+    "pay": "Lipa {price} kwa M-Pesa",
+    "waiting": "Angalia simu na uweke PIN ya M-Pesa.",
+    "simulatePay": "Majaribio: lipa",
+    "simulateCancel": "Majaribio: ghairi kwenye simu",
+    "active": "{farm} linaangaziwa hadi {date}.",
+    "failed": "Malipo hayakufaulu: {reason}",
+    "tryAgain": "Tuma ombi tena",
+    "cta": "Angazia shamba hili",
+    "until": "Linaangaziwa hadi {date}",
+    "extend": "Ongeza muda",
+    "newPlanAfter": "Mpango mpya unaanza wa sasa ukiisha.",
+    "errors": {
+      "phone": "Tumia nambari ya Safaricom, kama 0712 345 678.",
+      "failed": "Haikuanza: {detail}",
+      "notPayable": "Mpango huu hauwezi kulipiwa tena. Chagua upya.",
+      "mpesa": "M-Pesa haikukubali ombi: {detail}"
+    }
   }
 }

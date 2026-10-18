@@ -299,7 +299,8 @@
     "empty": "Your cart is empty.",
     "left": "{n} left",
     "soldOut": "Sold out",
-    "browse": "Find farms"
+    "browse": "Find farms",
+    "book": "Book"
   },
   "checkout": {
     "title": "Checkout",
@@ -324,8 +325,14 @@
       "phone": "Use a Safaricom number, like 0712 345 678.",
       "empty": "Your cart is empty.",
       "placeFailed": "The order wasn't placed: {detail}",
-      "signedOut": "Sign in first."
-    }
+      "signedOut": "Sign in first.",
+      "visit": "Choose a visit date from tomorrow."
+    },
+    "visitTitle": "When will you visit?",
+    "visitDate": "Visit date",
+    "morning": "Morning (8 am – 12 pm)",
+    "afternoon": "Afternoon (2 – 5 pm)",
+    "visitHint": "The farm confirms the date when it accepts your booking."
   },
   "orders": {
     "title": "Orders",
@@ -404,7 +411,13 @@
     "note": "Note",
     "error": "Not done: {reason}",
     "refundDue": "This order was paid and then cancelled. i12farm refunds the buyer.",
-    "viewAll": "All orders"
+    "viewAll": "All orders",
+    "visit": "Visit",
+    "slot": {
+      "morning": "morning",
+      "afternoon": "afternoon"
+    },
+    "booking": "Booking"
   },
   "farmPage": {
     "message": "Message",
@@ -475,6 +488,77 @@
     "commissionHint": "Applies to new orders. Each order keeps the rate it was placed with.",
     "save": "Save",
     "done": "Done.",
-    "error": "Not done: {reason}"
+    "error": "Not done: {reason}",
+    "insights": "Insights",
+    "settings": "Settings",
+    "csvTitle": "Pay many farms at once",
+    "csvHint": "Download the file, pay the farms through M-Pesa bulk payments, then upload the results with each receipt in the reference column.",
+    "downloadCsv": "Download payout file (CSV)",
+    "importLabel": "Results file (CSV: farm_id, amount_kes, reference)",
+    "importButton": "Record payouts from file",
+    "importResult": "{ok} recorded, {failed} not recorded.",
+    "importRowError": "Row {row}: {reason}",
+    "autoComplete": "Days before a ready order completes on its own",
+    "unpaidHours": "Hours before an unpaid order is cancelled",
+    "plans": "Featured plans",
+    "plansHint": "One plan per line: days, price in KES.",
+    "runUpkeep": "Run order upkeep now",
+    "upkeepDone": "{completed} completed, {cancelled} cancelled, {expired} payment prompts expired, {ended} featured periods ended.",
+    "promotionRevenue": "Featured listings",
+    "kpi": {
+      "orders": "Orders placed",
+      "paid": "Paid orders",
+      "gmv": "Paid value",
+      "commission": "Commission",
+      "farms": "Published farms",
+      "people": "New accounts",
+      "views": "Farm page views",
+      "contacts": "Calls and WhatsApps"
+    },
+    "period": "Last {days} days",
+    "weekly": "Paid value per week (KES)",
+    "funnel": "From farm view to paid order",
+    "funnelSteps": {
+      "views": "Farm page views",
+      "contacts": "Contact taps",
+      "placed": "Orders placed",
+      "paid": "Orders paid"
+    },
+    "byCounty": "By pilot county",
+    "county": "County",
+    "topProducts": "What sells",
+    "product": "Product",
+    "qty": "Qty",
+    "value": "Value",
+    "export": "Download data (CSV)",
+    "exportOrders": "Orders",
+    "exportContacts": "Contact taps",
+    "exportDaily": "Daily event counts",
+    "noData": "No data yet for this period."
+  },
+  "featured": {
+    "badge": "Featured",
+    "title": "Feature your farm",
+    "intro": "Featured farms appear first on the map and in search, with a Featured badge, for the days you choose.",
+    "plan": "{days} days",
+    "choose": "Choose a plan",
+    "phone": "M-Pesa number",
+    "pay": "Pay {price} with M-Pesa",
+    "waiting": "Check the phone and enter the M-Pesa PIN.",
+    "simulatePay": "Simulate: pay",
+    "simulateCancel": "Simulate: cancel on phone",
+    "active": "{farm} is featured until {date}.",
+    "failed": "The payment didn't go through: {reason}",
+    "tryAgain": "Send the prompt again",
+    "cta": "Feature this farm",
+    "until": "Featured until {date}",
+    "extend": "Extend",
+    "newPlanAfter": "A new plan starts when the current one ends.",
+    "errors": {
+      "phone": "Use a Safaricom number, like 0712 345 678.",
+      "failed": "Not started: {detail}",
+      "notPayable": "This plan can no longer be paid. Choose again.",
+      "mpesa": "M-Pesa didn't accept the request: {detail}"
+    }
   }
 }

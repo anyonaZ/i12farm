@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { currentUserId } from '@/lib/auth/session';
 import { withUser } from '@/lib/db';
+import { allow, clientIp } from '@/lib/rate-limit';
 
 const CHANNELS = new Set(['call', 'whatsapp', 'sms', 'directions', 'share']);
 const UUID_RE = /^[0-9a-f-]{36}$/;
@@ -10,6 +11,7 @@ const ID_RE = /^[A-Za-z0-9-]{8,64}$/;
 // with keepalive just before the phone app opens. RLS only accepts taps on
 // published farms, and actor_id defaults to the signed-in user.
 export async function POST(request: NextRequest) {
+  if (!allow(`contact:${clientIp(request.headers)}`, 30, 60_000)) return new NextResponse(null, { status: 429 });
   let body: { farm_id?: string; listing_id?: string | null; channel?: string; anonymous_id?: string };
   try {
     body = await request.json();

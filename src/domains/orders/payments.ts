@@ -64,13 +64,13 @@ export async function applyResult(cb: StkCallback, raw: unknown, confirm: boolea
     select public.record_payment_result(${cb.checkoutRequestId}, ${cb.resultCode}, ${cb.resultDesc},
                                         ${cb.receipt}, ${cb.amount}, ${sql.json(raw as never)}) as result`;
   if (result === 'paid' || result === 'failed' || result === 'paid_after_cancel' || result === 'underpaid') {
-    const [payment] = await sql<
-      { order_id: string }[]
-    >`select order_id from public.payments where checkout_request_id = ${cb.checkoutRequestId}`;
+    const [payment] = await sql<{ order_id: string | null; promotion_id: string | null }[]>`
+      select order_id, promotion_id from public.payments where checkout_request_id = ${cb.checkoutRequestId}`;
     await sql`
       insert into public.events (name, anonymous_id, properties, path)
       values (${result === 'failed' ? 'payment.failed' : 'payment.succeeded'}, 'server',
-              ${sql.json({ order: payment?.order_id ?? null, result, code: cb.resultCode })}, '/api/mpesa/callback')`;
+              ${sql.json({ order: payment?.order_id ?? null, promotion: payment?.promotion_id ?? null, result, code: cb.resultCode })},
+              '/api/mpesa/callback')`;
   }
   return result;
 }
@@ -118,6 +118,62 @@ export async function simulatePayment(userId: string, orderId: string, outcome: 
     from public.payments p join public.orders o on o.id = p.order_id
     where p.order_id = ${orderId} and p.status = 'requested' and o.buyer_id = ${userId}
     order by p.requested_at desc limit 1`,
+  );
+  if (!p) return 'none';
+  const raw = simulatedCallback(p.checkout_request_id, p.amount_kes, p.phone, outcome);
+  const cb = parseCallback(raw);
+  return cb ? applyResult(cb, raw, false) : 'invalid';
+}
+
+// ---------------------------------------------------------------------------
+// Featured listings: the farm pays, same STK flow, different target.
+// ---------------------------------------------------------------------------
+export async function requestPromotionPayment(
+  userId: string,
+  promotionId: string,
+  phone: string,
+): Promise<{ ok: true; message: string } | { ok: false; error: PayError; detail?: string }> {
+  const promo = await withUser(userId, async (tx) => {
+    const [row] = await tx<{ id: string; status: string; amount_kes: number; days: number; farm_id: string; recent: string | null }[]>`
+      select p.id, p.status, p.amount_kes, p.days, p.farm_id,
+             (select x.checkout_request_id from public.payments x
+               where x.promotion_id = p.id and x.status = 'requested' and x.requested_at > now() - interval '90 seconds'
+               order by x.requested_at desc limit 1) as recent
+      from public.farm_promotions p where p.id = ${promotionId}`;
+    return row;
+  });
+  if (!promo) return { ok: false, error: 'notYours' };
+  if (promo.status !== 'awaiting_payment') return { ok: false, error: 'notPayable' };
+  if (promo.recent) return { ok: true, message: 'pending' };
+  let stk;
+  try {
+    stk = await stkPush({ phone, amount: promo.amount_kes, reference: 'I12-FEATURE', description: `Featured ${promo.days}d` });
+  } catch (error) {
+    return { ok: false, error: 'mpesa', detail: (error as Error).message };
+  }
+  await getSql()`select public.record_promotion_payment_request(${promo.id}, ${phone}, ${promo.amount_kes},
+                   ${stk.merchantRequestId}, ${stk.checkoutRequestId}, ${userId})`;
+  await withUser(userId, (tx) =>
+    recordEvent(tx, {
+      name: 'payment.requested',
+      userId,
+      properties: { promotion: promo.id, farm: promo.farm_id, amount: promo.amount_kes, mode: mpesaMode },
+      path: '/my-farm/promote',
+    }),
+  );
+  return { ok: true, message: stk.customerMessage };
+}
+
+/** Simulate mode only: answer the prompt for a featured-listing payment. */
+export async function simulatePromotionPayment(userId: string, promotionId: string, outcome: 'success' | 'cancel'): Promise<string> {
+  if (mpesaMode !== 'simulate') return 'disabled';
+  const [p] = await withUser(
+    userId,
+    (tx) => tx<{ checkout_request_id: string; amount_kes: number; phone: string }[]>`
+    select x.checkout_request_id, x.amount_kes, x.phone
+    from public.payments x join public.farm_promotions p on p.id = x.promotion_id
+    where x.promotion_id = ${promotionId} and x.status = 'requested'
+    order by x.requested_at desc limit 1`,
   );
   if (!p) return 'none';
   const raw = simulatedCallback(p.checkout_request_id, p.amount_kes, p.phone, outcome);

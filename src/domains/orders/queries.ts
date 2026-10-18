@@ -12,7 +12,7 @@ export async function getOrder(viewer: Viewer, number: string): Promise<OrderDet
     viewer.id,
     (tx) => tx<OrderDetail[]>`
     select o.id, o.number, o.status, o.subtotal_kes, o.created_at::text as created_at, o.fulfilment, o.buyer_name,
-           o.delivery_note, o.buyer_phone, o.commission_bps, o.commission_kes, o.farmer_payout_kes,
+           o.delivery_note, o.visit_date::text as visit_date, o.visit_slot, o.buyer_phone, o.commission_bps, o.commission_kes, o.farmer_payout_kes,
            o.paid_at::text as paid_at, o.completed_at::text as completed_at,
            f.name as farm_name, f.slug as farm_slug,
            (select count(*)::int from public.order_items i where i.order_id = o.id) as item_count,
@@ -79,12 +79,20 @@ export async function farmForCheckout(viewer: Viewer | null, slug: string) {
         place_name: string | null;
         county_name: string;
         mine: boolean;
-        listings: { id: string; title: string; unit: string; price_kes: number; quantity: number | null; product_slug: string | null }[];
+        listings: {
+          id: string;
+          title: string;
+          unit: string;
+          price_kes: number;
+          quantity: number | null;
+          product_slug: string | null;
+          type: string;
+        }[];
       }[]
     >`
     select f.id, f.slug, f.name, f.farmer_name, f.place_name, c.name as county_name,
            public.can_manage_farm(f.id) as mine,
-           coalesce((select json_agg(json_build_object('id', l.id, 'title', l.title, 'unit', l.unit, 'price_kes', l.price_kes,
+           coalesce((select json_agg(json_build_object('id', l.id, 'title', l.title, 'unit', l.unit, 'price_kes', l.price_kes, 'type', l.type,
                                                        'quantity', l.quantity, 'product_slug', l.product_slug) order by l.price_kes)
                      from public.listings l where l.farm_id = f.id and l.status = 'active' and l.price_kes is not null), '[]'::json) as listings
     from public.farms f join public.counties c on c.code = f.county_code

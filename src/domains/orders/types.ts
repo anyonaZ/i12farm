@@ -28,6 +28,8 @@ export interface OrderItem {
 
 export interface OrderDetail extends OrderSummary {
   delivery_note: string | null;
+  visit_date: string | null;
+  visit_slot: 'morning' | 'afternoon' | null;
   buyer_phone: string;
   commission_bps: number;
   commission_kes: number;

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { currentUserId } from '@/lib/auth/session';
 import { isDbConfigured, withUser } from '@/lib/db';
+import { allow, clientIp } from '@/lib/rate-limit';
 import { isEventName, MAX_BATCH, type EventBatch } from '@/lib/analytics/events';
 
 // Receives batches from the client tracker and appends them to public.events.
@@ -30,6 +31,7 @@ function cleanProperties(input: unknown): Record<string, string | number | boole
 
 export async function POST(request: NextRequest) {
   if (!isDbConfigured) return new NextResponse(null, { status: 204 });
+  if (!allow(`events:${clientIp(request.headers)}`, 60, 60_000)) return new NextResponse(null, { status: 429 });
 
   let body: Partial<EventBatch>;
   try {

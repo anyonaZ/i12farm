@@ -1,10 +1,11 @@
 import Link from 'next/link';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
 import { FarmCover } from '@/components/farm/FarmCover';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { getPilotProgress, listManagedFarms, listSavedFarms } from '@/domains/farms/queries';
 import { unreadTotal } from '@/domains/messaging/queries';
+import { featuredUntil } from '@/domains/promotions/queries';
 import { farmOrdersNeedingAction } from '@/domains/orders/queries';
 import { displayName, requireViewer } from '@/lib/auth/viewer';
 import { kes } from '@/lib/format';
@@ -31,6 +32,11 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
     unreadTotal(viewer),
   ]);
   const name = displayName(viewer);
+  const until = await featuredUntil(
+    viewer,
+    farms.map((f) => f.id),
+  );
+  const format = await getFormatter();
   const total = progress.reduce((s, r) => s + Number(r.farms), 0);
   const mine = progress.reduce((s, r) => s + Number(r.mine), 0);
   const maxCounty = Math.max(1, ...progress.map((r) => Number(r.farms)));
@@ -162,6 +168,24 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
                   <p className="text-xs text-soil">{t('myFarmPlus.payoutNote')}</p>
                 </div>
               ) : null}
+              <Link
+                href={`/my-farm/feature/${f.id}`}
+                className={`flex min-h-12 items-center justify-between gap-3 rounded-2xl px-3.5 text-sm font-bold ${until[f.id] ? 'bg-lime/40' : 'border border-line'}`}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <Icon name="star" size={18} className={until[f.id] ? 'fill-forest text-forest' : 'text-sprout-deep'} />
+                  {until[f.id]
+                    ? t('featured.until', {
+                        date: format.dateTime(new Date(until[f.id] as string), {
+                          day: 'numeric',
+                          month: 'short',
+                          timeZone: 'Africa/Nairobi',
+                        }),
+                      })
+                    : t('featured.cta')}
+                </span>
+                <span className="text-sprout-deep">{until[f.id] ? t('featured.extend') : '›'}</span>
+              </Link>
               {isAgent && !f.claimed && f.managed_by === viewer.id ? <ClaimCode farmId={f.id} /> : null}
               {f.claimed && f.managed_by === viewer.id && f.owner_id !== viewer.id ? (
                 <p className="flex items-center gap-2 text-sm text-soil">

@@ -7,7 +7,7 @@ import { setLine, track, useCartLine } from './cart-hooks';
 
 interface Props {
   farm: { id: string; slug: string; name: string };
-  listing: { id: string; title: string; unit: string; price: number; max: number | null };
+  listing: { id: string; title: string; unit: string; price: number; max: number | null; booking?: boolean };
 }
 
 // "Add" button that becomes − n + once the item is in the cart.
@@ -22,7 +22,9 @@ export function CartStepper({ farm, listing }: Props) {
     setLine(
       farm,
       listing.id,
-      next > 0 ? { qty: next, price: listing.price, title: listing.title, unit: listing.unit, max: listing.max } : null,
+      next > 0
+        ? { qty: next, price: listing.price, title: listing.title, unit: listing.unit, max: listing.max, booking: listing.booking }
+        : null,
     );
     track(next > qty ? 'cart.item_added' : 'cart.item_removed', { farm: farm.id, listing: listing.id, qty: next });
   }
@@ -37,7 +39,14 @@ export function CartStepper({ farm, listing }: Props) {
             className="btn-primary min-h-10 text-sm"
             onClick={() => {
               setConfirming(false);
-              setLine(farm, listing.id, { qty: 1, price: listing.price, title: listing.title, unit: listing.unit, max: listing.max });
+              setLine(farm, listing.id, {
+                qty: 1,
+                price: listing.price,
+                title: listing.title,
+                unit: listing.unit,
+                max: listing.max,
+                booking: listing.booking,
+              });
               track('cart.item_added', { farm: farm.id, listing: listing.id, qty: 1, replaced: true });
             }}
           >
@@ -59,7 +68,7 @@ export function CartStepper({ farm, listing }: Props) {
         className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-sprout-deep px-4 text-sm font-bold text-white"
       >
         <Icon name="plus" size={16} />
-        {t('add')}
+        {listing.booking ? t('book') : t('add')}
       </button>
     );
   }

@@ -12,6 +12,7 @@ export interface CartLine {
   title: string;
   unit: string;
   max: number | null;
+  booking?: boolean; // training or farm tour: checkout asks for a visit date
 }
 
 export interface Cart {
