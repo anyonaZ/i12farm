@@ -2,7 +2,7 @@
 
 Every Kenyan farm, pinned, discoverable and able to sell. A mobile-first web
 app (installable on Android from Chrome) built on Next.js and plain
-PostgreSQL + PostGIS, delivered in phases. Phases 0, 1 and 2 are built. See
+PostgreSQL + PostGIS, delivered in phases. Phases 0 to 3 are built. See
 `HANDOFF.md` for the current state, decisions and what comes next.
 
 No vendor backend: the app talks to Postgres directly and handles sign-in,
@@ -27,6 +27,10 @@ sessions and photo storage itself. Any Postgres 15+ with PostGIS works
 | Inbox | Buyer ↔ farm conversations, order updates posted into the thread, unread counts; polls every 5 s while open |
 | My Farm | Views, calls, WhatsApp taps, earnings (held, due, paid out), price and stock editing, photos, claim codes, pilot progress for agents |
 | Admin | `/admin`: Insights (KPIs, weekly paid value, funnel, counties, top products, CSV exports), people (roles, suspend, one-time sign-in links), farms to verify, money (payouts and refunds, payout CSV out and results CSV in), settings (commission, upkeep timings, featured plans) |
+| Vets | `/vets`: farmers ask for a vet (animal, problem, county, how soon); vet-service farms in that county get an SMS, the first to accept gets the farmer's number and the farmer gets the vet's. Requests expire after 48 h |
+| SMS | Africa's Talking: new paid order to the farm, ready/declined to the buyer, payout and refund receipts, vet alerts. Every SMS goes through an outbox table; **simulate mode** (default) stores the text without sending. STOP / ACHA opts a phone out of partner news |
+| USSD | Feature-phone menu: farmers see and accept orders, mark them ready, change prices and stock, request a vet or take vet requests, switch SMS news and language. Admin → Reach has a simulator |
+| Partners | `/partner`: county offices, cooperatives and NGOs write one SMS in English and Kiswahili, pick counties and farm types, see the audience and cost, and submit it; an admin approves it in Admin → Reach; delivery numbers come back to the partner |
 | Analytics | First-party events (`src/lib/analytics`) into `public.events`, rolled up nightly into `events_daily` |
 
 ## Run it locally (Arch Linux)
@@ -55,6 +59,7 @@ Dev accounts (password `i12farm-dev` for all):
 | Field agent | `0700 000 001` | Manages most demo farms (including Homa Organica), enrols farms, issues claim codes, handles their orders |
 | Farmer | `0700 000 002` | Owns Lakeview Dairy |
 | Buyer | `0700 000 003` | Orders and reviews |
+| Partner | `0700 000 004` | Homa Bay County Extension: sends SMS broadcasts from `/partner` |
 | Admin | `admin@dev.i12farm.local` | Everything under `/admin` |
 
 **Try a full sale:** sign in as the buyer, open `/f/homa-organica`, add racing
@@ -96,6 +101,30 @@ secret, `MPESA_PASSKEY` (sandbox shortcode 174379), and
 public HTTPS; locally use a tunnel (`cloudflared tunnel --url localhost:3000`)
 and set `MPESA_CALLBACK_BASE_URL` to it. Callbacks are confirmed with an STK
 status query before an order is marked paid.
+
+## SMS and USSD (Africa's Talking)
+
+`SMS_ENV=simulate` (the default without keys) sends nothing: messages are
+rendered in the farmer's language and stored with status `simulated`, so
+Admin → Reach shows exactly what would have gone out. The USSD simulator on
+the same page runs the real menu for any phone number.
+
+To go live: create an Africa's Talking account, then set `AT_USERNAME`,
+`AT_API_KEY`, `SMS_ENV=sandbox` (or `production` once you have credit and,
+optionally, a sender ID in `AT_SENDER_ID`). Set `SMS_CALLBACK_SECRET` and
+`USSD_SECRET` (`openssl rand -hex 24` each) and register these URLs on the AT
+dashboard:
+
+- SMS delivery reports: `<site>/api/sms/delivery/<SMS_CALLBACK_SECRET>`
+- Incoming SMS (STOP/START): `<site>/api/sms/inbound/<SMS_CALLBACK_SECRET>`
+- USSD service code callback: `<site>/api/ussd/<USSD_SECRET>`
+
+Then put the leased USSD code in Admin → Reach → settings so SMS mention it.
+The server sends queued SMS every 30 s; on hosts that pause idle servers,
+call `/api/cron/sms` every minute or two with `Authorization: Bearer <CRON_SECRET>`.
+The Africa's Talking API details (endpoints, status codes, callback fields)
+were written from their documentation; check them against the dashboard
+before going live.
 
 ## Deploy
 

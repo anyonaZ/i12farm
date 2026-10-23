@@ -52,7 +52,7 @@ export async function withUser<T>(userId: string | null, fn: (tx: Tx) => Promise
 export function dbMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'message' in error) {
     const e = error as { message: string; code?: string };
-    if (e.code && /^(P0001|P0002|22023|23505|42501|54000)$/.test(e.code)) return e.message;
+    if (e.code && /^(P0001|P0002|22023|23505|42501|54000|55000)$/.test(e.code)) return e.message;
     if (e.code === '23514') return 'That value is not allowed';
     if (e.code === '23503') return 'Unknown reference';
   }

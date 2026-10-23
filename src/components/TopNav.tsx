@@ -8,14 +8,15 @@ import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { Logo } from '@/components/Logo';
 
 // Laptop and desktop navigation (the bottom tab bar is for phones).
-const ITEMS: { href: string; key: 'explore' | 'orders' | 'inbox' | 'myFarm'; icon: IconName }[] = [
+const ITEMS: { href: string; key: 'explore' | 'orders' | 'vets' | 'inbox' | 'myFarm'; icon: IconName }[] = [
   { href: '/', key: 'explore', icon: 'compass' },
   { href: '/orders', key: 'orders', icon: 'bag' },
+  { href: '/vets', key: 'vets', icon: 'cross' },
   { href: '/inbox', key: 'inbox', icon: 'inbox' },
   { href: '/my-farm', key: 'myFarm', icon: 'sprout' },
 ];
 
-export function TopNav({ viewer }: { viewer: { name: string; admin: boolean } | null }) {
+export function TopNav({ viewer }: { viewer: { name: string; admin: boolean; partner: boolean } | null }) {
   const pathname = usePathname();
   const t = useTranslations();
 
@@ -42,6 +43,18 @@ export function TopNav({ viewer }: { viewer: { name: string; admin: boolean } | 
               </Link>
             );
           })}
+          {viewer?.partner ? (
+            <Link
+              href="/partner"
+              aria-current={pathname.startsWith('/partner') ? 'page' : undefined}
+              className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold ${
+                pathname.startsWith('/partner') ? 'bg-sprout/15 text-sprout-deep' : 'text-soil hover:bg-mint hover:text-forest'
+              }`}
+            >
+              <Icon name="megaphone" size={18} />
+              {t('nav.partner')}
+            </Link>
+          ) : null}
           {viewer?.admin ? (
             <Link
               href="/admin"

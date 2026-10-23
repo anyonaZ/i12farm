@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSql } from '@/lib/db';
+import { dispatchQueued } from '@/domains/notifications/dispatch';
 
 // Order upkeep for hosts with a scheduler (Vercel Cron, cron-job.org, a VPS
 // crontab): GET or POST with "Authorization: Bearer <CRON_SECRET>".
@@ -12,7 +13,8 @@ async function handle(request: NextRequest) {
   const b = Buffer.from(secret);
   if (secret.length < 24 || a.length !== b.length || !timingSafeEqual(a, b)) return new NextResponse(null, { status: 404 });
   const [{ result }] = await getSql()<{ result: unknown }[]>`select public.run_maintenance() as result`;
-  return NextResponse.json(result, { headers: { 'cache-control': 'no-store' } });
+  const sms = await dispatchQueued().catch(() => null);
+  return NextResponse.json({ ...(result as object), sms }, { headers: { 'cache-control': 'no-store' } });
 }
 
 export const GET = handle;

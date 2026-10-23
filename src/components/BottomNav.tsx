@@ -3,11 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { Icon } from '@/components/Icon';
 
-// Requests joins this bar when Phase 3 ships.
 const ITEMS = [
   { href: '/', key: 'explore', icon: CompassIcon },
   { href: '/orders', key: 'orders', icon: BagIcon },
+  { href: '/vets', key: 'vets', icon: VetIcon },
   { href: '/inbox', key: 'inbox', icon: InboxIcon },
   { href: '/my-farm', key: 'myFarm', icon: SproutIcon },
 ] as const;
@@ -44,6 +45,10 @@ export function BottomNav() {
       </ul>
     </nav>
   );
+}
+
+function VetIcon() {
+  return <Icon name="cross" size={22} />;
 }
 
 function CompassIcon() {

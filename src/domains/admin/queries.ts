@@ -82,3 +82,63 @@ export async function adminMoney(viewer: Viewer) {
     return { payouts, refunds, totals, commissionBps: setting?.value ?? 1000 };
   });
 }
+
+// ---------------------------------------------------------------------------
+// Phase 3 · Reach (admins read these through RLS)
+// ---------------------------------------------------------------------------
+
+export interface OutboxRow {
+  id: number;
+  phone: string;
+  template: string;
+  kind: string;
+  locale: string;
+  status: string;
+  body: string | null;
+  error: string | null;
+  cost_kes: number | null;
+  created_at: string;
+}
+
+export interface ReachOverview {
+  today: number;
+  queued: number;
+  failed7d: number;
+  cost30d: number;
+  outbox: OutboxRow[];
+  requests: {
+    number: string;
+    status: string;
+    animal: string;
+    county: string;
+    via: string;
+    vets_alerted: number;
+    created_at: string;
+    vet: string | null;
+  }[];
+  settings: Record<string, unknown>;
+}
+
+export async function adminReach(viewer: Viewer): Promise<ReachOverview> {
+  return withUser(viewer.id, async (tx) => {
+    const [counts] = await tx<{ today: number; queued: number; failed7d: number; cost30d: number }[]>`
+      select
+        (select count(*)::int from public.notifications
+          where sent_at >= date_trunc('day', now() at time zone 'Africa/Nairobi') at time zone 'Africa/Nairobi') as today,
+        (select count(*)::int from public.notifications where status in ('queued', 'sending')) as queued,
+        (select count(*)::int from public.notifications where status = 'failed' and created_at > now() - interval '7 days') as "failed7d",
+        (select coalesce(sum(cost_kes), 0) from public.notifications where created_at > now() - interval '30 days') as "cost30d"`;
+    const outbox = await tx<OutboxRow[]>`
+      select id, phone, template, kind, locale, status, body, error, cost_kes, created_at::text as created_at
+      from public.notifications order by id desc limit 40`;
+    const requests = await tx<ReachOverview['requests']>`
+      select s.number, s.status, s.animal, c.name as county, s.via, s.vets_alerted, s.created_at::text as created_at, f.name as vet
+      from public.service_requests s join public.counties c on c.code = s.county_code
+      left join public.farms f on f.id = s.vet_farm_id
+      order by s.created_at desc limit 20`;
+    const settings = Object.fromEntries(
+      (await tx<{ key: string; value: unknown }[]>`select key, value from public.platform_settings`).map((r) => [r.key, r.value]),
+    );
+    return { ...counts, outbox, requests, settings };
+  });
+}

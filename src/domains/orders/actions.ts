@@ -5,6 +5,7 @@ import { getViewer } from '@/lib/auth/viewer';
 import { recordEvent } from '@/lib/analytics/server';
 import { dbMessage, withUser } from '@/lib/db';
 import { toInternational } from '@/lib/phone';
+import { dispatchSoon } from '@/domains/notifications/dispatch';
 import { refreshPayment, requestPayment, simulatePayment } from './payments';
 import type { CartLine, OrderStatus } from './types';
 
@@ -116,6 +117,7 @@ export async function changeOrderStatus(orderId: string, status: OrderStatus, no
   } catch (error) {
     return { ok: false, error: 'statusFailed', detail: dbMessage(error) };
   }
+  dispatchSoon();
   revalidatePath('/orders');
   revalidatePath('/my-farm');
   return { ok: true, data: undefined };

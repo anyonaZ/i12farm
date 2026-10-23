@@ -48,7 +48,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale} className={jakarta.variable}>
       <body className="antialiased">
         <NextIntlClientProvider>
-          <TopNav viewer={viewer ? { name: displayName(viewer), admin: viewer.roles.includes('admin') } : null} />
+          <TopNav
+            viewer={
+              viewer
+                ? {
+                    name: displayName(viewer),
+                    admin: viewer.roles.includes('admin'),
+                    partner: viewer.roles.includes('partner') || viewer.roles.includes('admin'),
+                  }
+                : null
+            }
+          />
           {/* Phones: one centred column. Desktop: each page sets its own width. */}
           <div className="mx-auto min-h-dvh max-w-md lg:min-h-[calc(100dvh-4rem)] lg:max-w-none">{children}</div>
           <BottomNav />

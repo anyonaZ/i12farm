@@ -45,6 +45,14 @@ export const EVENT_NAMES = [
   // Phase 2b
   'promotion.started',
   'booking.date_chosen',
+  // Phase 3 · Reach
+  'vet.requested',
+  'vet.accepted',
+  'vet.closed',
+  'broadcast.created',
+  'broadcast.reviewed',
+  'ussd.session',
+  'sms.opt_changed',
 ] as const;
 
 export type EventName = (typeof EVENT_NAMES)[number];

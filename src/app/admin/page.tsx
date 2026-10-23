@@ -18,6 +18,7 @@ import {
   UserRow,
 } from './AdminControls';
 import { InsightsView } from './Insights';
+import { ReachView } from './Reach';
 
 export const metadata = { title: 'Admin', robots: { index: false } };
 
@@ -46,6 +47,7 @@ export default async function AdminPage({
     { key: 'people', label: t('users'), icon: 'user' as const },
     { key: 'farms', label: t('farms'), icon: 'badge' as const },
     { key: 'money', label: t('money'), icon: 'wallet' as const },
+    { key: 'reach', label: t('reach'), icon: 'megaphone' as const },
     { key: 'settings', label: t('settings'), icon: 'clipboard' as const },
   ];
 
@@ -70,6 +72,8 @@ export default async function AdminPage({
           </Link>
         ))}
       </nav>
+
+      {tab === 'reach' ? <ReachView viewer={viewer} /> : null}
 
       {tab === 'people' ? (
         <>

@@ -2,7 +2,7 @@
 -- A field agent, a farmer, a buyer, an admin, and eight sample farms around Homa Bay and
 -- Kisumu so every developer sees a populated map. Names are invented.
 
--- Dev accounts. Password for all three: i12farm-dev
+-- Dev accounts. Password for all of them: i12farm-dev
 -- Sign in with the email or the phone number (0700 000 001 etc.).
 insert into auth.users (id, email, phone, password_hash, password_changed_at, meta)
 values
@@ -81,3 +81,17 @@ insert into public.listings (farm_id, type, product_slug, title, unit, price_kes
   ('10000000-0000-4000-8000-000000000006', 'produce',    'kale-sukuma',     'Sukuma wiki',                    'kg',       50, 200),
   ('10000000-0000-4000-8000-000000000007', 'livestock',  'piglets',         'Weaned piglets',                 'head',   4500,  10),
   ('10000000-0000-4000-8000-000000000008', 'service',    'vet-visit',       'On-farm vet visit',              'visit',  1500, null);
+
+-- Phase 3: a partner organisation (sends SMS broadcasts after admin review),
+-- and a phone for the vet farm so vet-request SMS reach it.
+insert into auth.users (id, email, phone, password_hash, password_changed_at, meta)
+values
+  ('00000000-0000-4000-8000-0000000000c1', 'partner@dev.i12farm.local', '254700000004',
+   'scrypt$16384$8$1$aTEyZmFybS1kZXYtc2FsdA==$PwrQdfhbuoymqj2cIs3cn6nM4w+t98x3wp5kH9Te1Yd6h5ZXND7rjEgNGj7m29xVU+tdzDuaGP8N3RIcCTrS7A==',
+   now(), '{"full_name":"Dev Partner"}')
+on conflict (id) do nothing;
+update public.profiles set roles = array['partner','buyer']::public.user_role[], county_code = 43,
+                           organisation = 'Homa Bay County Extension'
+  where id = '00000000-0000-4000-8000-0000000000c1';
+update public.farms set phone_public = '+254722000008'
+  where id = '10000000-0000-4000-8000-000000000008' and phone_public is null;

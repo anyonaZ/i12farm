@@ -83,6 +83,15 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
           <Icon name="user" className="shrink-0 text-sprout-deep" />
           {t('myFarmPlus.account')}
         </Link>
+        {viewer.roles.includes('partner') || isAdmin ? (
+          <Link
+            href="/partner"
+            className="flex min-h-14 items-center gap-2.5 rounded-2xl border border-line bg-surface px-3.5 text-sm font-bold"
+          >
+            <Icon name="megaphone" className="shrink-0 text-sprout-deep" />
+            {t('nav.partner')}
+          </Link>
+        ) : null}
         {isAdmin ? (
           <Link
             href="/admin"

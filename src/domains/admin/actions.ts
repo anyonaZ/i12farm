@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { audit, createSignInLink } from '@/lib/auth/accounts';
 import { getViewer } from '@/lib/auth/viewer';
 import { dbMessage, getSql, withUser } from '@/lib/db';
+import { dispatchSoon } from '@/domains/notifications/dispatch';
 
 type Result<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
 const ROLES = ['farmer', 'buyer', 'provider', 'agent', 'partner', 'admin'];
@@ -21,6 +22,7 @@ async function run(fn: (adminId: string) => Promise<void>, path = '/admin'): Pro
   } catch (error) {
     return { ok: false, error: dbMessage(error) };
   }
+  dispatchSoon(); // payouts and refunds queue SMS
   revalidatePath(path);
   return { ok: true, data: undefined };
 }
@@ -137,6 +139,7 @@ export async function importPayouts(form: FormData): Promise<Result<{ ok: number
       failed.push({ row: n + 2, reason: dbMessage(error) });
     }
   }
+  dispatchSoon();
   revalidatePath('/admin');
   return { ok: true, data: { ok, failed } };
 }
@@ -173,6 +176,62 @@ export async function runUpkeep(): Promise<Result<Record<string, number>>> {
   if (!viewer) return { ok: false, error: 'Admins only' };
   const [{ result }] = await getSql()<{ result: Record<string, number> }[]>`select public.run_maintenance() as result`;
   await audit(viewer.id, null, 'maintenance.run', result);
+  dispatchSoon();
   revalidatePath('/admin');
   return { ok: true, data: result };
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 · Reach
+// ---------------------------------------------------------------------------
+
+export async function sendQueuedSms(): Promise<Result<{ sent: number; failed: number }>> {
+  const viewer = await admin();
+  if (!viewer) return { ok: false, error: 'Admins only' };
+  const { dispatchQueued } = await import('@/domains/notifications/dispatch');
+  const r = await dispatchQueued();
+  revalidatePath('/admin');
+  return { ok: true, data: { sent: r.sent, failed: r.failed } };
+}
+
+/** Admin USSD simulator: runs the real handler as the given phone. */
+export async function simulateUssd(phone: string, text: string): Promise<Result<{ reply: string }>> {
+  const viewer = await admin();
+  if (!viewer) return { ok: false, error: 'Admins only' };
+  const { handleUssd } = await import('@/domains/ussd/handler');
+  try {
+    const reply = await handleUssd({ phone, text: text.slice(0, 200), sessionId: `admin-${viewer.id}` });
+    dispatchSoon();
+    return { ok: true, data: { reply } };
+  } catch (error) {
+    return { ok: false, error: dbMessage(error) };
+  }
+}
+
+export async function saveReachSettings(input: {
+  smsDailyCap: number;
+  smsCost: number;
+  ussdCode: string;
+  vetAlertMax: number;
+  vetHours: number;
+}) {
+  const cap = Math.round(Number(input.smsDailyCap));
+  const cost = Number(input.smsCost);
+  const code = input.ussdCode.trim();
+  const vets = Math.round(Number(input.vetAlertMax));
+  const hours = Math.round(Number(input.vetHours));
+  if (!(cap >= 0 && cap <= 1_000_000)) return { ok: false as const, error: 'daily cap must be 0 to 1,000,000' };
+  if (!(cost >= 0 && cost <= 20)) return { ok: false as const, error: 'cost must be 0 to 20' };
+  if (code && !/^\*[0-9*]{2,20}#$/.test(code)) return { ok: false as const, error: 'USSD code looks like *384*12#' };
+  if (!(vets >= 1 && vets <= 50)) return { ok: false as const, error: 'vets alerted must be 1 to 50' };
+  if (!(hours >= 2 && hours <= 336)) return { ok: false as const, error: 'hours must be 2 to 336' };
+  return run((me) =>
+    withUser(me, async (tx) => {
+      await tx`select public.admin_set_setting('sms_daily_cap', ${tx.json(cap)})`;
+      await tx`select public.admin_set_setting('sms_cost_kes', ${tx.json(cost)})`;
+      await tx`select public.admin_set_setting('ussd_code', ${tx.json(code)})`;
+      await tx`select public.admin_set_setting('vet_alert_max', ${tx.json(vets)})`;
+      await tx`select public.admin_set_setting('vet_request_hours', ${tx.json(hours)})`;
+    }),
+  );
 }
