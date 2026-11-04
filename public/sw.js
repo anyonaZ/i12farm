@@ -5,7 +5,7 @@
  * - API and auth calls are never cached.
  * Bump VERSION to force every phone to drop old caches.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL = `i12f-shell-${VERSION}`;
 const PAGES = `i12f-pages-${VERSION}`;
 const MEDIA = `i12f-media-${VERSION}`;
@@ -13,7 +13,7 @@ const PRECACHE = ['/offline', '/manifest.webmanifest', '/icons/icon-192.png'];
 const MAX_PAGES = 30;
 const MAX_MEDIA = 80;
 // Personal pages are never stored: field agents often share one phone.
-const PRIVATE = ['/my-farm', '/inbox', '/sign-in', '/account', '/orders', '/admin', '/checkout'];
+const PRIVATE = ['/my-farm', '/inbox', '/sign-in', '/account', '/orders', '/admin', '/checkout', '/vets', '/partner', '/auth'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(SHELL).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));

@@ -302,15 +302,21 @@ export function PayoutImport() {
 export function TradeSettingsForm({
   autoCompleteDays,
   unpaidHours,
+  reminderHours,
+  declineHours,
   plans,
 }: {
   autoCompleteDays: number;
   unpaidHours: number;
+  reminderHours: number;
+  declineHours: number;
   plans: string;
 }) {
   const t = useTranslations('admin');
   const [days, setDays] = useState(String(autoCompleteDays));
   const [hours, setHours] = useState(String(unpaidHours));
+  const [remind, setRemind] = useState(String(reminderHours));
+  const [decline, setDecline] = useState(String(declineHours));
   const [planText, setPlanText] = useState(plans);
   const { pending, message, run } = useRun();
   return (
@@ -335,6 +341,26 @@ export function TradeSettingsForm({
         onChange={(e) => setHours(e.target.value.replace(/\D/g, ''))}
         className="input tabular-nums"
       />
+      <label htmlFor="set-remind" className="text-sm font-bold">
+        {t('reminderHours')}
+      </label>
+      <input
+        id="set-remind"
+        inputMode="numeric"
+        value={remind}
+        onChange={(e) => setRemind(e.target.value.replace(/\D/g, ''))}
+        className="input tabular-nums"
+      />
+      <label htmlFor="set-decline" className="text-sm font-bold">
+        {t('declineHours')}
+      </label>
+      <input
+        id="set-decline"
+        inputMode="numeric"
+        value={decline}
+        onChange={(e) => setDecline(e.target.value.replace(/\D/g, ''))}
+        className="input tabular-nums"
+      />
       <label htmlFor="set-plans" className="text-sm font-bold">
         {t('plans')}
       </label>
@@ -344,7 +370,17 @@ export function TradeSettingsForm({
         type="button"
         disabled={pending}
         className="btn-primary"
-        onClick={() => run(() => saveTradeSettings({ autoCompleteDays: Number(days), unpaidHours: Number(hours), plans: planText }))}
+        onClick={() =>
+          run(() =>
+            saveTradeSettings({
+              autoCompleteDays: Number(days),
+              unpaidHours: Number(hours),
+              reminderHours: Number(remind),
+              declineHours: Number(decline),
+              plans: planText,
+            }),
+          )
+        }
       >
         {t('save')}
       </button>
@@ -372,6 +408,7 @@ export function UpkeepButton() {
                 ? t('upkeepDone', {
                     completed: r.data.auto_completed ?? 0,
                     cancelled: r.data.unpaid_cancelled ?? 0,
+                    declined: r.data.unanswered_declined ?? 0,
                     expired: r.data.payments_expired ?? 0,
                     ended: r.data.promotions_ended ?? 0,
                   })

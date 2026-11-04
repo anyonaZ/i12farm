@@ -6,14 +6,19 @@ import type { FarmDetail, FarmSummary } from './types';
 // Every read runs as the visitor (anon) or the signed-in user, so RLS decides
 // what comes back: drafts, exact locations and other people's data never leak.
 
-function detailQuery(tx: Tx, where: 'slug' | 'managed', value: string) {
-  const filter = where === 'slug' ? tx`f.slug = ${value}` : tx`(f.owner_id = ${value} or f.managed_by = ${value})`;
+function detailQuery(tx: Tx, where: 'slug' | 'managed', value: string, farmId?: string) {
+  const filter =
+    where === 'slug'
+      ? tx`f.slug = ${value}`
+      : farmId
+        ? tx`(f.owner_id = ${value} or f.managed_by = ${value}) and f.id = ${farmId}`
+        : tx`(f.owner_id = ${value} or f.managed_by = ${value})`;
   return tx<FarmDetail[]>`
     select f.id, f.slug, f.name, f.farmer_name, f.description, f.categories, f.county_code, f.place_name,
            f.visibility, f.size_acres, f.year_started, f.phone_public, f.whatsapp,
            f.verified_at::text as verified_at, f.owner_id, f.managed_by,
            public.public_lng(f) as public_lng, public.public_lat(f) as public_lat,
-           f.created_at::text as created_at,
+           f.created_at::text as created_at, f.status::text as status,
            json_build_object('name', c.name) as county,
            case when sc.id is null then null else json_build_object('name', sc.name) end as sub_county,
            coalesce((
@@ -36,7 +41,7 @@ function detailQuery(tx: Tx, where: 'slug' | 'managed', value: string) {
     left join public.sub_counties sc on sc.id = f.sub_county_id
     where ${filter}
     order by f.created_at desc
-    limit 50`;
+    limit 500`;
 }
 
 export async function getFarmBySlug(slug: string): Promise<FarmDetail | null> {
@@ -56,9 +61,9 @@ export interface ManagedFarm extends FarmDetail {
 }
 
 /** Farms the signed-in user owns or manages as a field agent. */
-export async function listManagedFarms(userId: string): Promise<ManagedFarm[]> {
+export async function listManagedFarms(userId: string, farmId?: string): Promise<ManagedFarm[]> {
   return withUser(userId, async (tx) => {
-    const farms = await detailQuery(tx, 'managed', userId);
+    const farms = await detailQuery(tx, 'managed', userId, farmId);
     if (farms.length === 0) return [];
     const ids = farms.map((f) => f.id);
     const history = await tx<{ listing_id: string; price_kes: number | null }[]>`
@@ -185,4 +190,71 @@ export async function listFarmReviews(farmId: string, limit = 10): Promise<FarmR
     from public.reviews where farm_id = ${farmId}
     order by created_at desc limit ${limit}`,
   );
+}
+
+export interface ManagedFarmRow {
+  id: string;
+  slug: string;
+  name: string;
+  farmer_name: string | null;
+  place_name: string | null;
+  county_name: string;
+  categories: string[];
+  status: string;
+  claimed: boolean;
+  cover_path: string | null;
+  products: number;
+  need_action: number;
+}
+
+/** Light list of every farm the user owns or manages (agents may have hundreds). */
+export async function listManagedFarmRows(userId: string): Promise<ManagedFarmRow[]> {
+  return withUser(
+    userId,
+    (tx) => tx<ManagedFarmRow[]>`
+    select f.id, f.slug, f.name, f.farmer_name, f.place_name, c.name as county_name, f.categories, f.status::text as status,
+           f.owner_id is not null as claimed,
+           (select m.storage_path from public.farm_media m where m.farm_id = f.id and m.kind = 'photo'
+             order by m.position, m.created_at limit 1) as cover_path,
+           (select count(*)::int from public.listings l where l.farm_id = f.id and l.status <> 'archived') as products,
+           (select count(*)::int from public.orders o where o.farm_id = f.id and o.status in ('paid', 'accepted')) as need_action
+    from public.farms f join public.counties c on c.code = f.county_code
+    where f.owner_id = ${userId} or f.managed_by = ${userId}
+    order by (select count(*) from public.orders o where o.farm_id = f.id and o.status in ('paid', 'accepted')) desc, f.name`,
+  );
+}
+
+export interface FarmForEdit {
+  id: string;
+  slug: string;
+  name: string;
+  farmer_name: string | null;
+  description: string | null;
+  categories: string[];
+  county_code: number;
+  sub_county_id: number | null;
+  place_name: string | null;
+  visibility: 'exact' | 'approximate' | 'hidden';
+  size_acres: number | null;
+  year_started: number | null;
+  phone_public: string | null;
+  whatsapp: string | null;
+  status: string;
+  lng: number | null;
+  lat: number | null;
+}
+
+/** A farm the user manages, with its exact pin (RLS: managers only). */
+export async function getFarmForEdit(userId: string, farmId: string): Promise<FarmForEdit | null> {
+  if (!/^[0-9a-f-]{36}$/.test(farmId)) return null;
+  const [row] = await withUser(
+    userId,
+    (tx) => tx<FarmForEdit[]>`
+    select f.id, f.slug, f.name, f.farmer_name, f.description, f.categories, f.county_code, f.sub_county_id, f.place_name,
+           f.visibility, f.size_acres, f.year_started, f.phone_public, f.whatsapp, f.status::text as status,
+           extensions.st_x(l.location::extensions.geometry) as lng, extensions.st_y(l.location::extensions.geometry) as lat
+    from public.farms f left join public.farm_locations l on l.farm_id = f.id
+    where f.id = ${farmId} and public.can_manage_farm(f.id)`,
+  );
+  return row ?? null;
 }

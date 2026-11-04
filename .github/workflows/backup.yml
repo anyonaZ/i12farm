@@ -23,13 +23,29 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
+      # Until a hosted database exists the secrets are empty: skip instead of
+      # failing (and emailing a failure) every night.
+      - name: Check that the database secrets are set
+        id: check
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -n "$DATABASE_URL" ] && [ -n "$BACKUP_PASSPHRASE" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::DATABASE_URL or BACKUP_PASSPHRASE is not set; skipping the backup."
+          fi
       - name: Roll up yesterday's events and run order upkeep
+        if: steps.check.outputs.ready == 'true'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           docker run --rm -e DATABASE_URL postgres:17 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
             -c 'select public.rollup_events()' -c 'select public.run_maintenance()'
       - name: Dump, compress and encrypt
+        if: steps.check.outputs.ready == 'true'
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
@@ -44,6 +60,7 @@ jobs:
                   --symmetric --cipher-algo AES256 -o "i12farm-$stamp.sql.gz.gpg"
           ls -lh i12farm-*.gpg
       - uses: actions/upload-artifact@v4
+        if: steps.check.outputs.ready == 'true'
         with:
           name: db-backup
           path: i12farm-*.sql.gz.gpg

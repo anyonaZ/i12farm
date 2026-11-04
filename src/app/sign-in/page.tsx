@@ -5,6 +5,7 @@ import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { isGoogleConfigured } from '@/lib/auth/google';
 import { getViewer } from '@/lib/auth/viewer';
 import { safeNextPath } from '@/lib/http';
+import { LegalLinks } from '@/components/LegalPage';
 import { SignInForm } from './SignInForm';
 
 export const metadata = { title: 'Sign in' };
@@ -34,6 +35,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         <SignInForm next={safeNext} google={isGoogleConfigured} startTab={tab === 'up' ? 'up' : 'in'} />
       </div>
       <p className="text-center text-sm text-soil">{t('noEmail')}</p>
+      <LegalLinks />
     </main>
   );
 }

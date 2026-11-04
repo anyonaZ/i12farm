@@ -33,12 +33,14 @@ export function CheckoutForm({
   signedIn,
   signInHref,
   defaults,
+  paymentsOff = false,
 }: {
   farm: { id: string; slug: string; name: string };
   listings: Listing[];
   signedIn: boolean;
   signInHref: string;
   defaults: { name: string; phone: string };
+  paymentsOff?: boolean;
 }) {
   const t = useTranslations('checkout');
   const tc = useTranslations('cart');
@@ -288,7 +290,12 @@ export function CheckoutForm({
               {error}
             </p>
           ) : null}
-          <button type="button" onClick={submit} disabled={pending} className="btn-primary min-h-14 text-lg">
+          {paymentsOff ? (
+            <p role="status" className="rounded-xl bg-amber/15 px-3 py-2.5 text-sm font-semibold">
+              {t('paymentsOff')}
+            </p>
+          ) : null}
+          <button type="button" onClick={submit} disabled={pending || paymentsOff} className="btn-primary min-h-14 text-lg">
             {pending ? t('placing') : t('pay', { total: kes(total) })}
           </button>
         </section>

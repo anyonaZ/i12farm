@@ -51,7 +51,12 @@ export function SignInForm({ next, google, startTab }: { next: string; google: b
 
       {tab === 'in' ? (
         <div className="border-t border-line pt-4">
-          <button type="button" className="text-sm font-bold text-sprout-deep" aria-expanded={forgot} onClick={() => setForgot((f) => !f)}>
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center text-sm font-bold text-sprout-deep"
+            aria-expanded={forgot}
+            onClick={() => setForgot((f) => !f)}
+          >
             {t('forgot')}
           </button>
           {forgot ? (
@@ -206,7 +211,12 @@ function CreateAccount({ next }: { next: string }) {
       <PasswordInput id="su-pw" name="password" autoComplete="new-password" label={t('password')} hint={t('passwordHint')} />
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="consent" required className="mt-0.5 size-5 shrink-0 accent-sprout-deep" />
-        <span>{t('consent')}</span>
+        <span>
+          {t('consent')}{' '}
+          <a href="/privacy" target="_blank" rel="noopener" className="font-semibold text-sprout-deep underline">
+            {t('consentLinks')}
+          </a>
+        </span>
       </label>
       <button type="submit" disabled={pending} className="btn-primary">
         {pending ? t('creating') : t('signUpButton')}

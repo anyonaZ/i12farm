@@ -32,7 +32,7 @@ recorded with time and county, because that data is the long-term asset.
 | Pilot counties | Homa Bay (43), Migori (44), Kisumu (42), Kiambu (22), Nairobi (47). Stored as `counties.is_pilot` |
 | Phase 1 target | 100 farms in the pilot counties, enrolled by field agents (progress bar on My Farm) |
 | Domain | Undecided |
-| Languages | English and Kiswahili from day one (about 670 strings each, including SMS and USSD text; a native speaker should review) |
+| Languages | English and Kiswahili from day one (about 780 strings each, including SMS and USSD text; a native speaker should review) |
 | Backend | Next.js server + PostgreSQL 15+ with PostGIS. No Supabase. RLS policies unchanged; `withUser()` sets the role per transaction |
 | Sign-in | Phone or email + password (scrypt). Google optional. Email link for forgotten passwords; admins issue one-time links for farmers without email. **No SMS OTP** (costs money); farm ownership is proven with agent-issued claim codes |
 | Sessions | Random token in an httpOnly cookie, SHA-256 in `auth.sessions`; 30 days idle, 180 days max; revoked rows are kept |
@@ -54,6 +54,11 @@ recorded with time and county, because that data is the long-term asset.
 | Vet requests | Anyone signed in (web) or any phone (USSD) asks for a vet; up to 10 vet-service farms in that county are texted (verified first); first to accept wins and both sides get each other's number. Vets don't see the farmer's number until they accept. Open requests expire after 48 h. Free for now |
 | Broadcasts | Partner role writes EN + SW text, picks counties and farm types; admin approval required; one SMS per distinct farm phone, opted-out phones skipped; max 5,000 phones per message (setting) |
 
+| Demo mode | `npm run dev` always simulates. A production build refuses simulated payments, open USSD/SMS callbacks and "Simulate: pay" unless `DEMO_MODE=true` is set on purpose (a banner then says nothing is real). Without M-Pesa keys and without demo mode, checkout says payments are not switched on yet |
+| Unanswered paid orders | Farm gets one reminder SMS 6 h after payment; at 36 h the order is declined and the buyer's refund is due (both are settings in Admin → Settings) |
+| Account deletion | Name, phone, email, password, saved farms and Google link removed; farms only that person managed are hidden; orders, payments and ledger kept without the name (tax/payment records). Blocked while orders are open, money is owed to them, or they manage unclaimed farms |
+| Privacy | Draft privacy notice and terms at `/privacy` and `/terms` (`src/content/legal.ts`), linked from sign-up. **Needs a Kenyan lawyer's review and a decision on ODPC registration** before launch. Set `NEXT_PUBLIC_CONTACT_EMAIL` |
+
 Still open: commission rate, featured-listing prices, annual subscription, domain, whether to automate payouts with the B2C API, USSD code lease (placeholder `*384*12#`), whether partners pay for broadcasts, whether vet requests carry a fee.
 
 ## 4. Status
@@ -64,7 +69,18 @@ Still open: commission rate, featured-listing prices, annual subscription, domai
 | 1 Be seen | Done and now actually built and run: `npm run build` clean, flows walked in a phone-sized browser |
 | 2 Trade | **Built.** Own accounts, claim codes, cart, orders, M-Pesa (simulate + Daraja), ledger, reviews, messaging, admin (11 Oct). Bookings, featured listings, order upkeep, payout file, Insights dashboard, rate limits (18 Oct). Waiting on a real Daraja test (gate below) |
 | 3 Reach | **Built (23 Oct)** in simulate mode: SMS alerts, USSD menu, vet requests, partner broadcasts, Admin → Reach (outbox, review, USSD simulator, settings). Waiting on Africa's Talking keys and a USSD code |
+| 3.5 Hardening | **Done (4 Nov)** after the audit: demo mode locked in production builds, Next.js / Nodemailer / MapLibre upgraded (0 advisories), security headers, backup job skips without secrets, privacy notice + terms + download my data + delete my account, unanswered paid orders reminded then declined and refunded, edit farm and products after publishing, agent farm list with search, wizard drafts, tab badges, forgiving search, branded 404, clean farm links, link previews, sitemap |
 | 4 Insight | Not started |
+
+Verified on 4 Nov 2026: 110 database checks (8 new: unanswered paid orders,
+search, account deletion, badges, farm links), `npm audit` clean, production
+build, the audit sweep again (23 pages × 6 roles × phone/desktop × English and
+Kiswahili: no layout, label or server issues left), all six scripted journeys
+including a new one for Phase 3.5 (agent finds a farm in the list, adds,
+pauses and removes products, edits details, pauses the farm; wizard draft
+survives a reload; farmer sees an Orders badge; data download; account
+deletion and the number refused at sign-in), and the map on MapLibre 6.
+Audit report: https://claude.ai/artifact/RfzJPhxTdw5GMqmkC3BS4b
 
 Verified on 23 Oct 2026: 102 database checks (18 new for Phase 3: order
 SMS, USSD ownership and order rules, price/stock by USSD, private outbox, vet
@@ -100,8 +116,9 @@ sandbox; Explore now lists farms even without tiles).
 1. On the laptop: install Postgres + PostGIS (README), `npm install`, `npm run db:reset`, `npm run dev`. Sign in with the dev accounts in the README.
 2. Get Daraja sandbox keys and test one real STK push through a tunnel (README → M-Pesa).
 3. Open an Africa's Talking sandbox account, add the keys, and check one SMS and the USSD menu in their simulator (README → SMS and USSD). Apply for a USSD code and sender ID early: approval takes weeks.
-4. Confirm Homa Organica's real phone, prices and stock with Benedict; update in My Farm (or have Benedict claim the farm himself with a claim code).
-5. Pick hosting (section 9) and deploy the pilot.
+4. Have a lawyer review `/privacy` and `/terms` and confirm whether i12farm must register with the ODPC.
+5. Confirm Homa Organica's real phone, prices and stock with Benedict; update in My Farm (or have Benedict claim the farm himself with a claim code).
+6. Pick hosting (section 9) and deploy the pilot.
 
 ## 6. Repository map
 
@@ -118,6 +135,14 @@ src/app/account/                   profile, sign-in details, password, devices, 
 src/app/admin/                     insights, people, farms to verify, money (payouts, refunds, CSV),
                                    reach (SMS outbox, broadcast review, USSD simulator, SMS/vet settings),
                                    settings (commission, upkeep days, featured plans), export/[kind]
+src/app/my-farm/[farmId]/          one farm's tools (agents open it from the searchable list); edit/ = edit farm details and pin
+src/app/privacy, terms/            privacy notice and terms (text in src/content/legal.ts)
+src/app/account/export/            Download my data (JSON)
+src/app/api/me/counts/             tab-bar badge numbers
+src/app/f/[slug]/preview/          link preview picture for farms without photos
+src/app/sitemap.ts, robots.ts      search engines
+src/lib/demo.ts                    demo mode rules (simulate only in dev or with DEMO_MODE=true)
+scripts/copy-map-worker.mjs        copies MapLibre's worker to public/ before dev and build
 src/app/vets/                      request a vet, my requests, vet inbox (accept / done), vets list
 src/app/partner/                   broadcast composer with live audience and cost, history with delivery counts
 src/app/sign-in, auth/*            sign-in/up forms, Google start/callback, one-time link, sign-out
@@ -140,7 +165,7 @@ src/lib/cart.ts                    one-farm cart in localStorage
 messages/en.json, sw.json          all UI text (keys must match in both)
 db/migrations/                     schema source of truth (platform → foundation → … → trade)
 db/seed.sql, seed_demo.sql         dev accounts + 8 test farms; 28 demo farms incl. Homa Organica
-db/tests/                          security_test.sql, trade_test.sql, phase2b_test.sql, reach_test.sql (+ PostGIS stand-in)
+db/tests/                          security_test.sql, trade_test.sql, phase2b_test.sql, reach_test.sql, hardening_test.sql (+ PostGIS stand-in)
 scripts/db.mjs                     migrate / status / seed / reset
 scripts/test-db.sh                 fresh database, all migrations, seed, all test files
 .github/workflows/                 ci.yml (build + DB tests), backup.yml (rollup + order upkeep + encrypted dump)
@@ -162,6 +187,8 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 - SMS are only queued by database functions (`queue_sms` is server-only); the outbox is readable by admins only. USSD functions (`ussd_*`) are server-only and take the network-supplied phone.
 - Vet requests move only through `request_vet` / `accept_service_request` / `close_service_request` (and their USSD twins); `service_request_history` and `phone_pref_events` are append-only.
 - Broadcasts are created by partners and sent only by `admin_review_broadcast`.
+- A deleted account keeps its row (status `deleted`, no identifiers) so orders and the ledger stay consistent; `delete_my_account()` is the only way in.
+- `search_aliases` maps everyday words (milk, mayai, nguruwe…) to farm types; add rows freely.
 - Counties, sub-counties and wards use official codes.
 
 ## 8. Known gaps
@@ -174,7 +201,9 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 - Broadcasts are text only, no scheduling; partners can't see who received them (phones stay private).
 - Chat is polling, not push (fine for the pilot; cheap on any host).
 - Rate limits on events, contact taps, messages and uploads are in memory per server process: solid on one VM, partial on serverless hosts.
-- Farms without a phone number can't be paid from the payout file until one is added.
+- Farms with no phone at all (no public, WhatsApp or owner sign-in phone) can't be paid from the payout file until one is added.
+- After a migration, restart the app server: Postgres refuses cached query plans whose columns changed ("cached plan must not change result type").
+- The privacy notice and terms are drafts (see Decisions).
 - Bookings have no farm calendar: the farm accepts or declines the date the buyer picked.
 - A Kiswahili native speaker should review all text.
 - Map tiles are not cached offline; pages and photos are.

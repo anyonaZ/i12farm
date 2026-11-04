@@ -36,7 +36,7 @@ export default async function FeaturePage({ params }: { params: Promise<{ farmId
         <Link
           href="/my-farm"
           className="grid size-11 shrink-0 place-items-center rounded-full border border-line bg-surface"
-          aria-label="Back"
+          aria-label={t('back')}
         >
           <Icon name="back" />
         </Link>

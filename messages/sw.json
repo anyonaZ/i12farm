@@ -2,17 +2,20 @@
   "app": {
     "name": "i12farm",
     "tagline": "Kila shamba, kwenye ramani.",
-    "offline": "Uko nje ya mtandao. Kurasa ulizotembelea karibuni bado zinafanya kazi."
+    "offline": "Uko nje ya mtandao. Kurasa ulizotembelea karibuni bado zinafanya kazi.",
+    "demoBanner": "Majaribio: malipo na SMS si halisi. Hakuna oda halisi hapa."
   },
   "nav": {
     "explore": "Gundua",
     "market": "Soko",
     "requests": "Maombi",
     "inbox": "Ujumbe",
-    "myFarm": "Shamba Langu",
+    "myFarm": "Shamba",
     "orders": "Oda",
     "vets": "Madaktari",
-    "partner": "Mshirika"
+    "partner": "Mshirika",
+    "badge": "{n} mpya",
+    "mainLabel": "Kuu"
   },
   "explore": {
     "searchPlaceholder": "Tafuta mashamba au mazao",
@@ -26,7 +29,9 @@
     "zoomOut": "Punguza",
     "showAll": "Onyesha kaunti zote za majaribio",
     "results": "{n, plural, one {Tokeo 1} other {Matokeo #}}",
-    "hiddenOnMap": "Halipo kwenye ramani"
+    "hiddenOnMap": "Halipo kwenye ramani",
+    "categoriesLabel": "Aina za mashamba",
+    "searchShort": "Tafuta mashamba"
   },
   "myFarm": {
     "title": "Shamba Langu",
@@ -44,7 +49,7 @@
     "savedTitle": "Mashamba uliyohifadhi",
     "savedEmpty": "Gusa moyo kwenye shamba ili kulihifadhi hapa.",
     "haveFarm": "Una shamba?",
-    "haveFarmD": "Liweke kwenye ramani kwa hatua tano fupi.",
+    "haveFarmD": "Liweke kwenye ramani kwa hatua sita fupi.",
     "agentTitle": "Afisa wa nyanjani",
     "target": "Mashamba {n} kati ya 100 yamesajiliwa",
     "pilotTarget": "Lengo la majaribio",
@@ -128,8 +133,11 @@
       "google_off": "Kuingia kwa Google bado hakujawekwa kwenye seva hii.",
       "noEmail": "Akaunti yako ya Google haina barua pepe iliyothibitishwa.",
       "link": "Kiungo hicho cha kuingia kimeisha muda au kimeshatumika.",
-      "callback": "Kuingia hakukukamilika. Tafadhali jaribu tena."
-    }
+      "callback": "Kuingia hakukukamilika. Tafadhali jaribu tena.",
+      "deletePhrase": "Andika neno hilo sawasawa kuthibitisha.",
+      "deleteBlocked": "Akaunti haiwezi kufutwa bado."
+    },
+    "consentLinks": "Soma taarifa ya faragha na masharti."
   },
   "language": {
     "label": "Lugha",
@@ -168,7 +176,8 @@
     "signInToSave": "Ingia ili kuhifadhi mashamba",
     "products": "{n, plural, one {Bidhaa 1} other {Bidhaa #}}",
     "waGreeting": "Habari {farmer}, nimepata {farm} kupitia i12farm.",
-    "from": "na zaidi"
+    "from": "na zaidi",
+    "showMap": "Onyesha kwenye ramani"
   },
   "wizard": {
     "pinTitle": "Weka shamba lako",
@@ -220,7 +229,12 @@
     "err3": "Chagua kaunti na kaunti ndogo.",
     "err5": "Ongeza angalau bidhaa moja yenye bei.",
     "errSave": "Shamba halikuhifadhiwa: {reason}. Angalia mtandao kisha ujaribu tena.",
-    "photoFailed": "Shamba limechapishwa, lakini picha {n} hazikupakiwa. Ziongeze tena kutoka Shamba Langu."
+    "photoFailed": "Shamba limechapishwa, lakini picha {n} hazikupakiwa. Ziongeze tena kutoka Shamba Langu.",
+    "draftFound": "Hukumaliza \"{name}\". Endelea ulipoachia?",
+    "draftResume": "Ndiyo, endelea",
+    "draftDiscard": "Anza upya",
+    "back": "Rudi",
+    "close": "Funga"
   },
   "units": {
     "litre": "lita",
@@ -285,7 +299,14 @@
       "agent": "Afisa wa nyanjani",
       "partner": "Mshirika",
       "admin": "Msimamizi"
-    }
+    },
+    "yourData": "Data yako",
+    "download": "Pakua data yangu",
+    "downloadHint": "Faili lenye kila kitu i12farm inachohifadhi kukuhusu: akaunti, mashamba, oda, ujumbe na maombi.",
+    "deleteTitle": "Futa akaunti yangu",
+    "deleteHint": "Hii inaondoa jina lako, simu, barua pepe, nenosiri na mashamba uliyohifadhi, na kuficha mashamba unayosimamia peke yako. Kumbukumbu za oda na malipo ya zamani huhifadhiwa bila jina lako, kama sheria inavyotaka. Haiwezi kurudishwa.",
+    "deletePhrase": "Andika FUTA kuthibitisha",
+    "deleteButton": "Futa akaunti yangu kabisa"
   },
   "cart": {
     "add": "Ongeza",
@@ -335,7 +356,9 @@
     "visitDate": "Tarehe ya ziara",
     "morning": "Asubuhi (saa 2 – saa 6)",
     "afternoon": "Mchana (saa 8 – saa 11)",
-    "visitHint": "Shamba linathibitisha tarehe linapokubali nafasi yako."
+    "visitHint": "Shamba linathibitisha tarehe linapokubali nafasi yako.",
+    "paymentsOff": "Malipo ya mtandaoni bado hayajawashwa. Piga simu au tuma WhatsApp kwa shamba kuagiza.",
+    "back": "Rudi"
   },
   "orders": {
     "title": "Oda",
@@ -386,12 +409,12 @@
     "back": "Rudi",
     "heldNote": "i12farm inashikilia pesa hadi mnunuzi athibitishe amepokea oda.",
     "farmNext": {
-      "paid": "Kubali oda kama unaweza kuitimiza. Mnunuzi ameshalipa.",
+      "paid": "Kubali oda ukiweza kuitimiza. Mnunuzi ameshalipa. Oda zisizojibiwa hukataliwa zenyewe na mnunuzi kurudishiwa pesa.",
       "accepted": "Weka iko tayari mnunuzi anapoweza kuichukua au ikiwa njiani kuletwa.",
       "ready": "Inasubiri mnunuzi athibitishe ameipokea."
     },
     "buyerNext": {
-      "paid": "Imelipwa. Inasubiri shamba likubali.",
+      "paid": "Imelipwa. Inasubiri shamba likubali. Shamba lisipojibu kwa wakati, oda itakataliwa na pesa zako zitarudishwa.",
       "accepted": "Shamba linaandaa oda yako.",
       "ready": "Oda yako iko tayari. Gusa “Nimeipokea” ukishaipata.",
       "completed": "Imekamilika. Mkulima analipwa."
@@ -506,7 +529,7 @@
     "plans": "Mipango ya kuangazia",
     "plansHint": "Mpango mmoja kwa kila mstari: siku, bei kwa KES.",
     "runUpkeep": "Endesha usafishaji wa oda sasa",
-    "upkeepDone": "{completed} zimekamilishwa, {cancelled} zimeghairiwa, maombi {expired} ya malipo yameisha muda, vipindi {ended} vya kuangazia vimeisha.",
+    "upkeepDone": "{completed} zimekamilika, {cancelled} zimesitishwa, {declined} zisizojibiwa zimekataliwa, maombi {expired} ya malipo yameisha, vipindi {ended} vya kuangaziwa vimeisha.",
     "promotionRevenue": "Kuangazia mashamba",
     "kpi": {
       "orders": "Oda zilizowekwa",
@@ -567,7 +590,16 @@
     "vetAlertMax": "Madaktari wanaojulishwa kwa kila ombi",
     "vetHours": "Maombi ya daktari yanaisha baada ya (saa)",
     "reach": "Ufikiaji",
-    "vetRequests": "Maombi ya daktari"
+    "vetRequests": "Maombi ya daktari",
+    "reminderHours": "Saa baada ya malipo kabla shamba kupata SMS ya kukumbusha",
+    "declineHours": "Saa baada ya malipo kabla oda isiyojibiwa kukataliwa na pesa kurudishwa",
+    "back": "Rudi",
+    "colTime": "Saa",
+    "colPhone": "Simu",
+    "colMessage": "Ujumbe",
+    "colStatus": "Hali",
+    "failed7d": "{n} zimeshindwa (siku 7)",
+    "cost30d": "KES {kes} zimetumika (siku 30)"
   },
   "featured": {
     "badge": "Linaangaziwa",
@@ -592,7 +624,8 @@
       "failed": "Haikuanza: {detail}",
       "notPayable": "Mpango huu hauwezi kulipiwa tena. Chagua upya.",
       "mpesa": "M-Pesa haikukubali ombi: {detail}"
-    }
+    },
+    "back": "Rudi"
   },
   "map": {
     "offline": "Ramani ya nyuma haikupakia. Alama za mashamba bado zinafanya kazi.",
@@ -612,7 +645,8 @@
     "vet_request_received": "{vets, plural, =0 {i12farm: Ombi {number} limehifadhiwa, lakini bado hakuna daktari wa kaunti yako kwenye i12farm. Jaribu pia duka la dawa za mifugo karibu nawe.} one {i12farm: Ombi {number} limetumwa kwa daktari 1. Tutakutumia SMS akikubali.} other {i12farm: Ombi {number} limetumwa kwa madaktari #. Tutakutumia SMS mmoja akikubali.}}",
     "vet_accepted": "i12farm: {vet} wa {farm} atasaidia na ombi {number}. Piga {phone}.",
     "vet_cancelled": "i12farm: Mkulima amesitisha ombi {number}. Hakuna haja ya kwenda.",
-    "stop": "Jibu STOP kusitisha."
+    "stop": "Jibu STOP kusitisha.",
+    "order_reminder": "i12farm kumbusho: oda {number} iliyolipwa (KES {total}) inakusubiri. Ikubali au ikatae ndani ya saa {hours}, la sivyo itakataliwa na mnunuzi arudishiwe pesa. Piga {ussd} au fungua app."
   },
   "ussd": {
     "welcome": "Karibu i12farm",
@@ -750,5 +784,92 @@
     "stopNote": "\"Jibu STOP kusitisha\" huongezwa kwa kila ujumbe.",
     "error": "Haikuhifadhiwa: {detail}",
     "reviewNote": "Maoni ya ukaguzi: {note}"
+  },
+  "legal": {
+    "back": "Rudi",
+    "updated": "Ilisasishwa {date}",
+    "contact": "Maswali au maombi: {email}",
+    "contactInApp": "Maswali au maombi: tutumie ujumbe kupitia app, au muulize wakala wako.",
+    "privacy": "Faragha",
+    "terms": "Masharti"
+  },
+  "farmEdit": {
+    "edit": "Hariri",
+    "title": "Hariri shamba",
+    "back": "Rudi",
+    "details": "Maelezo ya shamba",
+    "size": "Ukubwa (ekari)",
+    "since": "Tangu mwaka",
+    "types": "Shamba linafanya nini",
+    "where": "Mahali",
+    "movePin": "Hamisha alama",
+    "save": "Hifadhi mabadiliko",
+    "saving": "Inahifadhi…",
+    "saved": "Imehifadhiwa. Ukurasa wa shamba umesasishwa.",
+    "errors": {
+      "name": "Jina la shamba linahitaji herufi 2 hadi 80.",
+      "categories": "Chagua angalau kitu kimoja shamba linafanya.",
+      "phone": "Tumia nambari ya simu ya Kenya, kama 0712 345 678.",
+      "size": "Ukubwa uwe idadi ya ekari.",
+      "year": "Tumia mwaka kama 2015.",
+      "pin": "Alama lazima iwe ndani ya Kenya."
+    },
+    "pause": "Simamisha",
+    "resume": "Onyesha tena",
+    "remove": "Ondoa",
+    "removeConfirm": "Ndiyo, ondoa",
+    "pausedPill": "Imesimamishwa",
+    "noProducts": "Bado hakuna bidhaa. Ongeza moja ili wanunuzi waagize.",
+    "addProduct": "Ongeza bidhaa",
+    "product": "Bidhaa",
+    "productTitle": "Jina kwenye ukurasa wa shamba (si lazima)",
+    "productTitleHint": "mf. Maziwa ya asubuhi",
+    "price": "Bei, KES kwa {unit}",
+    "quantity": "Ngapi zipo",
+    "addButton": "Ongeza bidhaa",
+    "cancel": "Ghairi",
+    "errPrice": "Weka bei kwa shilingi.",
+    "pauseFarm": "Simamisha shamba (ficha kwenye Gundua)",
+    "publishFarm": "Onyesha shamba kwenye Gundua tena",
+    "pausedFarm": "Shamba hili limesimamishwa: wanunuzi hawalioni kwenye Gundua wala kwenye utafutaji.",
+    "suspended": "Msimamizi amesimamisha shamba hili. Wasiliana na i12farm kulirudisha.",
+    "allFarms": "Mashamba yote",
+    "searchFarms": "Tafuta kwa shamba, mkulima au mahali",
+    "county": "Kaunti",
+    "allCounties": "Kaunti zote",
+    "filter": "Onyesha",
+    "filters": {
+      "all": "Yote",
+      "orders": "Oda zinasubiri",
+      "unclaimed": "Hayajadaiwa",
+      "paused": "Yamesimamishwa"
+    },
+    "showing": "Mashamba {n} kati ya {total}",
+    "productsCount": "{n, plural, one {bidhaa #} other {bidhaa #}}",
+    "ordersWaiting": "{n, plural, one {oda # inasubiri} other {oda # zinasubiri}}",
+    "unclaimed": "Bado halijadaiwa"
+  },
+  "unitCount": {
+    "litre": "{n, plural, one {lita #} other {lita #}}",
+    "head": "{n, plural, one {mnyama #} other {wanyama #}}",
+    "tray-30": "{n, plural, one {trei ya 30 #} other {trei za 30 #}}",
+    "bird": "{n, plural, one {ndege #} other {ndege #}}",
+    "chick": "{n, plural, one {kifaranga #} other {vifaranga #}}",
+    "kg": "{n, plural, one {kg #} other {kg #}}",
+    "piece": "{n, plural, one {kipande #} other {vipande #}}",
+    "bunch": "{n, plural, one {kicha #} other {vicha #}}",
+    "bag-90kg": "{n, plural, one {gunia la kg 90 #} other {magunia ya kg 90 #}}",
+    "bag-70kg": "{n, plural, one {mfuko wa kg 70 #} other {mifuko ya kg 70 #}}",
+    "tray": "{n, plural, one {trei #} other {trei #}}",
+    "bale": "{n, plural, one {robota #} other {marobota #}}",
+    "visit": "{n, plural, one {ziara #} other {ziara #}}",
+    "service": "{n, plural, one {huduma #} other {huduma #}}",
+    "person": "{n, plural, one {mtu #} other {watu #}}"
+  },
+  "notFound": {
+    "title": "Hatukupata ukurasa huo",
+    "body": "Huenda kiungo ni cha zamani, au shamba limesimamishwa au kubadilishwa jina.",
+    "explore": "Gundua mashamba",
+    "orders": "Oda zangu"
   }
 }

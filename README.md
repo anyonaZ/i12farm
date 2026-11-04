@@ -2,7 +2,7 @@
 
 Every Kenyan farm, pinned, discoverable and able to sell. A mobile-first web
 app (installable on Android from Chrome) built on Next.js and plain
-PostgreSQL + PostGIS, delivered in phases. Phases 0 to 3 are built. See
+PostgreSQL + PostGIS, delivered in phases. Phases 0 to 3, plus the 3.5 hardening pass, are built. See
 `HANDOFF.md` for the current state, decisions and what comes next.
 
 No vendor backend: the app talks to Postgres directly and handles sign-in,
@@ -31,6 +31,8 @@ sessions and photo storage itself. Any Postgres 15+ with PostGIS works
 | SMS | Africa's Talking: new paid order to the farm, ready/declined to the buyer, payout and refund receipts, vet alerts. Every SMS goes through an outbox table; **simulate mode** (default) stores the text without sending. STOP / ACHA opts a phone out of partner news |
 | USSD | Feature-phone menu: farmers see and accept orders, mark them ready, change prices and stock, request a vet or take vet requests, switch SMS news and language. Admin → Reach has a simulator |
 | Partners | `/partner`: county offices, cooperatives and NGOs write one SMS in English and Kiswahili, pick counties and farm types, see the audience and cost, and submit it; an admin approves it in Admin → Reach; delivery numbers come back to the partner |
+| Editing | Farms and agents edit a published farm (details, types, phone, pin, visibility), add, pause or remove products, and pause the whole farm. Agents with many farms get a searchable list |
+| Privacy | `/privacy` and `/terms` (drafts for legal review), Account → Download my data and Delete my account |
 | Analytics | First-party events (`src/lib/analytics`) into `public.events`, rolled up nightly into `events_daily` |
 
 ## Run it locally (Arch Linux)
@@ -130,7 +132,8 @@ before going live.
 
 See "Hosting" in `HANDOFF.md` for the recommended free setups. Whatever the host:
 
-1. Create the database (with PostGIS), set `DATABASE_URL`, run `npm run db:migrate`.
+1. Create the database (with PostGIS), set `DATABASE_URL`, run `npm run db:migrate`, then **restart the app** (after every migration).
+   Do not set `DEMO_MODE` on the real pilot: without it, a production build refuses simulated payments and open callback URLs.
 2. Set `NEXT_PUBLIC_SITE_URL` to the https address (cookies become Secure).
 3. On hosts without a lasting disk, set the `S3_*` variables (Cloudflare R2) for photos.
 4. Make yourself admin once:

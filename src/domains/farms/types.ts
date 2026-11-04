@@ -59,6 +59,7 @@ export interface FarmDetail {
   media: { id: string; storage_path: string; position: number }[];
   rating: { avg: number | null; count: number } | null;
   created_at?: string;
+  status?: string;
   featured: boolean;
 }
 

@@ -54,7 +54,7 @@ export default async function AdminPage({
   return (
     <main className="mx-auto w-full flex flex-col gap-4 px-4 pb-24 pt-6 lg:max-w-5xl lg:px-8 lg:pb-16 lg:pt-10">
       <header className="flex items-center gap-3">
-        <Link href="/my-farm" className="grid size-11 place-items-center rounded-full border border-line bg-surface" aria-label="Back">
+        <Link href="/my-farm" className="grid size-11 place-items-center rounded-full border border-line bg-surface" aria-label={t('back')}>
           <Icon name="back" />
         </Link>
         <h1 className="text-2xl font-extrabold">{t('title')}</h1>
@@ -106,14 +106,17 @@ export default async function AdminPage({
 
       {tab === 'farms' ? (
         <>
-          <Link href={all ? '/admin?tab=farms' : '/admin?tab=farms&all=1'} className="text-sm font-bold text-sprout-deep">
+          <Link
+            href={all ? '/admin?tab=farms' : '/admin?tab=farms&all=1'}
+            className="inline-flex min-h-11 items-center self-start text-sm font-bold text-sprout-deep"
+          >
             {all ? t('farms') : t('allFarms')}
           </Link>
           <ul className="flex flex-col gap-2">
             {(await adminListFarms(viewer, !all)).map((f) => (
               <li key={f.id} className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-3">
                 <span className="min-w-0">
-                  <Link href={`/f/${f.slug}`} className="block truncate font-bold underline-offset-2 hover:underline">
+                  <Link href={`/f/${f.slug}`} className="flex min-h-11 items-center truncate font-bold underline-offset-2 hover:underline">
                     {f.name}
                   </Link>
                   <span className="block truncate text-sm text-soil">
@@ -200,6 +203,8 @@ export default async function AdminPage({
             <TradeSettingsForm
               autoCompleteDays={Number(settings.auto_complete_days ?? 3)}
               unpaidHours={Number(settings.unpaid_cancel_hours ?? 48)}
+              reminderHours={Number(settings.paid_reminder_hours ?? 6)}
+              declineHours={Number(settings.paid_decline_hours ?? 36)}
               plans={((settings.premium_plans as { days: number; price: number }[] | undefined) ?? [])
                 .map((p) => `${p.days}, ${p.price}`)
                 .join('\n')}

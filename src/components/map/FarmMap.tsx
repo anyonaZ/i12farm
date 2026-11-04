@@ -142,7 +142,11 @@ function VectorMap({
     if (!active) return;
     let cancelled = false;
     (async () => {
-      const [maplibregl, style] = await Promise.all([import('maplibre-gl').then((m) => m.default), loadStyle()]);
+      const [maplibregl, style] = await Promise.all([import('maplibre-gl'), loadStyle()]);
+      // The worker file is copied to /public at build time (scripts/copy-map-worker.mjs).
+      if (!maplibregl.getWorkerUrl().includes('/vendor/maplibre/')) {
+        maplibregl.setWorkerUrl(`/vendor/maplibre/maplibre-gl-worker-${maplibregl.getVersion()}.mjs`);
+      }
       if (cancelled || !container.current) return;
       if (!style) setOffline(true);
       let map: MlMap;

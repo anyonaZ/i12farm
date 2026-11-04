@@ -49,8 +49,8 @@ export async function ReachView({ viewer }: { viewer: Viewer }) {
           {[
             [t('smsToday', { count: reach.today, cap: num('sms_daily_cap', 1000) }), ''],
             [t('smsQueued', { count: reach.queued }), ''],
-            [`${reach.failed7d} failed (7 days)`, ''],
-            [`KES ${reach.cost30d.toLocaleString('en-KE')} (30 days)`, ''],
+            [t('failed7d', { n: reach.failed7d }), ''],
+            [t('cost30d', { kes: reach.cost30d.toLocaleString('en-KE') }), ''],
           ].map(([label]) => (
             <div key={label} className="rounded-xl bg-mint px-3 py-2.5 text-sm font-bold tabular-nums">
               {label}
@@ -108,10 +108,10 @@ export async function ReachView({ viewer }: { viewer: Viewer }) {
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="text-xs uppercase text-soil">
                 <tr>
-                  <th className="py-2 pr-3">Time</th>
-                  <th className="py-2 pr-3">Phone</th>
-                  <th className="py-2 pr-3">Message</th>
-                  <th className="py-2">Status</th>
+                  <th className="py-2 pr-3">{t('colTime')}</th>
+                  <th className="py-2 pr-3">{t('colPhone')}</th>
+                  <th className="py-2 pr-3">{t('colMessage')}</th>
+                  <th className="py-2">{t('colStatus')}</th>
                 </tr>
               </thead>
               <tbody>

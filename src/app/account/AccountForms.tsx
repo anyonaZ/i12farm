@@ -5,6 +5,7 @@ import { useActionState, useTransition } from 'react';
 import {
   changePassword,
   claimFarm,
+  deleteMyAccount,
   signOutOtherDevices,
   updateProfile,
   updateSignInDetails,
@@ -190,5 +191,38 @@ export function ClaimForm() {
         {t('claimButton')}
       </button>
     </form>
+  );
+}
+
+/** Download my data + Delete my account. Deleting asks for a typed word so a stray tap cannot do it. */
+export function DataControls() {
+  const t = useTranslations('account');
+  const [state, action, pending] = useActionState(deleteMyAccount, initial);
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-soil">{t('downloadHint')}</p>
+        <a href="/account/export" className="btn-secondary" download>
+          {t('download')}
+        </a>
+      </div>
+      <details className="rounded-2xl border border-line p-3">
+        <summary className="flex min-h-11 cursor-pointer items-center font-bold text-forest">{t('deleteTitle')}</summary>
+        <form action={action} className="mt-2 flex flex-col gap-3">
+          <p className="text-sm">{t('deleteHint')}</p>
+          <Status state={state} okText="" />
+          <Field id="del-phrase" label={t('deletePhrase')}>
+            <input id="del-phrase" name="phrase" autoComplete="off" autoCapitalize="characters" className="input" />
+          </Field>
+          <button
+            type="submit"
+            disabled={pending}
+            className="inline-flex min-h-tap w-full items-center justify-center rounded-full bg-red-700 px-5 font-semibold text-white disabled:opacity-60"
+          >
+            {t('deleteButton')}
+          </button>
+        </form>
+      </details>
+    </div>
   );
 }

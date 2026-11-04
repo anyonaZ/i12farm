@@ -9,3 +9,4 @@ next-env.d.ts
 
 # Local photo storage and Postgres data
 /data
+/public/vendor/

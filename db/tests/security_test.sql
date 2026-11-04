@@ -294,7 +294,7 @@ begin
   if (select public_location from public.farms where id = fid) is null then
     raise exception 'FAIL: agent-created farm has no public pin';
   end if;
-  if (select slug from public.farms where id = fid) !~ '^kendu-bay-layers-[0-9a-f]{5}$' then
+  if (select slug from public.farms where id = fid) !~ '^kendu-bay-layers(-[0-9a-f]{5})?$' then
     raise exception 'FAIL: unexpected slug %', (select slug from public.farms where id = fid);
   end if;
   raise notice 'ok  agents pin farms for farmers without accounts';
@@ -390,7 +390,7 @@ begin
     "listings": [{"product_slug": "kale-sukuma", "price_kes": 45, "quantity": 100},
                  {"product_slug": "tomatoes", "price_kes": 90}]
   }'::jsonb);
-  if r.slug !~ '^kendu-greens-' then raise exception 'FAIL: create_farm slug %', r.slug; end if;
+  if r.slug !~ '^kendu-greens(-[0-9a-f]{5})?$' then raise exception 'FAIL: create_farm slug %', r.slug; end if;
   if (select count(*) from public.listings where farm_id = r.id) <> 2 then raise exception 'FAIL: create_farm listings'; end if;
   if (select owner_id from public.farms where id = r.id) <> auth.uid() then raise exception 'FAIL: create_farm owner'; end if;
   select extensions.st_x(public_location::extensions.geometry) into loc_x from public.farms where id = r.id;

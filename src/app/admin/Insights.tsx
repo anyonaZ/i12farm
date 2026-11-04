@@ -33,13 +33,13 @@ export async function InsightsView({ data }: { data: Insights }) {
 
   return (
     <>
-      <nav className="flex gap-1.5" aria-label={t('period', { days: data.days })}>
+      <nav className="flex flex-wrap gap-1.5" aria-label={t('period', { days: data.days })}>
         {[7, 30, 90].map((d) => (
           <Link
             key={d}
             href={`/admin?tab=insights&days=${d}`}
             aria-current={d === data.days ? 'page' : undefined}
-            className={`chip min-h-9 px-3 text-xs font-bold ${d === data.days ? 'border-forest bg-forest text-white' : ''}`}
+            className={`chip min-h-11 px-3 text-xs font-bold ${d === data.days ? 'border-forest bg-forest text-white' : ''}`}
           >
             {t('period', { days: d })}
           </Link>
@@ -67,26 +67,28 @@ export async function InsightsView({ data }: { data: Insights }) {
 
       <section className="card gap-2 p-0">
         <h2 className="px-5 pt-4 text-base font-bold">{t('byCounty')}</h2>
-        <table className="w-full text-sm tabular-nums">
-          <thead className="text-xs text-soil">
-            <tr>
-              <th className="px-5 py-2 text-left font-semibold">{t('county')}</th>
-              <th className="px-2 py-2 text-right font-semibold">{t('kpi.farms')}</th>
-              <th className="px-2 py-2 text-right font-semibold">{t('kpi.contacts')}</th>
-              <th className="px-5 py-2 text-right font-semibold">{t('kpi.gmv')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.counties.map((c) => (
-              <tr key={c.county} className="border-t border-line">
-                <td className="px-5 py-2 font-semibold">{c.county}</td>
-                <td className="px-2 py-2 text-right">{c.farms}</td>
-                <td className="px-2 py-2 text-right">{c.contacts}</td>
-                <td className="px-5 py-2 text-right">{short(c.gmv)}</td>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[22rem] text-sm tabular-nums">
+            <thead className="text-xs text-soil">
+              <tr>
+                <th className="px-5 py-2 text-left font-semibold">{t('county')}</th>
+                <th className="px-2 py-2 text-right font-semibold">{t('kpi.farms')}</th>
+                <th className="px-2 py-2 text-right font-semibold">{t('kpi.contacts')}</th>
+                <th className="px-5 py-2 text-right font-semibold">{t('kpi.gmv')}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.counties.map((c) => (
+                <tr key={c.county} className="border-t border-line">
+                  <td className="px-5 py-2 font-semibold">{c.county}</td>
+                  <td className="px-2 py-2 text-right">{c.farms}</td>
+                  <td className="px-2 py-2 text-right">{c.contacts}</td>
+                  <td className="px-5 py-2 text-right">{short(c.gmv)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="card gap-2 p-0">
@@ -94,24 +96,26 @@ export async function InsightsView({ data }: { data: Insights }) {
         {data.products.length === 0 ? (
           <p className="px-5 pb-4 text-sm text-soil">{t('noData')}</p>
         ) : (
-          <table className="w-full text-sm tabular-nums">
-            <thead className="text-xs text-soil">
-              <tr>
-                <th className="px-5 py-2 text-left font-semibold">{t('product')}</th>
-                <th className="px-2 py-2 text-right font-semibold">{t('qty')}</th>
-                <th className="px-5 py-2 text-right font-semibold">{t('value')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.products.map((p) => (
-                <tr key={p.title} className="border-t border-line">
-                  <td className="px-5 py-2 font-semibold">{p.title}</td>
-                  <td className="px-2 py-2 text-right">{p.qty}</td>
-                  <td className="px-5 py-2 text-right">{kes(p.value)}</td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[22rem] text-sm tabular-nums">
+              <thead className="text-xs text-soil">
+                <tr>
+                  <th className="px-5 py-2 text-left font-semibold">{t('product')}</th>
+                  <th className="px-2 py-2 text-right font-semibold">{t('qty')}</th>
+                  <th className="px-5 py-2 text-right font-semibold">{t('value')}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.products.map((p) => (
+                  <tr key={p.title} className="border-t border-line">
+                    <td className="px-5 py-2 font-semibold">{p.title}</td>
+                    <td className="px-2 py-2 text-right">{p.qty}</td>
+                    <td className="px-5 py-2 text-right">{kes(p.value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </section>
 

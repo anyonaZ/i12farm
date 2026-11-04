@@ -159,7 +159,7 @@ export function ExploreClient({ categories, counties }: Props) {
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder={t('searchPlaceholder')}
+        placeholder={t('searchShort')}
         autoComplete="off"
         className="h-12 min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-soil"
       />
@@ -186,7 +186,7 @@ export function ExploreClient({ categories, counties }: Props) {
     <div
       className="pointer-events-auto -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:px-0"
       role="toolbar"
-      aria-label="Categories"
+      aria-label={t('categoriesLabel')}
     >
       <Chip pressed={cat === null} onClick={() => setCat(null)}>
         {t('all')}

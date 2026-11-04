@@ -1,5 +1,6 @@
 import 'server-only';
 import { timingSafeEqual } from 'node:crypto';
+import { demoMode } from '@/lib/demo';
 
 // SMS through Africa's Talking (Kenya's common SMS/USSD gateway), written
 // against its REST API with fetch (no SDK).
@@ -86,7 +87,8 @@ function parseCost(cost: string | undefined): number | undefined {
 }
 
 function secretMatches(candidate: string, secret: string): boolean {
-  if (!secret && smsMode === 'simulate') return candidate === 'unset';
+  // Without a secret the callbacks only work in demo mode (see src/lib/demo.ts).
+  if (!secret) return demoMode && smsMode === 'simulate' && candidate === 'unset';
   const a = Buffer.from(candidate);
   const b = Buffer.from(secret);
   return secret.length >= 24 && a.length === b.length && timingSafeEqual(a, b);

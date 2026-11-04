@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Icon } from '@/components/Icon';
+import { Badge, useNavCounts } from '@/components/use-nav-counts';
 
 const ITEMS = [
   { href: '/', key: 'explore', icon: CompassIcon },
@@ -13,13 +14,18 @@ const ITEMS = [
   { href: '/my-farm', key: 'myFarm', icon: SproutIcon },
 ] as const;
 
+// Screens where the tab bar would only invite a tap that loses work.
+const HIDDEN = [/^\/my-farm\/new/, /^\/my-farm\/[^/]+\/edit/];
+
 export function BottomNav() {
   const pathname = usePathname();
   const t = useTranslations('nav');
+  const counts = useNavCounts();
+  if (HIDDEN.some((r) => r.test(pathname))) return null;
 
   return (
     <nav
-      aria-label="Main"
+      aria-label={t('mainLabel')}
       className="fixed inset-x-0 bottom-0 z-40 border-t lg:hidden border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
     >
       <ul className="mx-auto flex max-w-md justify-around">
@@ -34,8 +40,9 @@ export function BottomNav() {
                   active ? 'text-sprout-deep' : 'text-soil'
                 }`}
               >
-                <span className={`rounded-full px-4 py-1 ${active ? 'bg-sprout/15' : ''}`}>
+                <span className={`relative rounded-full px-4 py-1 ${active ? 'bg-sprout/15' : ''}`}>
                   <Icon />
+                  <Badge n={counts[key as keyof typeof counts]} label={t('badge', { n: counts[key as keyof typeof counts] ?? 0 })} />
                 </span>
                 {t(key)}
               </Link>

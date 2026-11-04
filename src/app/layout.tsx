@@ -6,6 +6,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { AppRuntime } from '@/components/AppRuntime';
 import { TopNav } from '@/components/TopNav';
 import { displayName, getViewer } from '@/lib/auth/viewer';
+import { publicDemo } from '@/lib/demo';
 import { siteUrl } from '@/lib/env';
 import './globals.css';
 
@@ -44,10 +45,16 @@ export const viewport: Viewport = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
   const viewer = await getViewer().catch(() => null);
+  const tApp = await getTranslations('app');
   return (
     <html lang={locale} className={jakarta.variable}>
       <body className="antialiased">
         <NextIntlClientProvider>
+          {publicDemo ? (
+            <p className="bg-amber px-4 py-1.5 text-center text-xs font-bold text-forest" role="note">
+              {tApp('demoBanner')}
+            </p>
+          ) : null}
           <TopNav
             viewer={
               viewer

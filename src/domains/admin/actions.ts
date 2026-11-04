@@ -144,11 +144,21 @@ export async function importPayouts(form: FormData): Promise<Result<{ ok: number
   return { ok: true, data: { ok, failed } };
 }
 
-export async function saveTradeSettings(input: { autoCompleteDays: number; unpaidHours: number; plans: string }) {
+export async function saveTradeSettings(input: {
+  autoCompleteDays: number;
+  unpaidHours: number;
+  reminderHours: number;
+  declineHours: number;
+  plans: string;
+}) {
   const days = Math.round(Number(input.autoCompleteDays));
   const hours = Math.round(Number(input.unpaidHours));
   if (!(days >= 1 && days <= 30)) return { ok: false as const, error: 'days must be 1 to 30' };
   if (!(hours >= 2 && hours <= 336)) return { ok: false as const, error: 'hours must be 2 to 336' };
+  const remind = Math.round(Number(input.reminderHours));
+  const decline = Math.round(Number(input.declineHours));
+  if (!(remind >= 1 && decline > remind && decline <= 168))
+    return { ok: false as const, error: 'reminder must come before the decline, and the decline within 168 hours' };
   const plans = input.plans
     .split('\n')
     .map((line) =>
@@ -166,6 +176,8 @@ export async function saveTradeSettings(input: { autoCompleteDays: number; unpai
     withUser(me, async (tx) => {
       await tx`select public.admin_set_setting('auto_complete_days', ${tx.json(days)})`;
       await tx`select public.admin_set_setting('unpaid_cancel_hours', ${tx.json(hours)})`;
+      await tx`select public.admin_set_setting('paid_reminder_hours', ${tx.json(remind)})`;
+      await tx`select public.admin_set_setting('paid_decline_hours', ${tx.json(decline)})`;
       await tx`select public.admin_set_setting('premium_plans', ${tx.json(plans)})`;
     }),
   );

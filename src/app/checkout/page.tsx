@@ -1,17 +1,19 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
 import { farmForCheckout } from '@/domains/orders/queries';
 import { getViewer } from '@/lib/auth/viewer';
 import { displayPhone } from '@/lib/phone';
+import { mpesaMode } from '@/lib/mpesa';
 import { CheckoutForm } from './CheckoutForm';
 
 export const metadata = { title: 'Checkout', robots: { index: false } };
 
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ farm?: string }> }) {
   const { farm: slug } = await searchParams;
-  if (!slug) notFound();
+  // Opened without a farm (old bookmark, back button): the cart lives on a farm's page.
+  if (!slug) redirect('/');
   const [t, viewer] = await Promise.all([getTranslations('checkout'), getViewer()]);
   const farm = await farmForCheckout(viewer, slug);
   if (!farm) notFound();
@@ -23,7 +25,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
         <Link
           href={`/f/${farm.slug}`}
           className="grid size-11 place-items-center rounded-full border border-line bg-surface"
-          aria-label="Back"
+          aria-label={t('back')}
         >
           <Icon name="back" />
         </Link>
@@ -40,6 +42,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           farm={{ id: farm.id, slug: farm.slug, name: farm.name }}
           listings={farm.listings}
           signedIn={Boolean(viewer)}
+          paymentsOff={mpesaMode === 'off'}
           signInHref={`/sign-in?next=${encodeURIComponent(back)}`}
           defaults={{
             name: viewer?.fullName ?? '',

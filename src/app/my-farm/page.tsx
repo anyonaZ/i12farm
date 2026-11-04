@@ -1,21 +1,23 @@
 import Link from 'next/link';
-import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
 import { FarmCover } from '@/components/farm/FarmCover';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
-import { getPilotProgress, listManagedFarms, listSavedFarms } from '@/domains/farms/queries';
+import { getPilotProgress, listManagedFarmRows, listManagedFarms, listSavedFarms } from '@/domains/farms/queries';
+import { listProducts } from '@/domains/reference/queries';
 import { unreadTotal } from '@/domains/messaging/queries';
 import { featuredUntil } from '@/domains/promotions/queries';
 import { farmOrdersNeedingAction } from '@/domains/orders/queries';
 import { displayName, requireViewer } from '@/lib/auth/viewer';
-import { kes } from '@/lib/format';
 import type { Locale } from '@/i18n/config';
-import { ClaimCode, PhotoManager, StockEditor } from './FarmTools';
-import { PriceEditor } from './PriceEditor';
+import { FarmList } from './FarmList';
+import { ManagedFarmCard } from './ManagedFarmCard';
 
 export const metadata = { title: 'My Farm' };
 
 const PILOT_TARGET = 100;
+// More farms than this (agents) → a searchable list; each farm's tools open on its own page.
+const CARD_LIMIT = 2;
 
 export default async function MyFarmPage({ searchParams }: { searchParams: Promise<{ photosFailed?: string }> }) {
   const t = await getTranslations();
@@ -24,19 +26,20 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
   const { photosFailed } = await searchParams;
   const isAgent = viewer.roles.includes('agent');
   const isAdmin = viewer.roles.includes('admin');
-  const [farms, saved, progress, needAction, unread] = await Promise.all([
-    listManagedFarms(viewer.id),
+  const rows = await listManagedFarmRows(viewer.id);
+  const [farms, saved, progress, needAction, unread, products] = await Promise.all([
+    rows.length > CARD_LIMIT ? Promise.resolve([]) : listManagedFarms(viewer.id),
     listSavedFarms(viewer.id),
     isAgent ? getPilotProgress() : Promise.resolve([]),
     farmOrdersNeedingAction(viewer),
     unreadTotal(viewer),
+    rows.length > CARD_LIMIT ? Promise.resolve([]) : listProducts(locale),
   ]);
   const name = displayName(viewer);
   const until = await featuredUntil(
     viewer,
     farms.map((f) => f.id),
   );
-  const format = await getFormatter();
   const total = progress.reduce((s, r) => s + Number(r.farms), 0);
   const mine = progress.reduce((s, r) => s + Number(r.mine), 0);
   const maxCounty = Math.max(1, ...progress.map((r) => Number(r.farms)));
@@ -59,7 +62,7 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
           <Icon name="bag" className="shrink-0 text-sprout-deep" />
           <span className="min-w-0">
             <span className="block">{t('myFarmPlus.orders')}</span>
-            {farms.length ? (
+            {rows.length ? (
               <span className={`block truncate text-xs ${needAction ? 'text-sprout-deep' : 'font-medium text-soil'}`}>
                 {t('myFarmPlus.needAction', { n: needAction })}
               </span>
@@ -146,94 +149,24 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
         </div>
       ) : null}
 
-      {farms.length > 0 ? (
+      {rows.length > 0 ? (
         <section className="flex flex-col gap-4">
           <h2 className="text-lg font-bold">{isAgent ? t('myFarm.managed') : t('myFarm.myFarms')}</h2>
-          <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start">
-            {farms.map((f) => (
-              <article key={f.id} className="card">
-                <div className="flex items-center gap-3">
-                  <span className="size-16 shrink-0 overflow-hidden rounded-2xl">
-                    <FarmCover id={f.id} name={f.name} category={f.categories[0]} coverPath={f.media[0]?.storage_path} sizes="64px" />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="truncate text-lg font-bold">{f.name}</h3>
-                    <p className="truncate text-sm text-soil">{[f.place_name, f.county?.name].filter(Boolean).join(' · ')}</p>
-                  </div>
-                </div>
-                <dl className="grid grid-cols-3 gap-2">
-                  <Stat label={t('myFarm.views')} value={f.stats.views} />
-                  <Stat label={t('myFarm.calls')} value={f.stats.calls} />
-                  <Stat label={t('myFarm.whatsapps')} value={f.stats.whatsapps} />
-                </dl>
-                {f.balance.pending || f.balance.due || f.balance.paidOut ? (
-                  <div className="flex flex-col gap-1.5 rounded-2xl border border-line p-3 text-sm">
-                    <h4 className="flex items-center gap-2 font-bold">
-                      <Icon name="wallet" size={18} className="text-sprout-deep" />
-                      {t('myFarmPlus.earnings')}
-                    </h4>
-                    <Money label={t('myFarmPlus.due')} value={f.balance.due} strong />
-                    <Money label={t('myFarmPlus.pending')} value={f.balance.pending} />
-                    <Money label={t('myFarmPlus.paidOut')} value={f.balance.paidOut} />
-                    <p className="text-xs text-soil">{t('myFarmPlus.payoutNote')}</p>
-                  </div>
-                ) : null}
-                <Link
-                  href={`/my-farm/feature/${f.id}`}
-                  className={`flex min-h-12 items-center justify-between gap-3 rounded-2xl px-3.5 text-sm font-bold ${until[f.id] ? 'bg-lime/40' : 'border border-line'}`}
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <Icon name="star" size={18} className={until[f.id] ? 'fill-forest text-forest' : 'text-sprout-deep'} />
-                    {until[f.id]
-                      ? t('featured.until', {
-                          date: format.dateTime(new Date(until[f.id] as string), {
-                            day: 'numeric',
-                            month: 'short',
-                            timeZone: 'Africa/Nairobi',
-                          }),
-                        })
-                      : t('featured.cta')}
-                  </span>
-                  <span className="text-sprout-deep">{until[f.id] ? t('featured.extend') : '›'}</span>
-                </Link>
-                {isAgent && !f.claimed && f.managed_by === viewer.id ? <ClaimCode farmId={f.id} /> : null}
-                {f.claimed && f.managed_by === viewer.id && f.owner_id !== viewer.id ? (
-                  <p className="flex items-center gap-2 text-sm text-soil">
-                    <Icon name="check" size={16} className="text-sprout-deep" />
-                    {t('myFarmPlus.claimedBy')}
-                  </p>
-                ) : null}
-                <h4 className="font-bold">{t('myFarm.productsTitle')}</h4>
-                <div>
-                  {f.listings.map((l) => {
-                    const label = l.product ? (locale === 'sw' ? l.product.name_sw : l.product.name_en) : l.title;
-                    return (
-                      <div key={l.id}>
-                        <PriceEditor
-                          listingId={l.id}
-                          name={label}
-                          unitLabel={t('farm.per', { unit: t(`units.${l.unit}`) })}
-                          price={l.price_kes === null ? null : Number(l.price_kes)}
-                          history={f.history[l.id] ?? []}
-                        />
-                        <StockEditor listingId={l.id} quantity={l.quantity === null ? null : Number(l.quantity)} label={label} />
-                      </div>
-                    );
-                  })}
-                </div>
-                <PhotoManager farmId={f.id} photos={f.media} />
-                <Link href={`/f/${f.slug}`} className="btn-secondary">
-                  {t('myFarm.viewPublic')}
-                </Link>
-              </article>
-            ))}
-          </div>
+          {rows.length > CARD_LIMIT ? (
+            <FarmList farms={rows} />
+          ) : (
+            <div className="flex flex-col gap-4 lg:grid lg:grid-cols-2 lg:items-start">
+              {farms.map((f) => (
+                <ManagedFarmCard key={f.id} farm={f} until={until[f.id] ?? null} viewer={viewer} locale={locale} products={products} />
+              ))}
+            </div>
+          )}
         </section>
       ) : null}
 
       {!isAgent ? (
         <section className="card gap-3 border-forest bg-forest text-white">
-          <h2 className="text-lg font-bold">{farms.length ? t('myFarm.addFarm') : t('myFarm.haveFarm')}</h2>
+          <h2 className="text-lg font-bold">{rows.length ? t('myFarm.addFarm') : t('myFarm.haveFarm')}</h2>
           <p className="text-sm text-white/75">{t('myFarm.haveFarmD')}</p>
           <Link href="/my-farm/new" className="btn-primary bg-lime text-forest">
             <Icon name="pin" size={18} />
@@ -271,23 +204,5 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
         </button>
       </form>
     </main>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex min-w-0 flex-col-reverse rounded-2xl bg-mint p-3">
-      <dt className="text-xs text-soil">{label}</dt>
-      <dd className="text-[22px] font-extrabold tabular-nums">{value}</dd>
-    </div>
-  );
-}
-
-function Money({ label, value, strong }: { label: string; value: number; strong?: boolean }) {
-  return (
-    <div className="flex justify-between gap-3">
-      <span className={strong ? 'font-semibold' : 'text-soil'}>{label}</span>
-      <span className={`tabular-nums ${strong ? 'font-extrabold' : ''}`}>{kes(value)}</span>
-    </div>
   );
 }

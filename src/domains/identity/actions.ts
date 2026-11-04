@@ -15,7 +15,7 @@ import {
   userForEmailLink,
 } from '@/lib/auth/accounts';
 import { passwordProblem } from '@/lib/auth/password';
-import { requestInfo, revokeOtherSessions, startSession } from '@/lib/auth/session';
+import { endSession, requestInfo, revokeOtherSessions, startSession } from '@/lib/auth/session';
 import { getViewer } from '@/lib/auth/viewer';
 import { recordEvent } from '@/lib/analytics/server';
 import { dbMessage, getSql, withUser } from '@/lib/db';
@@ -217,4 +217,23 @@ export async function claimFarm(_prev: FormState, form: FormData): Promise<FormS
   } catch (error) {
     return { error: 'claimFailed', detail: dbMessage(error) };
   }
+}
+
+/** Delete my account (Account → Delete my account). The phrase guards against a slip of the thumb. */
+export async function deleteMyAccount(_prev: FormState, form: FormData): Promise<FormState> {
+  const viewer = await getViewer();
+  if (!viewer) return { error: 'signedOut' };
+  const phrase = String(form.get('phrase') ?? '')
+    .trim()
+    .toUpperCase();
+  if (phrase !== 'DELETE' && phrase !== 'FUTA') return { error: 'deletePhrase' };
+  try {
+    await withUser(viewer.id, async (tx) => {
+      await tx`select public.delete_my_account()`;
+    });
+  } catch (error) {
+    return { error: 'deleteBlocked', detail: dbMessage(error) };
+  }
+  await endSession('account_deleted');
+  redirect('/?deleted=1');
 }

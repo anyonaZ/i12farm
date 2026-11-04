@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { Icon, type IconName } from '@/components/Icon';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { Logo } from '@/components/Logo';
+import { Badge, useNavCounts } from '@/components/use-nav-counts';
 
 // Laptop and desktop navigation (the bottom tab bar is for phones).
 const ITEMS: { href: string; key: 'explore' | 'orders' | 'vets' | 'inbox' | 'myFarm'; icon: IconName }[] = [
@@ -19,6 +20,7 @@ const ITEMS: { href: string; key: 'explore' | 'orders' | 'vets' | 'inbox' | 'myF
 export function TopNav({ viewer }: { viewer: { name: string; admin: boolean; partner: boolean } | null }) {
   const pathname = usePathname();
   const t = useTranslations();
+  const counts = useNavCounts();
 
   return (
     <header className="sticky top-0 z-40 hidden h-16 border-b border-line bg-surface/95 backdrop-blur lg:block">
@@ -26,7 +28,7 @@ export function TopNav({ viewer }: { viewer: { name: string; admin: boolean; par
         <Link href="/" aria-label="i12farm" className="shrink-0">
           <Logo />
         </Link>
-        <nav aria-label="Main" className="flex flex-1 items-center gap-1">
+        <nav aria-label={t('nav.mainLabel')} className="flex flex-1 items-center gap-1">
           {ITEMS.map(({ href, key, icon }) => {
             const active = href === '/' ? pathname === '/' || pathname.startsWith('/f/') : pathname.startsWith(href);
             return (
@@ -38,7 +40,10 @@ export function TopNav({ viewer }: { viewer: { name: string; admin: boolean; par
                   active ? 'bg-sprout/15 text-sprout-deep' : 'text-soil hover:bg-mint hover:text-forest'
                 }`}
               >
-                <Icon name={icon} size={18} />
+                <span className="relative">
+                  <Icon name={icon} size={18} />
+                  <Badge n={counts[key as keyof typeof counts]} label={t('nav.badge', { n: counts[key as keyof typeof counts] ?? 0 })} />
+                </span>
                 {t(`nav.${key}`)}
               </Link>
             );

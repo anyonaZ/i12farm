@@ -31,7 +31,12 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title: farm.name,
     description: `${place}. ${farm.description ?? ''}`.trim(),
-    openGraph: { title: `${farm.name} · i12farm`, description: place, images: image ? [image] : undefined },
+    openGraph: {
+      title: `${farm.name} · i12farm`,
+      description: place,
+      images: [image ?? { url: `/f/${farm.slug}/preview`, width: 1200, height: 630 }],
+    },
+    twitter: { card: 'summary_large_image' },
   };
 }
 
@@ -101,7 +106,18 @@ export default async function FarmPage({ params }: Params) {
         >
           <Icon name="back" />
         </Link>
-        <div className="absolute right-4 top-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="absolute right-4 top-[max(0.75rem,env(safe-area-inset-top))] flex gap-2">
+          <ContactBar
+            variant="share"
+            farmId={farm.id}
+            farmName={farm.name}
+            farmerName={farm.farmer_name}
+            phone={farm.phone_public}
+            whatsapp={farm.whatsapp}
+            listingId={farm.listings[0]?.id ?? null}
+            lng={farm.public_lng}
+            lat={farm.public_lat}
+          />
           <SaveButton farmId={farm.id} initial={saved} signedIn={Boolean(viewer)} />
         </div>
       </div>
@@ -142,11 +158,13 @@ export default async function FarmPage({ params }: Params) {
             </form>
           ) : null}
 
-          <dl className="grid grid-cols-3 gap-2">
-            <Fact label={t('farm.farmer')} value={farm.farmer_name ?? '–'} />
-            <Fact label={t('farm.since')} value={farm.year_started ? String(farm.year_started) : '–'} />
-            <Fact label={t('farm.size')} value={farm.size_acres ? t('farm.acres', { n: Number(farm.size_acres) }) : '–'} />
-          </dl>
+          {farm.farmer_name || farm.year_started || farm.size_acres ? (
+            <dl className="flex flex-wrap gap-2">
+              {farm.farmer_name ? <Fact label={t('farm.farmer')} value={farm.farmer_name} /> : null}
+              {farm.year_started ? <Fact label={t('farm.since')} value={String(farm.year_started)} /> : null}
+              {farm.size_acres ? <Fact label={t('farm.size')} value={t('farm.acres', { n: Number(farm.size_acres) })} /> : null}
+            </dl>
+          ) : null}
 
           <section className="flex flex-col gap-3">
             <h2 className="text-lg font-bold">{t('farm.offers')}</h2>
@@ -160,7 +178,11 @@ export default async function FarmPage({ params }: Params) {
                     <h3 className="font-bold">{productName(l)}</h3>
                     {l.quantity ? (
                       <p className="text-sm tabular-nums text-soil">
-                        {t('farm.available', { qty: `${formatQty(l.quantity)} ${t(`units.${l.unit}`)}` })}
+                        {t('farm.available', {
+                          qty: t.has(`unitCount.${l.unit}`)
+                            ? t(`unitCount.${l.unit}` as never, { n: Number(l.quantity) } as never)
+                            : `${formatQty(l.quantity)} ${t(`units.${l.unit}`)}`,
+                        })}
                       </p>
                     ) : null}
                   </div>
@@ -306,9 +328,9 @@ export default async function FarmPage({ params }: Params) {
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0 rounded-2xl border border-line bg-surface px-3 py-2.5">
+    <div className="min-w-[30%] flex-1 rounded-2xl border border-line bg-surface px-3 py-2.5">
       <dt className="text-xs text-soil">{label}</dt>
-      <dd className="mt-0.5 truncate font-bold tabular-nums">{value}</dd>
+      <dd className="mt-0.5 font-bold tabular-nums">{value}</dd>
     </div>
   );
 }

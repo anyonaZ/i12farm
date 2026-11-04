@@ -1,5 +1,6 @@
 import 'server-only';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { demoMode } from '@/lib/demo';
 import { siteUrl } from '@/lib/env';
 
 // M-Pesa Express (STK Push) through Safaricom Daraja, written against the
@@ -16,12 +17,16 @@ import { siteUrl } from '@/lib/env';
 // long secret, (2) a success callback is confirmed with an STK status query
 // before the order is marked paid, and (3) the amount is checked in SQL.
 
-export type MpesaMode = 'simulate' | 'sandbox' | 'production';
+//   off         a production build with no keys and no DEMO_MODE=true:
+//               payments are refused (see src/lib/demo.ts).
+
+export type MpesaMode = 'simulate' | 'sandbox' | 'production' | 'off';
 
 export const mpesaMode: MpesaMode = ((): MpesaMode => {
   const env = process.env.MPESA_ENV;
-  if (env === 'sandbox' || env === 'production' || env === 'simulate') return env;
-  return process.env.MPESA_CONSUMER_KEY ? 'sandbox' : 'simulate';
+  if (env === 'sandbox' || env === 'production') return env;
+  if (env === 'simulate' || !process.env.MPESA_CONSUMER_KEY) return demoMode ? 'simulate' : 'off';
+  return 'sandbox';
 })();
 
 const BASE = mpesaMode === 'production' ? 'https://api.safaricom.co.ke' : 'https://sandbox.safaricom.co.ke';
@@ -72,7 +77,7 @@ export function callbackUrl(): string {
 }
 
 export function isCallbackSecret(candidate: string): boolean {
-  if (!CALLBACK_SECRET && mpesaMode === 'simulate') return candidate === 'unset';
+  if (!CALLBACK_SECRET && mpesaMode === 'simulate' && demoMode) return candidate === 'unset';
   const a = Buffer.from(candidate);
   const b = Buffer.from(CALLBACK_SECRET);
   return CALLBACK_SECRET.length >= 24 && a.length === b.length && timingSafeEqual(a, b);
@@ -85,6 +90,7 @@ export interface StkResult {
 }
 
 export async function stkPush(input: { phone: string; amount: number; reference: string; description: string }): Promise<StkResult> {
+  if (mpesaMode === 'off') throw new Error('M-Pesa is not set up on this server yet');
   if (mpesaMode === 'simulate') {
     const id = randomBytes(6).toString('hex');
     return { merchantRequestId: `SIM-${id}`, checkoutRequestId: `ws_CO_SIM_${id}`, customerMessage: 'Simulated: no prompt was sent' };
@@ -128,7 +134,7 @@ export async function stkPush(input: { phone: string; amount: number; reference:
 
 /** Ask Daraja for the result of an STK request. null = still waiting for the customer. */
 export async function stkQuery(checkoutRequestId: string): Promise<{ resultCode: number; resultDesc: string } | null> {
-  if (mpesaMode === 'simulate') return null;
+  if (mpesaMode === 'simulate' || mpesaMode === 'off') return null;
   const ts = timestamp();
   const response = await fetch(`${BASE}/mpesa/stkpushquery/v1/query`, {
     method: 'POST',

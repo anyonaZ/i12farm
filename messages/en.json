@@ -2,7 +2,8 @@
   "app": {
     "name": "i12farm",
     "tagline": "Every farm, on the map.",
-    "offline": "You're offline. Recently viewed pages still work."
+    "offline": "You're offline. Recently viewed pages still work.",
+    "demoBanner": "Demo: payments and SMS are simulated. Nothing here is a real order."
   },
   "nav": {
     "explore": "Explore",
@@ -12,7 +13,9 @@
     "myFarm": "My Farm",
     "orders": "Orders",
     "vets": "Vets",
-    "partner": "Partner"
+    "partner": "Partner",
+    "badge": "{n} new",
+    "mainLabel": "Main"
   },
   "explore": {
     "searchPlaceholder": "Search farms or produce",
@@ -26,7 +29,9 @@
     "zoomOut": "Zoom out",
     "showAll": "Show all pilot counties",
     "results": "{n, plural, one {1 result} other {# results}}",
-    "hiddenOnMap": "Not on the map"
+    "hiddenOnMap": "Not on the map",
+    "categoriesLabel": "Farm types",
+    "searchShort": "Search farms"
   },
   "myFarm": {
     "title": "My Farm",
@@ -44,7 +49,7 @@
     "savedTitle": "Saved farms",
     "savedEmpty": "Tap the heart on a farm to keep it here.",
     "haveFarm": "Have a farm?",
-    "haveFarmD": "Put it on the map in five short steps.",
+    "haveFarmD": "Put it on the map in six short steps.",
     "agentTitle": "Field agent",
     "target": "{n} of 100 farms enrolled",
     "pilotTarget": "Pilot target",
@@ -128,8 +133,11 @@
       "google_off": "Google sign-in isn't set up on this server yet.",
       "noEmail": "Your Google account has no verified email.",
       "link": "That sign-in link has expired or was already used.",
-      "callback": "Sign-in didn't finish. Please try again."
-    }
+      "callback": "Sign-in didn't finish. Please try again.",
+      "deletePhrase": "Type the word exactly to confirm.",
+      "deleteBlocked": "The account can't be deleted yet."
+    },
+    "consentLinks": "Read the privacy notice and terms."
   },
   "language": {
     "label": "Language",
@@ -168,7 +176,8 @@
     "signInToSave": "Sign in to save farms",
     "products": "{n, plural, one {1 product} other {# products}}",
     "waGreeting": "Hello {farmer}, I found {farm} on i12farm.",
-    "from": "and up"
+    "from": "and up",
+    "showMap": "Show on map"
   },
   "wizard": {
     "pinTitle": "Pin your farm",
@@ -220,7 +229,12 @@
     "err3": "Choose the county and sub-county.",
     "err5": "Add at least one product with a price.",
     "errSave": "The farm wasn't saved: {reason}. Check your connection and try again.",
-    "photoFailed": "The farm is published, but {n} photo(s) didn't upload. Add them again from My Farm."
+    "photoFailed": "The farm is published, but {n} photo(s) didn't upload. Add them again from My Farm.",
+    "draftFound": "You didn't finish \"{name}\". Continue where you left off?",
+    "draftResume": "Yes, continue",
+    "draftDiscard": "Start over",
+    "back": "Back",
+    "close": "Close"
   },
   "units": {
     "litre": "litre",
@@ -285,7 +299,14 @@
       "agent": "Field agent",
       "partner": "Partner",
       "admin": "Admin"
-    }
+    },
+    "yourData": "Your data",
+    "download": "Download my data",
+    "downloadHint": "A file with everything i12farm keeps about you: account, farms, orders, messages and requests.",
+    "deleteTitle": "Delete my account",
+    "deleteHint": "This removes your name, phone, email, password and saved farms, and hides farms only you manage. Records of past orders and payments are kept without your name, as the law requires. It cannot be undone.",
+    "deletePhrase": "Type DELETE to confirm",
+    "deleteButton": "Delete my account for good"
   },
   "cart": {
     "add": "Add",
@@ -335,7 +356,9 @@
     "visitDate": "Visit date",
     "morning": "Morning (8 am – 12 pm)",
     "afternoon": "Afternoon (2 – 5 pm)",
-    "visitHint": "The farm confirms the date when it accepts your booking."
+    "visitHint": "The farm confirms the date when it accepts your booking.",
+    "paymentsOff": "Online payment isn't switched on yet. Call or WhatsApp the farm to order.",
+    "back": "Back"
   },
   "orders": {
     "title": "Orders",
@@ -386,12 +409,12 @@
     "back": "Back",
     "heldNote": "i12farm holds the money until the buyer confirms they received the order.",
     "farmNext": {
-      "paid": "Accept the order if you can fulfil it. The buyer has already paid.",
+      "paid": "Accept the order if you can fulfil it. The buyer has already paid. Orders left unanswered are declined automatically and the buyer refunded.",
       "accepted": "Mark it ready when the buyer can collect it or it is out for delivery.",
       "ready": "Waiting for the buyer to confirm they received it."
     },
     "buyerNext": {
-      "paid": "Paid. Waiting for the farm to accept.",
+      "paid": "Paid. Waiting for the farm to accept. If the farm doesn't answer in time, the order is declined and your money is refunded.",
       "accepted": "The farm is preparing your order.",
       "ready": "Your order is ready. Tap “I received it” once you have it.",
       "completed": "Done. The farmer is being paid."
@@ -506,7 +529,7 @@
     "plans": "Featured plans",
     "plansHint": "One plan per line: days, price in KES.",
     "runUpkeep": "Run order upkeep now",
-    "upkeepDone": "{completed} completed, {cancelled} cancelled, {expired} payment prompts expired, {ended} featured periods ended.",
+    "upkeepDone": "{completed} completed, {cancelled} cancelled, {declined} unanswered declined, {expired} payment prompts expired, {ended} featured periods ended.",
     "promotionRevenue": "Featured listings",
     "kpi": {
       "orders": "Orders placed",
@@ -567,7 +590,16 @@
     "vetAlertMax": "Vets alerted per request",
     "vetHours": "Open vet requests expire after (hours)",
     "reach": "Reach",
-    "vetRequests": "Vet requests"
+    "vetRequests": "Vet requests",
+    "reminderHours": "Hours after payment before the farm gets a reminder SMS",
+    "declineHours": "Hours after payment before an unanswered order is declined and refunded",
+    "back": "Back",
+    "colTime": "Time",
+    "colPhone": "Phone",
+    "colMessage": "Message",
+    "colStatus": "Status",
+    "failed7d": "{n} failed (7 days)",
+    "cost30d": "KES {kes} spent (30 days)"
   },
   "featured": {
     "badge": "Featured",
@@ -592,7 +624,8 @@
       "failed": "Not started: {detail}",
       "notPayable": "This plan can no longer be paid. Choose again.",
       "mpesa": "M-Pesa didn't accept the request: {detail}"
-    }
+    },
+    "back": "Back"
   },
   "map": {
     "offline": "Map background didn't load. Farm pins still work.",
@@ -612,7 +645,8 @@
     "vet_request_received": "{vets, plural, =0 {i12farm: Request {number} saved, but no vet in your county is on i12farm yet. Please also try your local agrovet.} one {i12farm: Request {number} sent to 1 vet. We will SMS you when they accept.} other {i12farm: Request {number} sent to # vets. We will SMS you when one accepts.}}",
     "vet_accepted": "i12farm: {vet} of {farm} will help with request {number}. Call {phone}.",
     "vet_cancelled": "i12farm: The farmer cancelled vet request {number}. No visit is needed.",
-    "stop": "Reply STOP to stop."
+    "stop": "Reply STOP to stop.",
+    "order_reminder": "i12farm reminder: paid order {number} (KES {total}) is waiting for you. Accept or decline within {hours} hours or it is declined and the buyer refunded. Dial {ussd} or open the app."
   },
   "ussd": {
     "welcome": "Welcome to i12farm",
@@ -750,5 +784,92 @@
     "stopNote": "\"Reply STOP to stop\" is added to every message.",
     "error": "Could not save: {detail}",
     "reviewNote": "Review note: {note}"
+  },
+  "legal": {
+    "back": "Back",
+    "updated": "Last updated {date}",
+    "contact": "Questions or requests: {email}",
+    "contactInApp": "Questions or requests: message us from the app, or ask your field agent.",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  },
+  "farmEdit": {
+    "edit": "Edit",
+    "title": "Edit farm",
+    "back": "Back",
+    "details": "Farm details",
+    "size": "Size (acres)",
+    "since": "Farming since (year)",
+    "types": "What the farm does",
+    "where": "Where",
+    "movePin": "Move the pin",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saved": "Saved. The farm page is updated.",
+    "errors": {
+      "name": "The farm name needs 2 to 80 letters.",
+      "categories": "Choose at least one thing the farm does.",
+      "phone": "Use a Kenyan mobile number, like 0712 345 678.",
+      "size": "The size should be a number of acres.",
+      "year": "Use a year like 2015.",
+      "pin": "The pin must be inside Kenya."
+    },
+    "pause": "Pause",
+    "resume": "Show again",
+    "remove": "Remove",
+    "removeConfirm": "Yes, remove",
+    "pausedPill": "Paused",
+    "noProducts": "No products yet. Add one so buyers can order.",
+    "addProduct": "Add a product",
+    "product": "Product",
+    "productTitle": "Name on the farm page (optional)",
+    "productTitleHint": "e.g. Morning milk, fresh",
+    "price": "Price, KES per {unit}",
+    "quantity": "How many available",
+    "addButton": "Add product",
+    "cancel": "Cancel",
+    "errPrice": "Enter a price in shillings.",
+    "pauseFarm": "Pause farm (hide from Explore)",
+    "publishFarm": "Show farm on Explore again",
+    "pausedFarm": "This farm is paused: buyers can't see it on Explore or in search.",
+    "suspended": "An admin has suspended this farm. Contact i12farm to restore it.",
+    "allFarms": "All farms",
+    "searchFarms": "Search by farm, farmer or place",
+    "county": "County",
+    "allCounties": "All counties",
+    "filter": "Show",
+    "filters": {
+      "all": "All",
+      "orders": "Orders waiting",
+      "unclaimed": "Not claimed",
+      "paused": "Paused"
+    },
+    "showing": "{n} of {total} farms",
+    "productsCount": "{n, plural, one {# product} other {# products}}",
+    "ordersWaiting": "{n, plural, one {# order waiting} other {# orders waiting}}",
+    "unclaimed": "Not claimed yet"
+  },
+  "unitCount": {
+    "litre": "{n, plural, one {# litre} other {# litres}}",
+    "head": "{n, plural, one {# animal} other {# animals}}",
+    "tray-30": "{n, plural, one {# tray of 30} other {# trays of 30}}",
+    "bird": "{n, plural, one {# bird} other {# birds}}",
+    "chick": "{n, plural, one {# chick} other {# chicks}}",
+    "kg": "{n, plural, one {# kg} other {# kg}}",
+    "piece": "{n, plural, one {# piece} other {# pieces}}",
+    "bunch": "{n, plural, one {# bunch} other {# bunches}}",
+    "bag-90kg": "{n, plural, one {# 90 kg bag} other {# 90 kg bags}}",
+    "bag-70kg": "{n, plural, one {# 70 kg bag} other {# 70 kg bags}}",
+    "tray": "{n, plural, one {# tray} other {# trays}}",
+    "bale": "{n, plural, one {# bale} other {# bales}}",
+    "visit": "{n, plural, one {# visit} other {# visits}}",
+    "service": "{n, plural, one {# service} other {# services}}",
+    "person": "{n, plural, one {# person} other {# people}}"
+  },
+  "notFound": {
+    "title": "We couldn't find that page",
+    "body": "The link may be old, or the farm may have been paused or renamed.",
+    "explore": "Explore farms",
+    "orders": "My orders"
   }
 }

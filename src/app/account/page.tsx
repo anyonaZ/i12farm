@@ -6,7 +6,8 @@ import { listMySessions } from '@/domains/identity/queries';
 import { listCounties } from '@/domains/reference/queries';
 import { requireViewer } from '@/lib/auth/viewer';
 import { displayPhone } from '@/lib/phone';
-import { ClaimForm, PasswordForm, ProfileForm, SignInDetailsForm, SignOutOthersButton } from './AccountForms';
+import { LegalLinks } from '@/components/LegalPage';
+import { ClaimForm, DataControls, PasswordForm, ProfileForm, SignInDetailsForm, SignOutOthersButton } from './AccountForms';
 
 export const metadata = { title: 'Account', robots: { index: false } };
 
@@ -46,7 +47,11 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   return (
     <main className="mx-auto w-full flex flex-col gap-5 px-4 pb-24 pt-6 lg:max-w-2xl lg:px-8 lg:pb-16 lg:pt-10">
       <header className="flex items-center justify-between gap-3">
-        <Link href="/my-farm" className="grid size-11 place-items-center rounded-full border border-line bg-surface" aria-label="Back">
+        <Link
+          href="/my-farm"
+          className="grid size-11 place-items-center rounded-full border border-line bg-surface"
+          aria-label={(await getTranslations('legal'))('back')}
+        >
           <Icon name="back" />
         </Link>
         <h1 className="flex-1 text-2xl font-extrabold">{t('title')}</h1>
@@ -121,11 +126,17 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         {sessions.length > 1 ? <SignOutOthersButton /> : null}
       </section>
 
+      <section className="card gap-3">
+        <h2 className="text-lg font-bold">{t('yourData')}</h2>
+        <DataControls />
+      </section>
+
       <form action="/auth/sign-out" method="post">
         <button type="submit" className="btn-secondary">
           {(await getTranslations('myFarm'))('signOut')}
         </button>
       </form>
+      <LegalLinks />
     </main>
   );
 }

@@ -54,13 +54,52 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
   const [photos, setPhotos] = useState<CompressedImage[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const started = useRef(false);
+  const [draftFound, setDraftFound] = useState<Draft | null>(null);
+  const done = useRef(false);
 
   useEffect(() => {
     if (!started.current) {
       started.current = true;
       track('farm.pin_started', { as: isAgent ? 'agent' : 'farmer' });
+      const d = readDraft();
+      if (d && d.name) setDraftFound(d);
     }
   }, [isAgent]);
+
+  // Keep a draft on the phone after every change (photos excepted: they are
+  // re-chosen), so a dropped signal or a closed tab doesn't lose the work.
+  useEffect(() => {
+    if (!started.current || draftFound || done.current) return;
+    if (!name && !cats.length && step === 1) return;
+    writeDraft({ step, name, farmer, phone, waSame, desc, cats, county, subId, place, vis, pin, items, savedAt: Date.now() });
+  }, [step, name, farmer, phone, waSame, desc, cats, county, subId, place, vis, pin, items, draftFound]);
+
+  // Ask before leaving with unsaved work.
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => {
+      if (!done.current && (name || cats.length)) e.preventDefault();
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [name, cats]);
+
+  function resumeDraft(d: Draft) {
+    setName(d.name);
+    setFarmer(d.farmer);
+    setPhone(d.phone);
+    setWaSame(d.waSame);
+    setDesc(d.desc);
+    setCats(d.cats);
+    setCounty(d.county);
+    setSubId(d.subId);
+    setPlace(d.place);
+    setVis(d.vis);
+    setPin(d.pin);
+    setMapView((v) => ({ center: d.pin, zoom: 14, key: v.key + 1 }));
+    setItems(d.items);
+    setStep(Math.min(Math.max(1, d.step), TOTAL));
+    setDraftFound(null);
+  }
 
   const offered = useMemo(() => products.filter((p) => cats.includes(p.category)), [products, cats]);
   const subs = subCounties.filter((s) => s.county_code === county);
@@ -112,6 +151,8 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
         return;
       }
       const { id, slug } = result.data;
+      done.current = true;
+      clearDraft();
 
       // Photos were shrunk on this phone; each one is a small upload to our server.
       if (photos.length) {
@@ -173,14 +214,14 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
   const productLabel = (s: string) => products.find((p) => p.slug === s);
 
   return (
-    <div className="flex min-h-dvh flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] lg:mx-auto lg:min-h-[calc(100dvh-4rem)] lg:w-full lg:max-w-2xl lg:border-x lg:border-line lg:bg-mint lg:pb-0">
+    <div className="flex min-h-dvh flex-col lg:mx-auto lg:min-h-[calc(100dvh-4rem)] lg:w-full lg:max-w-2xl lg:border-x lg:border-line lg:bg-mint lg:pb-0">
       <div className="sticky top-0 z-20 border-b border-line bg-surface px-4 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] lg:top-16 lg:px-8">
         <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={() => (step === 1 ? router.back() : (setError(''), setStep(step - 1)))}
             className="grid size-11 place-items-center rounded-full border border-line"
-            aria-label="Back"
+            aria-label={step === 1 ? t('close') : t('back')}
           >
             <Icon name={step === 1 ? 'close' : 'back'} />
           </button>
@@ -199,6 +240,27 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
           <p role="alert" className="rounded-xl bg-amber/15 px-3 py-2.5 text-sm font-semibold">
             {error}
           </p>
+        ) : null}
+
+        {draftFound ? (
+          <section className="flex flex-col gap-2 rounded-2xl border border-sprout-deep bg-sprout/10 p-4" role="status">
+            <p className="font-bold">{t('draftFound', { name: draftFound.name })}</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => resumeDraft(draftFound)} className="btn-primary min-h-11 w-auto px-5 text-sm">
+                {t('draftResume')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  clearDraft();
+                  setDraftFound(null);
+                }}
+                className="btn-secondary min-h-11 w-auto px-5 text-sm"
+              >
+                {t('draftDiscard')}
+              </button>
+            </div>
+          </section>
         ) : null}
 
         {step === 1 ? (
@@ -493,7 +555,7 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
         ) : null}
       </div>
 
-      <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-20 flex gap-2.5 border-t border-line bg-surface px-4 lg:bottom-0 lg:px-8 py-3">
+      <div className="sticky bottom-0 z-20 flex gap-2.5 border-t border-line bg-surface px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 lg:px-8">
         {step === 4 && photos.length === 0 ? (
           <button type="button" className="btn-secondary w-auto px-6" onClick={next}>
             {t('skip')}
@@ -525,4 +587,48 @@ function Row({ label, value }: { label: string; value: string }) {
       <dd className="min-w-0 text-right font-bold">{value}</dd>
     </div>
   );
+}
+
+interface Draft {
+  step: number;
+  name: string;
+  farmer: string;
+  phone: string;
+  waSame: boolean;
+  desc: string;
+  cats: string[];
+  county: number;
+  subId: number | '';
+  place: string;
+  vis: Visibility;
+  pin: [number, number];
+  items: Item[];
+  savedAt: number;
+}
+
+const DRAFT_KEY = 'i12f-pin-draft';
+const DRAFT_DAYS = 14;
+
+function readDraft(): Draft | null {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? 'null') as Draft | null;
+    if (!d || Date.now() - d.savedAt > DRAFT_DAYS * 86_400_000) return null;
+    return d;
+  } catch {
+    return null;
+  }
+}
+function writeDraft(d: Draft) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+  } catch {
+    // storage full or blocked: the wizard still works, just without a draft
+  }
+}
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    // ignore
+  }
 }

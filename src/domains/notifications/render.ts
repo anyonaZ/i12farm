@@ -18,6 +18,7 @@ export const SMS_TEMPLATES = [
   'order_paid',
   'order_ready',
   'order_declined',
+  'order_reminder',
   'payout_sent',
   'refund_sent',
   'vet_request',
@@ -77,6 +78,8 @@ export function renderSms(
       );
     case 'order_declined':
       return gsm(t('order_declined', { number: str(params.number), farm: str(params.farm) }));
+    case 'order_reminder':
+      return gsm(t('order_reminder', { number: str(params.number), total: str(params.total), hours: Number(params.hours ?? 30), ussd }));
     case 'payout_sent':
       return gsm(t('payout_sent', { amount: str(params.amount), ref: str(params.ref) }));
     case 'refund_sent':
