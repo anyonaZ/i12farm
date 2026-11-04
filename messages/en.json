@@ -31,7 +31,10 @@
     "results": "{n, plural, one {1 result} other {# results}}",
     "hiddenOnMap": "Not on the map",
     "categoriesLabel": "Farm types",
-    "searchShort": "Search farms"
+    "searchShort": "Search farms",
+    "emptySearch": "No farms match \"{q}\" yet. Try another word, like the product or the place.",
+    "emptySearchFiltered": "No farms match \"{q}\" in {where}.",
+    "searchEverywhere": "Search all counties and types"
   },
   "myFarm": {
     "title": "My Farm",

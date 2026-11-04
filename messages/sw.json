@@ -31,7 +31,10 @@
     "results": "{n, plural, one {Tokeo 1} other {Matokeo #}}",
     "hiddenOnMap": "Halipo kwenye ramani",
     "categoriesLabel": "Aina za mashamba",
-    "searchShort": "Tafuta mashamba"
+    "searchShort": "Tafuta mashamba",
+    "emptySearch": "Hakuna mashamba yanayolingana na \"{q}\" bado. Jaribu neno lingine, kama bidhaa au mahali.",
+    "emptySearchFiltered": "Hakuna mashamba yanayolingana na \"{q}\" katika {where}.",
+    "searchEverywhere": "Tafuta kaunti zote na aina zote"
   },
   "myFarm": {
     "title": "Shamba Langu",

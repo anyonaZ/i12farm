@@ -129,6 +129,33 @@ export function ExploreClient({ categories, counties }: Props) {
     [results, inView],
   );
 
+  // Say what is narrowing the results, and offer the one tap that widens them.
+  const countyName = counties.find((c) => c.code === county)?.name;
+  const catLabel = categories.find((c) => c.slug === cat)?.name;
+  const emptyState = (compact: boolean) => (
+    <div className={compact ? 'flex flex-col items-start gap-2 px-4 pb-4' : 'flex flex-col items-start gap-3'}>
+      <p className={compact ? 'text-sm text-soil' : 'text-soil'}>
+        {q.trim() && (county || cat)
+          ? t('emptySearchFiltered', { q: q.trim(), where: [catLabel, countyName].filter(Boolean).join(', ') })
+          : q.trim()
+            ? t('emptySearch', { q: q.trim() })
+            : t('emptyArea')}
+      </p>
+      {county || cat ? (
+        <button
+          type="button"
+          onClick={() => {
+            setCat(null);
+            chooseCounty('');
+          }}
+          className="btn-secondary min-h-11 w-auto px-4 text-sm"
+        >
+          {t('searchEverywhere')}
+        </button>
+      ) : null}
+    </div>
+  );
+
   function chooseCounty(value: string) {
     const code = value ? Number(value) : null;
     setCounty(code);
@@ -246,7 +273,7 @@ export function ExploreClient({ categories, counties }: Props) {
           <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto px-6 pb-10 pt-4">
             <h2 className="mb-4 text-lg font-bold">{heading}</h2>
             {list.length === 0 ? (
-              <p className="text-soil">{t('emptyArea')}</p>
+              emptyState(false)
             ) : (
               <div className="grid grid-cols-1 gap-x-5 gap-y-8 xl:grid-cols-2">
                 {desktopSorted.map((f) => (
@@ -298,7 +325,7 @@ export function ExploreClient({ categories, counties }: Props) {
           </span>
         </button>
         {list.length === 0 ? (
-          <p className="px-4 pb-4 text-sm text-soil">{t('emptyArea')}</p>
+          emptyState(true)
         ) : sheetOpen ? (
           <div className="flex flex-col gap-5 overflow-y-auto px-4 pb-6 pt-1">
             {sorted.map((f) => (
