@@ -6,7 +6,7 @@ Last updated: 10 November 2026. Read this first when continuing in a new chat.
 
 A mobile-first web app (installable on Android from Chrome) that makes every
 Kenyan farmer, however small, visible on a map, the way Airbnb did for small
-guesthouses, and now lets buyers order and pay with M-Pesa. Buyers find
+guesthouses, and now lets buyers order and pay with M-Pesa (through Pesi Pay). Buyers find
 produce, livestock, vets and training. Farmers get buyers and services.
 Government and NGOs see county insights: prices, supply, demand. Every action is
 recorded with time and county, because that data is the long-term asset.
@@ -37,7 +37,7 @@ recorded with time and county, because that data is the long-term asset.
 | Sign-in | Phone or email + password (scrypt). Google optional. Email link for forgotten passwords; admins issue one-time links for farmers without email. **No SMS OTP** (costs money); farm ownership is proven with agent-issued claim codes |
 | Sessions | Random token in an httpOnly cookie, SHA-256 in `auth.sessions`; 30 days idle, 180 days max; revoked rows are kept |
 | Photos | Local disk (`/media`) or any S3-compatible bucket (Cloudflare R2). Shrunk to WebP on the phone first |
-| Payments | M-Pesa STK Push via Daraja, hand-written client. Money is held until the buyer confirms receipt, then owed to the farmer; payouts and refunds recorded by an admin (manual M-Pesa for now) |
+| Payments | **Pesi Pay by Switchlink** (decided 10 Nov 2026; replaces Daraja). Buyers approve an M-Pesa prompt sent through Pesi. Money is held until the buyer confirms receipt, then owed to the farmer. Pesi can also pay out (M-Pesa, bank, till, paybill) after a name check ("Hakikisha"); the database side and client are built, the Admin buttons are next. Until then payouts and refunds are recorded by an admin. Not yet connected: no Switchlink account |
 | Commission | 10% default in `platform_settings` (still an open business decision: deck says 10%, concept doc 5–10%). Each order keeps the rate it was placed with |
 | Screens | Phone first (bottom tabs, one column). From 1024 px wide: top navigation bar, Explore as list beside map (hover a farm to light its pin, click a pin to find the farm), farm pages in two columns with a sticky order/contact panel, wider My Farm, Admin and lists. `src/lib/use-media.ts` holds the breakpoint |
 | Location privacy | Exact point is private (`farm_locations`). Public pin is exact, snapped to ~1 km (default), or hidden |
@@ -52,7 +52,7 @@ recorded with time and county, because that data is the long-term asset.
 | Vet requests | Anyone signed in asks for a vet (animal, problem, county, how soon); every published vet-service farm in that county sees it in the Vets tab; first to accept wins and both sides get each other's number. Vets don't see the farmer's number until they accept. Up to 3 open requests per person or phone; open requests expire after 48 h. Free for now |
 | Maps | Google Maps (Maps JavaScript API, Advanced Markers, marker clustering) when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` is set; MapLibre + OpenFreeMap otherwise, and automatically if Google fails (bad key, billing off, not loaded in 8 s); Leaflet for phones without WebGL. Decided 10 Nov 2026 |
 | Insight privacy | Partners and the public see aggregates only. Groups smaller than 3 (setting `insight_min_count`) are hidden or folded into "Other". Searches are logged without user id or IP (hashed device id), kept 180 days; the public "wanted" list shows everyday farm words only |
-| Demo mode | `npm run dev` always simulates. A production build refuses simulated payments, open callbacks and "Simulate: pay" unless `DEMO_MODE=true` is set on purpose (a banner then says nothing is real). Without M-Pesa keys and without demo mode, checkout says payments are not switched on yet |
+| Demo mode | `npm run dev` always simulates. A production build refuses simulated payments, open callbacks and "Simulate: pay" unless `DEMO_MODE=true` is set on purpose (a banner then says nothing is real). Without Pesi keys and without demo mode, checkout says payments are not switched on yet |
 | Unanswered paid orders | The order waits on the farm's Orders badge; at 36 h it is declined and the buyer's refund is due (setting in Admin → Settings). The 6 h reminder SMS went with SMS |
 | Account deletion | Name, phone, email, password, saved farms and Google link removed; farms only that person managed are hidden; orders, payments and ledger kept without the name (tax/payment records). Blocked while orders are open, money is owed to them, or they manage unclaimed farms |
 | Privacy | Draft privacy notice and terms at `/privacy` and `/terms` (`src/content/legal.ts`), linked from sign-up. **Needs a Kenyan lawyer's review and a decision on ODPC registration** before launch. Set `NEXT_PUBLIC_CONTACT_EMAIL` |
@@ -65,10 +65,22 @@ Still open: commission rate, featured-listing prices, annual subscription, domai
 | --- | --- |
 | 0 Foundations | Done |
 | 1 Be seen | Done and now actually built and run: `npm run build` clean, flows walked in a phone-sized browser |
-| 2 Trade | **Built.** Own accounts, claim codes, cart, orders, M-Pesa (simulate + Daraja), ledger, reviews, messaging, admin (11 Oct). Bookings, featured listings, order upkeep, payout file, Insights dashboard, rate limits (18 Oct). Waiting on a real Daraja test (gate below) |
+| 2 Trade | **Built.** Own accounts, claim codes, cart, orders, M-Pesa (simulate + Daraja, moved to Pesi on 10 Nov), ledger, reviews, messaging, admin (11 Oct). Bookings, featured listings, order upkeep, payout file, Insights dashboard, rate limits (18 Oct). Waiting on a real Pesi test (gate below) |
 | 3 Reach | Built 23 Oct in simulate mode (SMS alerts, USSD menu, vet requests, partner broadcasts). **10 Nov: SMS, USSD and broadcasts removed by decision**; vet requests stay, in the app; Admin → Reach became Admin → Vet requests |
 | 3.5 Hardening | **Done (4 Nov)** after the audit: demo mode locked in production builds, Next.js / Nodemailer / MapLibre upgraded (0 advisories), security headers, backup job skips without secrets, privacy notice + terms + download my data + delete my account, unanswered paid orders reminded then declined and refunded, edit farm and products after publishing, agent farm list with search, wizard drafts, tab badges, forgiving search, branded 404, clean farm links, link previews, sitemap |
 | 4 Insight | **Built (10 Nov)**: public `/prices` (weekly county median per product, 12-week chart with range and table, change over 4 weeks, "buyers looked for and found little"), "County median" beside prices on farm pages, partner `/partner` county insights (farms by type, on sale and medians, orders and value, buyer contacts, vet requests by animal, most searched and not found; 30/90/365 days), anonymous search log. Google Maps integrated with the free map as fallback |
+
+Verified on 10 Nov 2026 (Pesi): 117 database checks (9 new: payments default
+to Pesi, bank list, payout accounts private and only set by farm managers with
+history, only admins start payouts, in-flight money reserved, unique
+references, ledger written once and only on COMPLETED, failed payouts free the
+money, farms see their payouts). Against the local Pesi stand-in: encrypted
+sign-in, STK push, PROCESSING/COMPLETED/FAILED callbacks, status confirmation,
+a buyer pays and the order shows Paid; a cancelled prompt shows "didn't go
+through" and can be sent again; Hakikisha refuses an unregistered number;
+payout account saved with the checked name; payout sent, a second payout of the
+same money refused, callback recorded it in the ledger; balance read.
+NOT verified: anything against Pesi itself.
 
 Verified on 10 Nov 2026: 108 database checks (the Phase 3 SMS/USSD checks retired; 10 new for Phase 4: weekly
 median from price history with drafts excluded and earlier weeks using earlier
@@ -128,7 +140,7 @@ sandbox; Explore now lists farms even without tiles).
 ## 5. Do this first in the new chat
 
 1. On the laptop: install Postgres + PostGIS (README), `npm install`, `npm run db:reset`, `npm run dev`. Sign in with the dev accounts in the README.
-2. Get Daraja sandbox keys and test one real STK push through a tunnel (README → M-Pesa).
+2. Get Pesi development credentials from Switchlink (client id, secret, encryption key, account numbers) and test one payment and one payout on their SIT gateway (README → Payments). Send them the questions in section 10.
 3. Create a Google Maps API key and Map ID (README → Maps), set a budget alert, rebuild, and check Explore, the pin wizard and a farm page map on a real phone.
 4. Have a lawyer review `/privacy` and `/terms` and confirm whether i12farm must register with the ODPC.
 5. Confirm Homa Organica's real phone, prices and stock with Benedict; update in My Farm (or have Benedict claim the farm himself with a claim code).
@@ -163,7 +175,7 @@ src/app/prices/                    public market prices: county medians, chart, 
 src/app/sign-in, auth/*            sign-in/up forms, Google start/callback, one-time link, sign-out
 src/app/api/                       farms (map box), farms/search, contact, events, farms/[id]/photos,
                                    orders/[number] (status poll), conversations/[id]/messages,
-                                   mpesa/callback/[secret], promotions/[id], cron/maintenance
+                                   pesi/callback/[secret], promotions/[id], cron/maintenance
                                    (farms/search also logs the search for demand signals)
 src/app/media/[...path]            serves locally stored photos
 src/domains/                       farms, reference, identity, orders (+payments.ts), messaging,
@@ -173,13 +185,16 @@ src/components/insight/            PriceChart (hover + table), Sparkline
 src/lib/rate-limit.ts              in-memory limits on events, contact taps, messages, uploads
 src/lib/db.ts                      Postgres pool, withUser() (RLS context), dbMessage()
 src/lib/auth/                      password (scrypt), session, viewer, accounts, google
-src/lib/mpesa.ts                   Daraja client: token, STK push/query, callback parsing, simulate
+src/lib/pesi.ts                    Pesi Pay client: encrypted sign-in, STK push, status, Hakikisha, disbursements, callbacks, simulate
+src/domains/admin/disbursements.ts payouts and refunds through Pesi (payout accounts, reserve, confirm)
+scripts/pesi-mock.mjs              local stand-in for the Pesi gateway (npm run pesi:mock)
+scripts/pesi-register-callback.mjs one-time callback registration with Pesi (once per account!)
 src/lib/media.ts, media-url.ts     photo storage drivers (local / S3), public URLs
 src/lib/cart.ts                    one-farm cart in localStorage
 messages/en.json, sw.json          all UI text (keys must match in both)
 db/migrations/                     schema source of truth (platform → foundation → … → trade)
 db/seed.sql, seed_demo.sql         dev accounts + 8 test farms; 28 demo farms incl. Homa Organica
-db/tests/                          security_test.sql, trade_test.sql, phase2b_test.sql, vets_test.sql, hardening_test.sql, insight_test.sql (+ PostGIS stand-in)
+db/tests/                          security_test.sql, trade_test.sql, phase2b_test.sql, vets_test.sql, hardening_test.sql, insight_test.sql, pesi_test.sql (+ PostGIS stand-in)
 scripts/db.mjs                     migrate / status / seed / reset
 scripts/test-db.sh                 fresh database, all migrations, seed, all test files
 .github/workflows/                 ci.yml (build + DB tests), backup.yml (rollup + order upkeep + encrypted dump)
@@ -196,6 +211,7 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 - Orders: only `place_order()` creates them (prices from live listings), only `record_payment_result()` marks them paid (server-only, idempotent), only `set_order_status()` moves them (buyer cancels unpaid / confirms receipt; farm accepts, declines, marks ready; admin overrides).
 - `order_status_history`, `ledger_entries`, `messages`, `platform_settings_history`, `auth.audit_log`, `auth.sign_in_attempts` are append-only.
 - `apply_order_status()` is the single place an order moves and its money follows; users reach it through `set_order_status()`, the system through `run_maintenance()`.
+- Money out through Pesi: `admin_start_disbursement()` reserves the amount (no double payouts); `record_disbursement_result()` (server-only, idempotent) writes `payout_sent`/`refund_sent` only on COMPLETED. `farm_payout_accounts` is private to the farm's managers and admins; every change goes to `farm_payout_account_history`.
 - Featured status is public only as a yes/no (`farm_featured()`); promotion rows and their payments are private to the farm's managers and admins.
 - Admin actions are SECURITY DEFINER functions that check the admin role and write the audit log.
 - Vet requests move only through `create_service_request` / `take_service_request` / `close_service_request`; `service_request_history` is append-only.
@@ -244,17 +260,32 @@ and somewhere for photos. Two free setups fit:
 
 Not recommended: Render's free tier (web service sleeps after 15 minutes idle; free Postgres is deleted after 30 days + 14-day grace), and Koyeb (no free compute instance any more, only a small free Postgres).
 
-## 10. Next phase
+## 10. Next phase (roadmap, agreed order to be confirmed with Zacc)
 
-The five planned phases (0 to 4) are built. What is left before and after a
-pilot launch:
-
-**Gates (need you, not code):** a real Daraja sandbox payment end to end, then
-Safaricom "Go Live"; a Google Maps key with billing and a budget alert; a
+**Gates (need you, not code):** Switchlink onboarding (development credentials,
+then production); a Google Maps key with billing and a budget alert; a
 lawyer's review of `/privacy` and `/terms`; hosting (section 9) and a domain.
+The Pesi callback can be registered only once per account, so register it on
+the final domain.
 
-**Suggested Phase 5 · Launch and keep people informed**
-1. Web push notifications (new order, payment, vet request, order ready), opt-in per device, free, to replace what SMS did.
-2. Spam protection for sign-up and listings: rate limits per phone and IP, a new-farm review queue for admins, report a farm.
-3. Partner exports (CSV of the county figures) and a monthly county price summary partners can share.
-4. Optional: B2C payouts after go-live; a farm availability calendar for bookings; vet ratings and fees.
+| Step | What | Needs |
+| --- | --- | --- |
+| 5a Pesi groundwork | **Done 10 Nov**: client, collections moved from Daraja, callback, payout/refund engine, payout accounts, bank list, stand-in, tests | — |
+| 5b Payouts in the app | My Farm → "Where we send your money" (M-Pesa / bank / paybill / till, name checked with Hakikisha); Admin → Money: Pesi balance, "Pay with Pesi" per farm and per refund, "Pay all due", payout list with status, statement reconciliation; CSV kept as fallback | Decide: admin-approved batches (recommended for the pilot) or automatic payout when an order completes; who carries Pesi's fees |
+| 5c Pesi go-live | Test on Pesi SIT with real credentials, replace the guessed response shapes with real samples, register the callback, then production | Switchlink answers (below) |
+| 6 Keep people informed | Web push (new order, payment, message, vet request, order ready), opt-in per phone; spam protection (sign-up and listing limits per phone/IP, new-farm review queue, report a farm) | — |
+| 7 Ads | Sponsored farm cards, top search spot, vet spotlight, Prices-page banner; self-serve from My Farm, paid through Pesi, admin review, "Sponsored" label, view/tap/call stats | Ad prices per placement per county |
+| 8 Library | Farming books: book pages, free preview, buy through Pesi, in-app PDF reader (PDF.js), private files with per-buyer watermark, offline reading, author payouts through Pesi | Who sells (i12farm only or approved authors), commission, tax advice on e-book sales |
+| Later | Partner CSV exports and a monthly county price summary; booking calendar; vet ratings and fees; photos in messages | — |
+
+**Questions for Switchlink before going live**
+1. The response body of `initiateStkPush`, `FetchIPNStatus` and `Disburse/Single` (the document shows none).
+2. Does the collection callback include the amount, the payer's phone and the M-Pesa receipt? It currently shows only Partner_transaction_id, Status_code, Status_description, Trace_Id and Transaction_status.
+3. Are callbacks signed, or can you give the IP addresses they come from? We also confirm each one with FetchIPNStatus.
+4. All status codes (we know 200 processing, AC100 completed, AC300 failed), and the code for "customer cancelled the prompt" and "prompt timed out".
+5. Callback registration is once per account: do collections and disbursements share one URL? Can SIT and production have different URLs?
+6. Limits on `partnerReference` / `partnerTransactionId` (length, characters). We send 28 characters like `I12P` + 24 hex.
+7. B2B payouts: is the paybill/till number `receiverBank` (as in the example) or `receiverBankCode` (as in the bulk example)? Bulk paybill and till both point at `BulkDisburse/Bank`: is that right?
+8. Fees for collections and for each payout type, and how settlement to our bank works.
+9. Token lifetime and whether a refresh token will be used.
+10. Which `clientAccountReference` to use for collections, and which `sourceAccount` (MCA…) for payouts.

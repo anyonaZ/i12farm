@@ -5,7 +5,7 @@ import { Icon } from '@/components/Icon';
 import { farmForCheckout } from '@/domains/orders/queries';
 import { getViewer } from '@/lib/auth/viewer';
 import { displayPhone } from '@/lib/phone';
-import { mpesaMode } from '@/lib/mpesa';
+import { pesiMode } from '@/lib/pesi';
 import { CheckoutForm } from './CheckoutForm';
 
 export const metadata = { title: 'Checkout', robots: { index: false } };
@@ -42,7 +42,7 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Pro
           farm={{ id: farm.id, slug: farm.slug, name: farm.name }}
           listings={farm.listings}
           signedIn={Boolean(viewer)}
-          paymentsOff={mpesaMode === 'off'}
+          paymentsOff={pesiMode === 'off'}
           signInHref={`/sign-in?next=${encodeURIComponent(back)}`}
           defaults={{
             name: viewer?.fullName ?? '',

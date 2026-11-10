@@ -5,7 +5,7 @@ import { Icon } from '@/components/Icon';
 import { featuredUntil, listPlans } from '@/domains/promotions/queries';
 import { requireViewer } from '@/lib/auth/viewer';
 import { withUser } from '@/lib/db';
-import { mpesaMode } from '@/lib/mpesa';
+import { pesiMode } from '@/lib/pesi';
 import { displayPhone } from '@/lib/phone';
 import { FeatureForm } from './FeatureForm';
 
@@ -68,7 +68,7 @@ export default async function FeaturePage({ params }: { params: Promise<{ farmId
         farm={{ id: farm.id, name: farm.name }}
         plans={plans}
         defaultPhone={displayPhone(farm.phone ?? viewer.contactPhone ?? (viewer.phone ? '+' + viewer.phone : ''))}
-        simulate={mpesaMode === 'simulate'}
+        simulate={pesiMode === 'simulate'}
       />
     </main>
   );

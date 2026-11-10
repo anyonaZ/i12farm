@@ -402,7 +402,7 @@
     "payNow": "Lipa kwa M-Pesa",
     "checkPayment": "Nimelipa, angalia sasa",
     "paymentFailed": "Malipo ya mwisho hayakufaulu: {reason}",
-    "receipt": "Risiti ya M-Pesa {code}",
+    "receipt": "Kumbukumbu ya malipo {code}",
     "accept": "Kubali oda",
     "decline": "Kataa",
     "markReady": "Weka iko tayari",

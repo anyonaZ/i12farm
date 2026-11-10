@@ -402,7 +402,7 @@
     "payNow": "Pay with M-Pesa",
     "checkPayment": "I've paid, check now",
     "paymentFailed": "The last payment didn't go through: {reason}",
-    "receipt": "M-Pesa receipt {code}",
+    "receipt": "Payment reference {code}",
     "accept": "Accept order",
     "decline": "Decline",
     "markReady": "Mark as ready",

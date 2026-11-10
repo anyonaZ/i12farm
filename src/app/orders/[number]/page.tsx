@@ -5,7 +5,7 @@ import { Icon } from '@/components/Icon';
 import { getOrder } from '@/domains/orders/queries';
 import { requireViewer } from '@/lib/auth/viewer';
 import { kes } from '@/lib/format';
-import { mpesaMode } from '@/lib/mpesa';
+import { pesiMode } from '@/lib/pesi';
 import { displayPhone, toInternational } from '@/lib/phone';
 import { StatusPill } from '../StatusPill';
 import { BuyerActions, FarmActions, PaymentPanel, ReviewForm } from './OrderActions';
@@ -52,7 +52,7 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
           total={order.subtotal_kes}
           phone={displayPhone(order.buyer_phone)}
           lastPayment={lastPayment}
-          simulate={mpesaMode === 'simulate'}
+          simulate={pesiMode === 'simulate'}
         />
       ) : null}
 

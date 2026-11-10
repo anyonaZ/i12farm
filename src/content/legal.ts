@@ -41,7 +41,7 @@ export const PRIVACY: Record<'en' | 'sw', Doc> = {
       {
         heading: 'Services we use',
         body: [
-          'Safaricom M-Pesa (payments), Google Maps (shows the map; Google sees which part of the map you view), an email provider (sign-in links), Google (only if you sign in with Google), and our hosting and photo storage providers. They receive only what they need for that job.',
+          'Pesi Pay by Switchlink and Safaricom M-Pesa (payments and payouts), Google Maps (shows the map; Google sees which part of the map you view), an email provider (sign-in links), Google (only if you sign in with Google), and our hosting and photo storage providers. They receive only what they need for that job.',
         ],
       },
       {
@@ -88,7 +88,7 @@ export const PRIVACY: Record<'en' | 'sw', Doc> = {
       {
         heading: 'Huduma tunazotumia',
         body: [
-          'Safaricom M-Pesa (malipo), Google Maps (huonyesha ramani; Google huona sehemu ya ramani unayotazama), mtoa huduma wa barua pepe (viungo vya kuingia), Google (ukiingia kwa Google tu), na watoa huduma wa seva na kuhifadhi picha. Wanapata tu kinachohitajika kwa kazi hiyo.',
+          'Pesi Pay ya Switchlink na Safaricom M-Pesa (malipo na kulipa wakulima), Google Maps (huonyesha ramani; Google huona sehemu ya ramani unayotazama), mtoa huduma wa barua pepe (viungo vya kuingia), Google (ukiingia kwa Google tu), na watoa huduma wa seva na kuhifadhi picha. Wanapata tu kinachohitajika kwa kazi hiyo.',
         ],
       },
       {

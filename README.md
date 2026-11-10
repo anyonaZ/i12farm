@@ -11,28 +11,28 @@ sessions and photo storage itself. Any Postgres 15+ with PostGIS works
 
 ## What's in it
 
-| Area | What's here |
-| --- | --- |
-| Explore | Full-screen map: Google Maps when a key is set, otherwise (or if Google fails) MapLibre on free OpenFreeMap tiles; clustered pins, category chips, county picker, search in English and Kiswahili, ratings on cards |
-| Farm page | `/f/<slug>`: photos, verified badge, rating and reviews, products with **Add to cart**, Message, Call / WhatsApp / Directions / Share (every tap recorded) |
-| Accounts | Phone number **or** email + password, Google (optional), one-time email sign-in link, account page, signed-in devices, sign out elsewhere |
-| Pin your farm | Six-step wizard; photos shrink on the phone (to ~200 KB WebP) before upload. Field agents enrol farmers who have no account |
-| Claiming | An agent gets an 8-digit claim code; the farmer signs up with their phone and enters it to own the farm. No SMS cost |
-| Orders | One-farm cart kept on the phone, checkout (pickup or delivery), M-Pesa STK Push, order status history, farm accepts / declines / marks ready, buyer confirms receipt |
-| Money | Commission snapshotted per order (10% by default, admin can change), append-only ledger: payment, commission, farmer share held until completion, payouts and refunds recorded by an admin |
-| Bookings | Training and farm tours: **Book**, choose a visit date and morning/afternoon, pay by M-Pesa; the farm accepts the date |
-| Featured | Farms pay (7 or 30 days, prices are a setting) to appear first on the map and in search with a Featured badge |
-| Upkeep | Ready orders complete after 3 days, unpaid orders cancel after 48 h, silent payment prompts expire; nightly, or from Admin → Settings |
-| Reviews | One per completed order, public on the farm page and map cards |
-| Inbox | Buyer ↔ farm conversations, order updates posted into the thread, unread counts; polls every 5 s while open |
-| My Farm | Views, calls, WhatsApp taps, earnings (held, due, paid out), price and stock editing, photos, claim codes, pilot progress for agents |
-| Admin | `/admin`: Insights (KPIs, weekly paid value, funnel, counties, top products, CSV exports), people (roles, suspend, one-time sign-in links), farms to verify, money (payouts and refunds, payout CSV out and results CSV in), settings (commission, upkeep timings, featured plans) |
-| Vets | `/vets`: farmers ask for a vet (animal, problem, county, how soon); vet-service farms in that county see it in their app (Vets tab badge), the first to accept gets the farmer's number and the farmer gets the vet's. Up to 3 open requests per person; requests expire after 48 h |
-| Prices | `/prices` (public): weekly median price per product for each county or all of Kenya, 12-week trend, range across farms, and what buyers searched for but did not find. Farm pages show "County median KES …" beside each price |
-| Insights | `/partner` for partner organisations and admins: farms by type, what is on sale and at what median, orders and value, buyer contacts, vet requests by animal, most searched and not found, for 30 days / 90 days / 1 year. Groups smaller than 3 are hidden |
-| Editing | Farms and agents edit a published farm (details, types, phone, pin, visibility), add, pause or remove products, and pause the whole farm. Agents with many farms get a searchable list |
-| Privacy | `/privacy` and `/terms` (drafts for legal review), Account → Download my data and Delete my account |
-| Analytics | First-party events (`src/lib/analytics`) into `public.events`, rolled up nightly into `events_daily` |
+| Area          | What's here                                                                                                                                                                                                                                                                         |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Explore       | Full-screen map: Google Maps when a key is set, otherwise (or if Google fails) MapLibre on free OpenFreeMap tiles; clustered pins, category chips, county picker, search in English and Kiswahili, ratings on cards                                                                 |
+| Farm page     | `/f/<slug>`: photos, verified badge, rating and reviews, products with **Add to cart**, Message, Call / WhatsApp / Directions / Share (every tap recorded)                                                                                                                          |
+| Accounts      | Phone number **or** email + password, Google (optional), one-time email sign-in link, account page, signed-in devices, sign out elsewhere                                                                                                                                           |
+| Pin your farm | Six-step wizard; photos shrink on the phone (to ~200 KB WebP) before upload. Field agents enrol farmers who have no account                                                                                                                                                         |
+| Claiming      | An agent gets an 8-digit claim code; the farmer signs up with their phone and enters it to own the farm. No SMS cost                                                                                                                                                                |
+| Orders        | One-farm cart kept on the phone, checkout (pickup or delivery), M-Pesa prompt sent through Pesi Pay (Switchlink), order status history, farm accepts / declines / marks ready, buyer confirms receipt                                                                               |
+| Money         | Commission snapshotted per order (10% by default, admin can change), append-only ledger: payment, commission, farmer share held until completion, payouts and refunds recorded by an admin                                                                                          |
+| Bookings      | Training and farm tours: **Book**, choose a visit date and morning/afternoon, pay by M-Pesa; the farm accepts the date                                                                                                                                                              |
+| Featured      | Farms pay (7 or 30 days, prices are a setting) to appear first on the map and in search with a Featured badge                                                                                                                                                                       |
+| Upkeep        | Ready orders complete after 3 days, unpaid orders cancel after 48 h, silent payment prompts expire; nightly, or from Admin → Settings                                                                                                                                               |
+| Reviews       | One per completed order, public on the farm page and map cards                                                                                                                                                                                                                      |
+| Inbox         | Buyer ↔ farm conversations, order updates posted into the thread, unread counts; polls every 5 s while open                                                                                                                                                                         |
+| My Farm       | Views, calls, WhatsApp taps, earnings (held, due, paid out), price and stock editing, photos, claim codes, pilot progress for agents                                                                                                                                                |
+| Admin         | `/admin`: Insights (KPIs, weekly paid value, funnel, counties, top products, CSV exports), people (roles, suspend, one-time sign-in links), farms to verify, money (payouts and refunds, payout CSV out and results CSV in), settings (commission, upkeep timings, featured plans)  |
+| Vets          | `/vets`: farmers ask for a vet (animal, problem, county, how soon); vet-service farms in that county see it in their app (Vets tab badge), the first to accept gets the farmer's number and the farmer gets the vet's. Up to 3 open requests per person; requests expire after 48 h |
+| Prices        | `/prices` (public): weekly median price per product for each county or all of Kenya, 12-week trend, range across farms, and what buyers searched for but did not find. Farm pages show "County median KES …" beside each price                                                      |
+| Insights      | `/partner` for partner organisations and admins: farms by type, what is on sale and at what median, orders and value, buyer contacts, vet requests by animal, most searched and not found, for 30 days / 90 days / 1 year. Groups smaller than 3 are hidden                         |
+| Editing       | Farms and agents edit a published farm (details, types, phone, pin, visibility), add, pause or remove products, and pause the whole farm. Agents with many farms get a searchable list                                                                                              |
+| Privacy       | `/privacy` and `/terms` (drafts for legal review), Account → Download my data and Delete my account                                                                                                                                                                                 |
+| Analytics     | First-party events (`src/lib/analytics`) into `public.events`, rolled up nightly into `events_daily`                                                                                                                                                                                |
 
 ## Run it locally (Arch Linux)
 
@@ -55,16 +55,16 @@ npm run dev                     # http://localhost:3000
 
 Dev accounts (password `i12farm-dev` for all):
 
-| Who | Sign in with | Can do |
-| --- | --- | --- |
-| Field agent | `0700 000 001` | Manages most demo farms (including Homa Organica), enrols farms, issues claim codes, handles their orders |
-| Farmer | `0700 000 002` | Owns Lakeview Dairy |
-| Buyer | `0700 000 003` | Orders and reviews |
-| Partner | `0700 000 004` | Homa Bay County Extension: county insights at `/partner` |
-| Admin | `admin@dev.i12farm.local` | Everything under `/admin` |
+| Who         | Sign in with              | Can do                                                                                                    |
+| ----------- | ------------------------- | --------------------------------------------------------------------------------------------------------- |
+| Field agent | `0700 000 001`            | Manages most demo farms (including Homa Organica), enrols farms, issues claim codes, handles their orders |
+| Farmer      | `0700 000 002`            | Owns Lakeview Dairy                                                                                       |
+| Buyer       | `0700 000 003`            | Orders and reviews                                                                                        |
+| Partner     | `0700 000 004`            | Homa Bay County Extension: county insights at `/partner`                                                  |
+| Admin       | `admin@dev.i12farm.local` | Everything under `/admin`                                                                                 |
 
 **Try a full sale:** sign in as the buyer, open `/f/homa-organica`, add racing
-pigeons, check out. With `MPESA_ENV=simulate` (the default without keys) the
+pigeons, check out. With `PESI_ENV=simulate` (the default without keys) the
 order page shows **Simulate: pay**. Then sign in as the agent → Orders →
 accept → mark ready; back as the buyer → I received it → review. The admin
 sees the payout due under `/admin?tab=money`.
@@ -93,15 +93,47 @@ row-level security policies apply. Money moves only through database
 functions (`place_order`, `record_payment_result`, `set_order_status`), and
 the ledger is append-only.
 
-## M-Pesa
+## Payments (Pesi Pay by Switchlink)
 
-`MPESA_ENV=simulate` needs nothing. For the Daraja sandbox, create an app at
-developer.safaricom.co.ke, then set `MPESA_ENV=sandbox`, the consumer key and
-secret, `MPESA_PASSKEY` (sandbox shortcode 174379), and
-`MPESA_CALLBACK_SECRET` (`openssl rand -hex 24`). The callback URL must be
-public HTTPS; locally use a tunnel (`cloudflared tunnel --url localhost:3000`)
-and set `MPESA_CALLBACK_BASE_URL` to it. Callbacks are confirmed with an STK
-status query before an order is marked paid.
+Payments go through **Pesi Pay** (Switchlink), not Safaricom Daraja (decided
+10 Nov 2026). Buyers still approve an M-Pesa prompt on their phone. Pesi can
+also pay money out (farmer payouts, buyer refunds) to M-Pesa, banks, tills and
+paybills, after checking the receiver's registered name ("Hakikisha").
+
+**Status:** written from Switchlink's API document and tested against a local
+stand-in, **never against Pesi itself** (no account yet). `src/lib/pesi.ts` is
+the client; `scripts/pesi-mock.mjs` is the stand-in.
+
+- `PESI_ENV=simulate` (default without keys): nothing leaves the server; the
+  order page has **Simulate: pay**.
+- Try the real flow locally against the stand-in:
+  ```bash
+  KEY=$(openssl rand -hex 32); SECRET=$(openssl rand -hex 24)
+  PESI_MOCK_KEY=$KEY PESI_MOCK_CALLBACK=http://localhost:3000/api/pesi/callback/$SECRET npm run pesi:mock &
+  PESI_ENV=sandbox PESI_BASE_URL=http://localhost:4010 PESI_CLIENT_ID=mock-client PESI_CLIENT_SECRET=mock-secret \
+  PESI_ENCRYPTION_KEY=$KEY PESI_ACCOUNT_REFERENCE=2222 PESI_SOURCE_ACCOUNT=MCA00000080001 PESI_CALLBACK_SECRET=$SECRET npm run dev
+  ```
+  Phones ending in 9 cancel the prompt; any other number pays.
+- **Going live:** Switchlink sends a client id, client secret and 64-character
+  encryption key for development and for production. Set the `PESI_*`
+  variables (see `.env.example`), deploy on the final https domain, then
+  register the callback **once per account** (Pesi allows only one
+  registration): `node --env-file=.env.local scripts/pesi-register-callback.mjs`,
+  check the address it prints, and run it again with `--yes`.
+
+How it fits together:
+
+- Collections: we create a reference (`I12P…`), record the payment, ask Pesi for
+  the M-Pesa prompt; Pesi posts PROCESSING then COMPLETED or FAILED to
+  `/api/pesi/callback/<secret>`. Callbacks are not signed, so a COMPLETED one is
+  confirmed with Pesi's status query before the order is marked paid. Pesi's
+  callback has no amount; an M-Pesa prompt is for a fixed amount, so the
+  requested amount is recorded unless Pesi reports another one.
+- Payouts and refunds (`src/domains/admin/disbursements.ts`): references
+  `I12D…`. The farm saves where its money goes (M-Pesa, bank, paybill or till),
+  checked with Hakikisha. An admin starts a payout; the amount is reserved while
+  it is in flight and written to the ledger only when Pesi reports COMPLETED.
+  The Admin → Money buttons for this come next (see HANDOFF → Next).
 
 ## Maps (Google Maps, with a free fallback)
 
