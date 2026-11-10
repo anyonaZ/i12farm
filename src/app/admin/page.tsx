@@ -31,6 +31,7 @@ export default async function AdminPage({
   const { q = '', tab = 'people', all, days: daysParam } = await searchParams;
   const days = daysParam === '90' ? 90 : daysParam === '7' ? 7 : 30;
   const t = await getTranslations('admin');
+  const tp = await getTranslations('payouts');
   const format = await getFormatter();
   const money = tab === 'money' ? await adminMoney(viewer) : null;
   const insights = tab === 'insights' ? await getInsights(viewer, days) : null;
@@ -148,6 +149,19 @@ export default async function AdminPage({
               </div>
             ))}
           </dl>
+          <Link href="/admin/payouts" className="card flex-row items-center justify-between gap-3 hover:border-sprout">
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-mint text-sprout-deep">
+                <Icon name="wallet" />
+              </span>
+              <span className="min-w-0">
+                <b className="block">{tp('adminTitle')}</b>
+                <span className="text-sm text-soil">{tp('adminIntro')}</span>
+              </span>
+            </span>
+            <span className="shrink-0 font-bold text-sprout-deep">{tp('open')} ›</span>
+          </Link>
+          <p className="text-sm text-soil">{tp('manualNote')}</p>
           <section className="card gap-3">
             <h2 className="text-lg font-bold">{t('payouts')}</h2>
             {money.payouts.length === 0 ? <p className="text-sm text-soil">{t('noPayouts')}</p> : null}

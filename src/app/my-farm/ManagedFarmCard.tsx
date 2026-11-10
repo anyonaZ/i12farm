@@ -7,7 +7,9 @@ import type { Product } from '@/domains/reference/queries';
 import type { Viewer } from '@/lib/auth/viewer';
 import { kes } from '@/lib/format';
 import type { Locale } from '@/i18n/config';
+import { getPayoutAccount } from '@/domains/admin/disbursements';
 import { ClaimCode, PhotoManager, StockEditor } from './FarmTools';
+import { payoutWhere } from './payout-where';
 import { PriceEditor } from './PriceEditor';
 import { AddProduct, ListingControls, PauseFarm } from './ProductTools';
 
@@ -30,6 +32,7 @@ export async function ManagedFarmCard({
   const isAgent = viewer.roles.includes('agent');
   const published = f.status === 'published';
   const offered = products.filter((p) => f.categories.includes(p.category));
+  const payoutAccount = await getPayoutAccount(viewer, f.id).catch(() => null);
   return (
     <article className="card gap-3">
       <div className="flex items-center gap-3">
@@ -70,6 +73,20 @@ export async function ManagedFarmCard({
           <p className="text-xs text-soil">{t('myFarmPlus.payoutNote')}</p>
         </div>
       ) : null}
+      <Link
+        href={`/my-farm/${f.id}/payouts`}
+        className={`flex min-h-12 items-center justify-between gap-3 rounded-2xl px-3.5 text-sm font-bold ${
+          payoutAccount ? 'border border-line' : 'bg-amber/15'
+        }`}
+      >
+        <span className="inline-flex min-w-0 items-center gap-2">
+          <Icon name="wallet" size={18} className="shrink-0 text-sprout-deep" />
+          <span className="truncate">
+            {payoutAccount ? t('payouts.paidTo', { where: payoutWhere(payoutAccount, (k) => t(`payouts.${k}`)) }) : t('payouts.addLink')}
+          </span>
+        </span>
+        <span className="shrink-0 text-sprout-deep">{payoutAccount ? t('payouts.changeLink') : '›'}</span>
+      </Link>
       <Link
         href={`/my-farm/feature/${f.id}`}
         className={`flex min-h-12 items-center justify-between gap-3 rounded-2xl px-3.5 text-sm font-bold ${until ? 'bg-lime/40' : 'border border-line'}`}

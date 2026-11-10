@@ -129,11 +129,22 @@ How it fits together:
   confirmed with Pesi's status query before the order is marked paid. Pesi's
   callback has no amount; an M-Pesa prompt is for a fixed amount, so the
   requested amount is recorded unless Pesi reports another one.
-- Payouts and refunds (`src/domains/admin/disbursements.ts`): references
-  `I12D…`. The farm saves where its money goes (M-Pesa, bank, paybill or till),
-  checked with Hakikisha. An admin starts a payout; the amount is reserved while
-  it is in flight and written to the ledger only when Pesi reports COMPLETED.
-  The Admin → Money buttons for this come next (see HANDOFF → Next).
+- Payouts and refunds go out **only in batches an admin approves** (decided
+  10 Nov 2026; `src/domains/admin/disbursements.ts`, references `I12D…`):
+  1. Each farm sets where its money goes: My Farm → farm → "Where we send your
+     money" (M-Pesa, bank, paybill or till). Pesi's Hakikisha check shows the
+     registered name before it is saved; every change is kept.
+  2. Admin → Money → **Payouts through Pesi** (`/admin/payouts`): the Pesi
+     balance and everything due (farmer payouts and buyer refunds). Tick the
+     lines and **Prepare batch**: each receiver's name is checked with Pesi
+     again and the money is reserved in a draft batch. Nothing is sent.
+  3. On the batch page, compare the names, take lines out or cancel, then
+     **Approve and send**. The approver is recorded.
+  4. Pesi's callbacks mark each line paid or failed (the page refreshes itself;
+     **Check with Pesi** asks directly). Only paid lines reach the ledger;
+     failed lines are due again for the next batch.
+  Paying by hand with a reference (and the payout CSV) still works for money
+  that is not in a batch.
 
 ## Maps (Google Maps, with a free fallback)
 
