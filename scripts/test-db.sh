@@ -84,14 +84,19 @@ if [[ -f "$TESTS/phase2b_test.sql" ]]; then
   "${PSQL[@]}" -f "$TESTS/phase2b_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
 fi
 
-if [[ -f "$TESTS/reach_test.sql" ]]; then
-  echo "→ phase 3 tests"
-  "${PSQL[@]}" -f "$TESTS/reach_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
+if [[ -f "$TESTS/vets_test.sql" ]]; then
+  echo "→ vet request tests"
+  "${PSQL[@]}" -f "$TESTS/vets_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
 fi
 
 if [[ -f "$TESTS/hardening_test.sql" ]]; then
   echo "→ phase 3.5 tests"
   "${PSQL[@]}" -f "$TESTS/hardening_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
+fi
+
+if [[ -f "$TESTS/insight_test.sql" ]]; then
+  echo "→ phase 4 insight tests"
+  "${PSQL[@]}" -f "$TESTS/insight_test.sql" 2>&1 | sed -n 's/^.*NOTICE:  //p; /ERROR/p; /passed/p'
 fi
 
 echo "→ seed_demo.sql (applies cleanly on top)"

@@ -1,29 +1,34 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { FarmMap, type Bounds } from '@/components/map/FarmMap';
 import { FarmCard } from '@/components/farm/FarmCard';
 import { Icon, CATEGORY_ICON } from '@/components/Icon';
-import { track } from '@/lib/analytics/track';
+import { getAnonymousId, track } from '@/lib/analytics/track';
 import { DESKTOP, useMedia } from '@/lib/use-media';
 import type { FarmSummary } from '@/domains/farms/types';
 
 interface Props {
   categories: { slug: string; name: string }[];
   counties: { code: number; name: string; focus: [number, number] | null }[];
+  /** From the link (/?q=milk&county=47), e.g. "Find farms" on the prices page. */
+  initialQ?: string;
+  initialCounty?: number | null;
 }
 
 const KENYA_VIEW: { center: [number, number]; zoom: number } = { center: [35.6, -0.7], zoom: 6.2 };
 const SHEET_COLLAPSED = 214;
 
-export function ExploreClient({ categories, counties }: Props) {
+export function ExploreClient({ categories, counties, initialQ = '', initialCounty = null }: Props) {
   const t = useTranslations('explore');
+  const tAll = useTranslations();
   const [inView, setInView] = useState<FarmSummary[]>([]);
   const [results, setResults] = useState<FarmSummary[] | null>(null);
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(initialQ);
   const [cat, setCat] = useState<string | null>(null);
-  const [county, setCounty] = useState<number | null>(null);
+  const [county, setCounty] = useState<number | null>(initialCounty);
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const desktop = useMedia(DESKTOP);
@@ -76,7 +81,12 @@ export function ExploreClient({ categories, counties }: Props) {
       const params = new URLSearchParams({ q: term });
       if (cat) params.set('cat', cat);
       if (county) params.set('county', String(county));
-      const response = await fetch(`/api/farms/search?${params}`).catch(() => null);
+      const b = bounds.current;
+      if (b) {
+        params.set('lng', ((b.west + b.east) / 2).toFixed(3));
+        params.set('lat', ((b.south + b.north) / 2).toFixed(3));
+      }
+      const response = await fetch(`/api/farms/search?${params}`, { headers: { 'x-i12f-device': getAnonymousId() } }).catch(() => null);
       const rows = (response?.ok ? await response.json() : []) as FarmSummary[];
       setResults(rows);
       track('search.performed', { q: term.slice(0, 40), results: rows.length });
@@ -231,6 +241,13 @@ export function ExploreClient({ categories, counties }: Props) {
           {c.name}
         </Chip>
       ))}
+      <Link
+        href="/prices"
+        className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-sprout/40 bg-mint px-3.5 text-sm font-semibold text-sprout-deep shadow-sm lg:hidden"
+      >
+        <Icon name="trend" size={16} />
+        {tAll('prices.title')}
+      </Link>
     </div>
   );
 

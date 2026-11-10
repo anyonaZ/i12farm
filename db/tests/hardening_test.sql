@@ -1,5 +1,5 @@
 -- i12farm · Phase 3.5 tests: unanswered paid orders, search, account deletion, badges.
--- Runs after reach_test.sql (scripts/test-db.sh).
+-- Runs after vets_test.sql (scripts/test-db.sh).
 
 \set buyer   '00000000-0000-4000-8000-0000000000b1'
 \set farmer  '00000000-0000-4000-8000-0000000000f1'
@@ -51,28 +51,19 @@ declare
 begin
   update public.orders set paid_at = now() - interval '7 hours' where id = oid;
   r := public.run_maintenance();
-  if (r ->> 'unanswered_reminded')::integer < 1
-     or not exists (select 1 from public.notifications where template = 'order_reminder' and order_id = oid) then
-    raise exception 'FAIL: no reminder to the farm: %', r;
+  if (select status from public.orders where id = oid) <> 'paid' then
+    raise exception 'FAIL: order declined too early';
   end if;
-  r := public.run_maintenance();
-  if (select count(*) from public.notifications where template = 'order_reminder' and order_id = oid) <> 1 then
-    raise exception 'FAIL: farm reminded twice';
-  end if;
-  raise notice 'ok  unanswered paid order: one reminder SMS to the farm';
 
   update public.orders set paid_at = now() - interval '37 hours' where id = oid;
   r := public.run_maintenance();
-  if (select status from public.orders where id = oid) <> 'declined' then
+  if (select status from public.orders where id = oid) <> 'declined' or (r ->> 'unanswered_declined')::integer < 1 then
     raise exception 'FAIL: unanswered order not declined';
   end if;
   if not exists (select 1 from public.ledger_entries where order_id = oid and kind = 'refund_due') then
     raise exception 'FAIL: no refund due after automatic decline';
   end if;
-  if not exists (select 1 from public.notifications where template = 'order_declined' and order_id = oid) then
-    raise exception 'FAIL: buyer not told about the automatic decline';
-  end if;
-  raise notice 'ok  unanswered paid order declined after 36 h, refund due, buyer texted';
+  raise notice 'ok  unanswered paid order declined after 36 h with refund due, not before';
 end $$;
 
 -- Search

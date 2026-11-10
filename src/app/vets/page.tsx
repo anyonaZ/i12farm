@@ -3,7 +3,7 @@ import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { listCounties, listFarmCategories } from '@/domains/reference/queries';
-import { listVetFarms, myVetFarms, myVetRequests, ussdCode, vetInbox } from '@/domains/vets/queries';
+import { listVetFarms, myVetFarms, myVetRequests, vetInbox } from '@/domains/vets/queries';
 import { getViewer } from '@/lib/auth/viewer';
 import { displayPhone } from '@/lib/phone';
 import type { Locale } from '@/i18n/config';
@@ -27,10 +27,9 @@ export default async function VetsPage() {
   const locale = (await getLocale()) as Locale;
   const format = await getFormatter();
   const viewer = await getViewer();
-  const [counties, categories, code, vets, mine, myFarms, inbox] = await Promise.all([
+  const [counties, categories, vets, mine, myFarms, inbox] = await Promise.all([
     listCounties(),
     listFarmCategories(locale),
-    ussdCode(),
     listVetFarms(viewer?.countyCode ?? null),
     viewer ? myVetRequests(viewer) : Promise.resolve([]),
     viewer ? myVetFarms(viewer) : Promise.resolve([]),
@@ -69,12 +68,6 @@ export default async function VetsPage() {
               </Link>
             </section>
           )}
-          {code ? (
-            <p className="flex items-start gap-2 rounded-2xl bg-mint p-4 text-sm">
-              <Icon name="phone" size={18} className="mt-0.5 shrink-0 text-sprout-deep" />
-              {t('feature', { code })}
-            </p>
-          ) : null}
         </div>
 
         <div className="flex flex-col gap-5">

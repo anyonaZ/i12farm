@@ -49,6 +49,7 @@ export const EVENT_NAMES = [
   'vet.requested',
   'vet.accepted',
   'vet.closed',
+  // The next four are no longer sent (SMS and USSD were removed on 10 Nov 2026); kept so old rows still have a name.
   'broadcast.created',
   'broadcast.reviewed',
   'ussd.session',

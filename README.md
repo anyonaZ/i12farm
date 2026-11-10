@@ -2,7 +2,7 @@
 
 Every Kenyan farm, pinned, discoverable and able to sell. A mobile-first web
 app (installable on Android from Chrome) built on Next.js and plain
-PostgreSQL + PostGIS, delivered in phases. Phases 0 to 3, plus the 3.5 hardening pass, are built. See
+PostgreSQL + PostGIS, delivered in phases. Phases 0 to 4 (plus the 3.5 hardening pass) are built. SMS and USSD were removed on 10 Nov 2026. See
 `HANDOFF.md` for the current state, decisions and what comes next.
 
 No vendor backend: the app talks to Postgres directly and handles sign-in,
@@ -13,7 +13,7 @@ sessions and photo storage itself. Any Postgres 15+ with PostGIS works
 
 | Area | What's here |
 | --- | --- |
-| Explore | Full-screen MapLibre map on free OpenFreeMap tiles, clustered pins, category chips, county picker, search in English and Kiswahili, ratings on cards |
+| Explore | Full-screen map: Google Maps when a key is set, otherwise (or if Google fails) MapLibre on free OpenFreeMap tiles; clustered pins, category chips, county picker, search in English and Kiswahili, ratings on cards |
 | Farm page | `/f/<slug>`: photos, verified badge, rating and reviews, products with **Add to cart**, Message, Call / WhatsApp / Directions / Share (every tap recorded) |
 | Accounts | Phone number **or** email + password, Google (optional), one-time email sign-in link, account page, signed-in devices, sign out elsewhere |
 | Pin your farm | Six-step wizard; photos shrink on the phone (to ~200 KB WebP) before upload. Field agents enrol farmers who have no account |
@@ -27,10 +27,9 @@ sessions and photo storage itself. Any Postgres 15+ with PostGIS works
 | Inbox | Buyer ↔ farm conversations, order updates posted into the thread, unread counts; polls every 5 s while open |
 | My Farm | Views, calls, WhatsApp taps, earnings (held, due, paid out), price and stock editing, photos, claim codes, pilot progress for agents |
 | Admin | `/admin`: Insights (KPIs, weekly paid value, funnel, counties, top products, CSV exports), people (roles, suspend, one-time sign-in links), farms to verify, money (payouts and refunds, payout CSV out and results CSV in), settings (commission, upkeep timings, featured plans) |
-| Vets | `/vets`: farmers ask for a vet (animal, problem, county, how soon); vet-service farms in that county get an SMS, the first to accept gets the farmer's number and the farmer gets the vet's. Requests expire after 48 h |
-| SMS | Africa's Talking: new paid order to the farm, ready/declined to the buyer, payout and refund receipts, vet alerts. Every SMS goes through an outbox table; **simulate mode** (default) stores the text without sending. STOP / ACHA opts a phone out of partner news |
-| USSD | Feature-phone menu: farmers see and accept orders, mark them ready, change prices and stock, request a vet or take vet requests, switch SMS news and language. Admin → Reach has a simulator |
-| Partners | `/partner`: county offices, cooperatives and NGOs write one SMS in English and Kiswahili, pick counties and farm types, see the audience and cost, and submit it; an admin approves it in Admin → Reach; delivery numbers come back to the partner |
+| Vets | `/vets`: farmers ask for a vet (animal, problem, county, how soon); vet-service farms in that county see it in their app (Vets tab badge), the first to accept gets the farmer's number and the farmer gets the vet's. Up to 3 open requests per person; requests expire after 48 h |
+| Prices | `/prices` (public): weekly median price per product for each county or all of Kenya, 12-week trend, range across farms, and what buyers searched for but did not find. Farm pages show "County median KES …" beside each price |
+| Insights | `/partner` for partner organisations and admins: farms by type, what is on sale and at what median, orders and value, buyer contacts, vet requests by animal, most searched and not found, for 30 days / 90 days / 1 year. Groups smaller than 3 are hidden |
 | Editing | Farms and agents edit a published farm (details, types, phone, pin, visibility), add, pause or remove products, and pause the whole farm. Agents with many farms get a searchable list |
 | Privacy | `/privacy` and `/terms` (drafts for legal review), Account → Download my data and Delete my account |
 | Analytics | First-party events (`src/lib/analytics`) into `public.events`, rolled up nightly into `events_daily` |
@@ -61,7 +60,7 @@ Dev accounts (password `i12farm-dev` for all):
 | Field agent | `0700 000 001` | Manages most demo farms (including Homa Organica), enrols farms, issues claim codes, handles their orders |
 | Farmer | `0700 000 002` | Owns Lakeview Dairy |
 | Buyer | `0700 000 003` | Orders and reviews |
-| Partner | `0700 000 004` | Homa Bay County Extension: sends SMS broadcasts from `/partner` |
+| Partner | `0700 000 004` | Homa Bay County Extension: county insights at `/partner` |
 | Admin | `admin@dev.i12farm.local` | Everything under `/admin` |
 
 **Try a full sale:** sign in as the buyer, open `/f/homa-organica`, add racing
@@ -104,29 +103,47 @@ public HTTPS; locally use a tunnel (`cloudflared tunnel --url localhost:3000`)
 and set `MPESA_CALLBACK_BASE_URL` to it. Callbacks are confirmed with an STK
 status query before an order is marked paid.
 
-## SMS and USSD (Africa's Talking)
+## Maps (Google Maps, with a free fallback)
 
-`SMS_ENV=simulate` (the default without keys) sends nothing: messages are
-rendered in the farmer's language and stored with status `simulated`, so
-Admin → Reach shows exactly what would have gone out. The USSD simulator on
-the same page runs the real menu for any phone number.
+Without a key the app uses MapLibre on free OpenFreeMap tiles (and a Leaflet
+image map on phones without WebGL). To use Google Maps:
 
-To go live: create an Africa's Talking account, then set `AT_USERNAME`,
-`AT_API_KEY`, `SMS_ENV=sandbox` (or `production` once you have credit and,
-optionally, a sender ID in `AT_SENDER_ID`). Set `SMS_CALLBACK_SECRET` and
-`USSD_SECRET` (`openssl rand -hex 24` each) and register these URLs on the AT
-dashboard:
+1. Google Cloud console → create a project → attach a billing account
+   (required even for the free usage).
+2. APIs & Services → enable **Maps JavaScript API**.
+3. Credentials → Create API key → restrict it to **Websites** (your domain and
+   `http://localhost:3000/*`) and to the Maps JavaScript API only.
+4. Maps → Map management → Create map ID (JavaScript, Vector). Without one,
+   Google's `DEMO_MAP_ID` is used, which is fine for testing.
+5. Set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` and `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`,
+   then **rebuild** (both are baked into the browser bundle). The security
+   headers allow Google's domains only when the key is set.
 
-- SMS delivery reports: `<site>/api/sms/delivery/<SMS_CALLBACK_SECRET>`
-- Incoming SMS (STOP/START): `<site>/api/sms/inbound/<SMS_CALLBACK_SECRET>`
-- USSD service code callback: `<site>/api/ussd/<USSD_SECRET>`
+If the key is refused, billing is off or Google doesn't load within 8 s, the
+map quietly switches to the free one. Pricing at the time of writing: 10,000
+map loads a month free, then about USD 7 per 1,000 (Dynamic Maps SKU); check
+Google's pricing page and set a budget alert.
 
-Then put the leased USSD code in Admin → Reach → settings so SMS mention it.
-The server sends queued SMS every 30 s; on hosts that pause idle servers,
-call `/api/cron/sms` every minute or two with `Authorization: Bearer <CRON_SECRET>`.
-The Africa's Talking API details (endpoints, status codes, callback fields)
-were written from their documentation; check them against the dashboard
-before going live.
+## Prices and insights (Phase 4)
+
+All in SQL (`db/migrations/20261110000200_insight.sql`), read-only:
+
+- `price_index(county, weeks, product)`: each listing's price in effect at the
+  end of each week (from `price_history`), then the median per product and unit
+  across published farms; goods only, not services.
+- `price_benchmarks(farm)`: today's county median for each of a farm's listings
+  (Kenya median when fewer than 3 farms in the county sell it).
+- `search_log` + `log_search()`: every search from Explore, with the county
+  being looked at and the number of results. No user id, no IP; the device id
+  is hashed. Kept 180 days (setting `search_log_days`), at most 60 an hour per device.
+- `search_demand()` / `unmet_demand()`: finished searches only (half-typed words
+  dropped), no long numbers, at least 3 different devices. The public list keeps
+  only everyday farm words; partners see every term.
+- `county_insight(county, days)`: the partner dashboard, for partner and admin
+  roles only. Groups smaller than `insight_min_count` (3) are hidden.
+
+The demo seed adds 12 weeks of price history, searches, completed orders from a
+demo-only buyer, vet requests and contact taps so these pages have content.
 
 ## Deploy
 

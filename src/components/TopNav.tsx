@@ -9,10 +9,11 @@ import { Logo } from '@/components/Logo';
 import { Badge, useNavCounts } from '@/components/use-nav-counts';
 
 // Laptop and desktop navigation (the bottom tab bar is for phones).
-const ITEMS: { href: string; key: 'explore' | 'orders' | 'vets' | 'inbox' | 'myFarm'; icon: IconName }[] = [
+const ITEMS: { href: string; key: 'explore' | 'orders' | 'vets' | 'prices' | 'inbox' | 'myFarm'; icon: IconName }[] = [
   { href: '/', key: 'explore', icon: 'compass' },
   { href: '/orders', key: 'orders', icon: 'bag' },
   { href: '/vets', key: 'vets', icon: 'cross' },
+  { href: '/prices', key: 'prices', icon: 'trend' },
   { href: '/inbox', key: 'inbox', icon: 'inbox' },
   { href: '/my-farm', key: 'myFarm', icon: 'sprout' },
 ];
@@ -56,7 +57,7 @@ export function TopNav({ viewer }: { viewer: { name: string; admin: boolean; par
                 pathname.startsWith('/partner') ? 'bg-sprout/15 text-sprout-deep' : 'text-soil hover:bg-mint hover:text-forest'
               }`}
             >
-              <Icon name="megaphone" size={18} />
+              <Icon name="chart" size={18} />
               {t('nav.partner')}
             </Link>
           ) : null}

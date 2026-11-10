@@ -12,6 +12,7 @@ import { FarmViewTracker } from '@/components/farm/FarmViewTracker';
 import { CartBar } from '@/components/cart/CartBar';
 import { CartStepper } from '@/components/cart/CartStepper';
 import { getFarmBySlug, isFarmSaved, listFarmReviews } from '@/domains/farms/queries';
+import { priceBenchmarks } from '@/domains/insights/queries';
 import { openConversation } from '@/domains/messaging/actions';
 import { listFarmCategories } from '@/domains/reference/queries';
 import { getViewer } from '@/lib/auth/viewer';
@@ -47,11 +48,12 @@ export default async function FarmPage({ params }: Params) {
 
   const t = await getTranslations();
   const locale = (await getLocale()) as Locale;
-  const [categories, saved, viewer, reviews] = await Promise.all([
+  const [categories, saved, viewer, reviews, benchmarks] = await Promise.all([
     listFarmCategories(locale),
     isFarmSaved(farm.id),
     getViewer(),
     listFarmReviews(farm.id, 6),
+    priceBenchmarks(farm.id),
   ]);
   const mine = Boolean(viewer && (farm.owner_id === viewer.id || farm.managed_by === viewer.id));
   const canOrder = !mine;
@@ -192,6 +194,15 @@ export default async function FarmPage({ params }: Params) {
                     <>
                       <div className="font-bold tabular-nums">{kes(l.price_kes)}</div>
                       <div className="text-sm text-soil">{t('farm.per', { unit: t(`units.${l.unit}`) })}</div>
+                      {benchmarks[l.id] ? (
+                        <Link
+                          href={`/prices?${benchmarks[l.id].scope === 'county' ? `county=${farm.county_code}&` : ''}p=${l.product_slug ?? ''}&u=${l.unit}`}
+                          title={t('prices.compareTitle', { n: benchmarks[l.id].farms })}
+                          className="text-xs text-soil underline decoration-line underline-offset-2 hover:text-sprout-deep"
+                        >
+                          {t('prices.compare', { scope: benchmarks[l.id].scope, price: kes(benchmarks[l.id].median_kes) })}
+                        </Link>
+                      ) : null}
                     </>
                   ) : (
                     <div className="text-sm text-soil">{t('farm.onRequest')}</div>

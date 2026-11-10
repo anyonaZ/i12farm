@@ -1,6 +1,6 @@
 # i12farm handoff
 
-Last updated: 18 October 2026. Read this first when continuing in a new chat.
+Last updated: 10 November 2026. Read this first when continuing in a new chat.
 
 ## 1. What i12farm is
 
@@ -8,7 +8,7 @@ A mobile-first web app (installable on Android from Chrome) that makes every
 Kenyan farmer, however small, visible on a map, the way Airbnb did for small
 guesthouses, and now lets buyers order and pay with M-Pesa. Buyers find
 produce, livestock, vets and training. Farmers get buyers and services.
-Government and NGOs reach farmers by county and farm type. Every action is
+Government and NGOs see county insights: prices, supply, demand. Every action is
 recorded with time and county, because that data is the long-term asset.
 
 - **Owner:** Zacc (ogadazaddock@gmail.com). Works on one laptop (Lenovo T470s, Arch Linux).
@@ -32,7 +32,7 @@ recorded with time and county, because that data is the long-term asset.
 | Pilot counties | Homa Bay (43), Migori (44), Kisumu (42), Kiambu (22), Nairobi (47). Stored as `counties.is_pilot` |
 | Phase 1 target | 100 farms in the pilot counties, enrolled by field agents (progress bar on My Farm) |
 | Domain | Undecided |
-| Languages | English and Kiswahili from day one (about 780 strings each, including SMS and USSD text; a native speaker should review) |
+| Languages | English and Kiswahili from day one (about 720 strings each; a native speaker should review) |
 | Backend | Next.js server + PostgreSQL 15+ with PostGIS. No Supabase. RLS policies unchanged; `withUser()` sets the role per transaction |
 | Sign-in | Phone or email + password (scrypt). Google optional. Email link for forgotten passwords; admins issue one-time links for farmers without email. **No SMS OTP** (costs money); farm ownership is proven with agent-issued claim codes |
 | Sessions | Random token in an httpOnly cookie, SHA-256 in `auth.sessions`; 30 days idle, 180 days max; revoked rows are kept |
@@ -48,18 +48,16 @@ recorded with time and county, because that data is the long-term asset.
 | Dashboards | Built into Admin → Insights (no Metabase): KPIs, weekly paid value, view→contact→order funnel, pilot counties, top products, CSV exports |
 | Seed farm | Homa Organica, Benedict Kotonya, Lang'ata (Nairobi): pigs and racing pigeons, `/f/homa-organica`. Phone, prices and stock are placeholders until Benedict confirms |
 
-| SMS | Africa's Talking, hand-written client. Outbox table (`notifications`) filled by database triggers in the same transaction as the event; server renders text from `messages/*.json` (`sms` namespace) in the phone's language (account language, else USSD choice, else Kiswahili) and sends. Simulate mode until keys are added. Daily cap and per-SMS cost are settings |
-| Opt-out | STOP / ACHA by SMS or the USSD menu stops partner broadcasts only; order, payment and vet SMS still go. History kept in `phone_pref_events` |
-| USSD | Stateless: the network sends the whole key path (`1*2*450`), the handler replays it. Callers are known by their phone number; they can only act on farms whose public/WhatsApp number is theirs or that their account owns or manages. 0 = back, 00 = home |
-| Vet requests | Anyone signed in (web) or any phone (USSD) asks for a vet; up to 10 vet-service farms in that county are texted (verified first); first to accept wins and both sides get each other's number. Vets don't see the farmer's number until they accept. Open requests expire after 48 h. Free for now |
-| Broadcasts | Partner role writes EN + SW text, picks counties and farm types; admin approval required; one SMS per distinct farm phone, opted-out phones skipped; max 5,000 phones per message (setting) |
-
-| Demo mode | `npm run dev` always simulates. A production build refuses simulated payments, open USSD/SMS callbacks and "Simulate: pay" unless `DEMO_MODE=true` is set on purpose (a banner then says nothing is real). Without M-Pesa keys and without demo mode, checkout says payments are not switched on yet |
-| Unanswered paid orders | Farm gets one reminder SMS 6 h after payment; at 36 h the order is declined and the buyer's refund is due (both are settings in Admin → Settings) |
+| No SMS, no USSD | **Decided 10 Nov 2026.** Removed with migration `20261110000100_no_sms.sql` (the Phase 3 migration stays as history). Farmers and vets learn of new orders and vet requests in the app (tab badges); partner SMS broadcasts are gone and the partner role now opens county insights |
+| Vet requests | Anyone signed in asks for a vet (animal, problem, county, how soon); every published vet-service farm in that county sees it in the Vets tab; first to accept wins and both sides get each other's number. Vets don't see the farmer's number until they accept. Up to 3 open requests per person or phone; open requests expire after 48 h. Free for now |
+| Maps | Google Maps (Maps JavaScript API, Advanced Markers, marker clustering) when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` is set; MapLibre + OpenFreeMap otherwise, and automatically if Google fails (bad key, billing off, not loaded in 8 s); Leaflet for phones without WebGL. Decided 10 Nov 2026 |
+| Insight privacy | Partners and the public see aggregates only. Groups smaller than 3 (setting `insight_min_count`) are hidden or folded into "Other". Searches are logged without user id or IP (hashed device id), kept 180 days; the public "wanted" list shows everyday farm words only |
+| Demo mode | `npm run dev` always simulates. A production build refuses simulated payments, open callbacks and "Simulate: pay" unless `DEMO_MODE=true` is set on purpose (a banner then says nothing is real). Without M-Pesa keys and without demo mode, checkout says payments are not switched on yet |
+| Unanswered paid orders | The order waits on the farm's Orders badge; at 36 h it is declined and the buyer's refund is due (setting in Admin → Settings). The 6 h reminder SMS went with SMS |
 | Account deletion | Name, phone, email, password, saved farms and Google link removed; farms only that person managed are hidden; orders, payments and ledger kept without the name (tax/payment records). Blocked while orders are open, money is owed to them, or they manage unclaimed farms |
 | Privacy | Draft privacy notice and terms at `/privacy` and `/terms` (`src/content/legal.ts`), linked from sign-up. **Needs a Kenyan lawyer's review and a decision on ODPC registration** before launch. Set `NEXT_PUBLIC_CONTACT_EMAIL` |
 
-Still open: commission rate, featured-listing prices, annual subscription, domain, whether to automate payouts with the B2C API, USSD code lease (placeholder `*384*12#`), whether partners pay for broadcasts, whether vet requests carry a fee.
+Still open: commission rate, featured-listing prices, annual subscription, domain, whether to automate payouts with the B2C API, whether vet requests carry a fee, whether partners pay for county insights, the Google Maps billing account (and a budget alert).
 
 ## 4. Status
 
@@ -68,9 +66,25 @@ Still open: commission rate, featured-listing prices, annual subscription, domai
 | 0 Foundations | Done |
 | 1 Be seen | Done and now actually built and run: `npm run build` clean, flows walked in a phone-sized browser |
 | 2 Trade | **Built.** Own accounts, claim codes, cart, orders, M-Pesa (simulate + Daraja), ledger, reviews, messaging, admin (11 Oct). Bookings, featured listings, order upkeep, payout file, Insights dashboard, rate limits (18 Oct). Waiting on a real Daraja test (gate below) |
-| 3 Reach | **Built (23 Oct)** in simulate mode: SMS alerts, USSD menu, vet requests, partner broadcasts, Admin → Reach (outbox, review, USSD simulator, settings). Waiting on Africa's Talking keys and a USSD code |
+| 3 Reach | Built 23 Oct in simulate mode (SMS alerts, USSD menu, vet requests, partner broadcasts). **10 Nov: SMS, USSD and broadcasts removed by decision**; vet requests stay, in the app; Admin → Reach became Admin → Vet requests |
 | 3.5 Hardening | **Done (4 Nov)** after the audit: demo mode locked in production builds, Next.js / Nodemailer / MapLibre upgraded (0 advisories), security headers, backup job skips without secrets, privacy notice + terms + download my data + delete my account, unanswered paid orders reminded then declined and refunded, edit farm and products after publishing, agent farm list with search, wizard drafts, tab badges, forgiving search, branded 404, clean farm links, link previews, sitemap |
-| 4 Insight | Not started |
+| 4 Insight | **Built (10 Nov)**: public `/prices` (weekly county median per product, 12-week chart with range and table, change over 4 weeks, "buyers looked for and found little"), "County median" beside prices on farm pages, partner `/partner` county insights (farms by type, on sale and medians, orders and value, buyer contacts, vet requests by animal, most searched and not found; 30/90/365 days), anonymous search log. Google Maps integrated with the free map as fallback |
+
+Verified on 10 Nov 2026: 108 database checks (the Phase 3 SMS/USSD checks retired; 10 new for Phase 4: weekly
+median from price history with drafts excluded and earlier weeks using earlier
+prices, benchmarks, search log hashing, county from map position, 60-an-hour
+limit, half-typed words dropped, phone numbers and single-device terms hidden,
+public list limited to farm words, partner-only insight with trade hidden
+below 3 orders, 180-day pruning; and "no SMS or USSD left in the database"),
+typecheck, production build with and without a Maps key (security headers
+allow Google only with a key), browser walkthrough of `/prices` (desktop chart
+hover, county filter, phone width without sideways scroll), farm page median,
+partner dashboard for all counties and Kisumu at 30/90 days, a search from
+Explore landing in the log with its county, and Google Maps: real Google
+can't be reached from the build sandbox, so (a) with a key set and Google
+blocked, Explore fell back to MapLibre, and (b) with a stand-in of the Google
+API, pins, clustering and search-fit ran through the Google code path. **Not
+verified: real Google Maps with a real key.**
 
 Verified on 4 Nov 2026: 110 database checks (8 new: unanswered paid orders,
 search, account deletion, badges, farm links), `npm audit` clean, production
@@ -115,7 +129,7 @@ sandbox; Explore now lists farms even without tiles).
 
 1. On the laptop: install Postgres + PostGIS (README), `npm install`, `npm run db:reset`, `npm run dev`. Sign in with the dev accounts in the README.
 2. Get Daraja sandbox keys and test one real STK push through a tunnel (README → M-Pesa).
-3. Open an Africa's Talking sandbox account, add the keys, and check one SMS and the USSD menu in their simulator (README → SMS and USSD). Apply for a USSD code and sender ID early: approval takes weeks.
+3. Create a Google Maps API key and Map ID (README → Maps), set a budget alert, rebuild, and check Explore, the pin wizard and a farm page map on a real phone.
 4. Have a lawyer review `/privacy` and `/terms` and confirm whether i12farm must register with the ODPC.
 5. Confirm Homa Organica's real phone, prices and stock with Benedict; update in My Farm (or have Benedict claim the farm himself with a claim code).
 6. Pick hosting (section 9) and deploy the pilot.
@@ -133,7 +147,7 @@ src/app/my-farm/                   dashboard, PinWizard, FarmTools (claim code, 
                                    feature/[farmId] (buy a featured plan)
 src/app/account/                   profile, sign-in details, password, devices, claim a farm
 src/app/admin/                     insights, people, farms to verify, money (payouts, refunds, CSV),
-                                   reach (SMS outbox, broadcast review, USSD simulator, SMS/vet settings),
+                                   vets (recent vet requests, request expiry setting),
                                    settings (commission, upkeep days, featured plans), export/[kind]
 src/app/my-farm/[farmId]/          one farm's tools (agents open it from the searchable list); edit/ = edit farm details and pin
 src/app/privacy, terms/            privacy notice and terms (text in src/content/legal.ts)
@@ -144,18 +158,18 @@ src/app/sitemap.ts, robots.ts      search engines
 src/lib/demo.ts                    demo mode rules (simulate only in dev or with DEMO_MODE=true)
 scripts/copy-map-worker.mjs        copies MapLibre's worker to public/ before dev and build
 src/app/vets/                      request a vet, my requests, vet inbox (accept / done), vets list
-src/app/partner/                   broadcast composer with live audience and cost, history with delivery counts
+src/app/partner/                   county insights for partners and admins (Phase 4)
+src/app/prices/                    public market prices: county medians, chart, "wanted" words
 src/app/sign-in, auth/*            sign-in/up forms, Google start/callback, one-time link, sign-out
 src/app/api/                       farms (map box), farms/search, contact, events, farms/[id]/photos,
                                    orders/[number] (status poll), conversations/[id]/messages,
-                                   mpesa/callback/[secret], promotions/[id], cron/maintenance, cron/sms,
-                                   sms/delivery/[secret], sms/inbound/[secret], ussd/[secret]
+                                   mpesa/callback/[secret], promotions/[id], cron/maintenance
+                                   (farms/search also logs the search for demand signals)
 src/app/media/[...path]            serves locally stored photos
 src/domains/                       farms, reference, identity, orders (+payments.ts), messaging,
-                                   promotions, admin (+insights.ts), notifications (render, dispatch),
-                                   ussd (handler), vets, broadcasts
-src/lib/sms.ts                     Africa's Talking client (send, simulate, callback secrets)
-src/instrumentation.ts             starts the 30 s SMS sender on Node servers
+                                   promotions, admin (+insights.ts), vets, insights (prices, demand, county)
+src/components/map/                FarmMap (picks Google / MapLibre / Leaflet), GoogleMap, RasterMap
+src/components/insight/            PriceChart (hover + table), Sparkline
 src/lib/rate-limit.ts              in-memory limits on events, contact taps, messages, uploads
 src/lib/db.ts                      Postgres pool, withUser() (RLS context), dbMessage()
 src/lib/auth/                      password (scrypt), session, viewer, accounts, google
@@ -165,7 +179,7 @@ src/lib/cart.ts                    one-farm cart in localStorage
 messages/en.json, sw.json          all UI text (keys must match in both)
 db/migrations/                     schema source of truth (platform → foundation → … → trade)
 db/seed.sql, seed_demo.sql         dev accounts + 8 test farms; 28 demo farms incl. Homa Organica
-db/tests/                          security_test.sql, trade_test.sql, phase2b_test.sql, reach_test.sql, hardening_test.sql (+ PostGIS stand-in)
+db/tests/                          security_test.sql, trade_test.sql, phase2b_test.sql, vets_test.sql, hardening_test.sql, insight_test.sql (+ PostGIS stand-in)
 scripts/db.mjs                     migrate / status / seed / reset
 scripts/test-db.sh                 fresh database, all migrations, seed, all test files
 .github/workflows/                 ci.yml (build + DB tests), backup.yml (rollup + order upkeep + encrypted dump)
@@ -184,9 +198,9 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 - `apply_order_status()` is the single place an order moves and its money follows; users reach it through `set_order_status()`, the system through `run_maintenance()`.
 - Featured status is public only as a yes/no (`farm_featured()`); promotion rows and their payments are private to the farm's managers and admins.
 - Admin actions are SECURITY DEFINER functions that check the admin role and write the audit log.
-- SMS are only queued by database functions (`queue_sms` is server-only); the outbox is readable by admins only. USSD functions (`ussd_*`) are server-only and take the network-supplied phone.
-- Vet requests move only through `request_vet` / `accept_service_request` / `close_service_request` (and their USSD twins); `service_request_history` and `phone_pref_events` are append-only.
-- Broadcasts are created by partners and sent only by `admin_review_broadcast`.
+- Vet requests move only through `create_service_request` / `take_service_request` / `close_service_request`; `service_request_history` is append-only.
+- `search_log` has no policies: nothing reads it except `search_demand`, `unmet_demand` and `county_insight`, which only return groups of 3+ devices. `log_search()` hashes the device id and never stores a user id or IP.
+- Insight functions (`price_index`, `price_benchmarks`, `unmet_demand` public; `county_insight` partner/admin) are read-only aggregates.
 - A deleted account keeps its row (status `deleted`, no identifiers) so orders and the ledger stay consistent; `delete_my_account()` is the only way in.
 - `search_aliases` maps everyday words (milk, mayai, nguruwe…) to farm types; add rows freely.
 - Counties, sub-counties and wards use official codes.
@@ -194,11 +208,11 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 ## 8. Known gaps
 
 - Payouts are semi-manual (bulk payment file in, results file out). B2C API automation needs Safaricom go-live and an initiator certificate.
-- SMS and USSD tested only in simulate mode and by HTTP replay; real Africa's Talking calls untested. USSD code `*384*12#` is a placeholder.
-- No push notifications in the app itself (SMS covers the important events).
-- On serverless hosts the 30 s SMS loop doesn't persist: schedule `/api/cron/sms`. Vercel Hobby cron runs once a day only, so use a free external pinger (e.g. cron-job.org).
+- **No notifications outside the app** since SMS was removed: a farm only sees a new order or vet request when someone opens the app (badges). Web push (free, works on Android Chrome) is the obvious next step; until then agents should check daily, and the 36 h auto-decline protects buyers.
+- Google Maps untested against real Google (blocked in the build sandbox); the fallback is tested.
+- Prices are asking prices from listings, not prices paid; pilot counties have few farms per product, so medians move with one farm. Units differ by product (litre, tray of 30, 90 kg bag); medians are per product and unit.
+- Searches are logged from Explore only, after the 400 ms typing pause; half-typed words are filtered in SQL. Searches without a county filter take the county nearest the map centre (within 80 km).
 - Vet requests: no in-app chat with the vet, no fee, no rating of vets yet; matching is by county only.
-- Broadcasts are text only, no scheduling; partners can't see who received them (phones stay private).
 - Chat is polling, not push (fine for the pilot; cheap on any host).
 - Rate limits on events, contact taps, messages and uploads are in memory per server process: solid on one VM, partial on serverless hosts.
 - Farms with no phone at all (no public, WhatsApp or owner sign-in phone) can't be paid from the payout file until one is added.
@@ -232,12 +246,15 @@ Not recommended: Render's free tier (web service sleeps after 15 minutes idle; f
 
 ## 10. Next phase
 
-**Gates still open (need you, not code):** a real Daraja sandbox payment
-end to end, then Safaricom "Go Live"; Africa's Talking keys, a sender ID and
-a leased USSD code.
+The five planned phases (0 to 4) are built. What is left before and after a
+pilot launch:
 
-**Phase 4 · Insight**
-1. County price index from `price_history` (weekly median price per product per county), public page and SMS price alerts.
-2. Partner and county dashboards: farms, products, orders and vet requests per county (no personal data).
-3. Demand signals: what buyers search for and don't find, by county.
+**Gates (need you, not code):** a real Daraja sandbox payment end to end, then
+Safaricom "Go Live"; a Google Maps key with billing and a budget alert; a
+lawyer's review of `/privacy` and `/terms`; hosting (section 9) and a domain.
+
+**Suggested Phase 5 · Launch and keep people informed**
+1. Web push notifications (new order, payment, vet request, order ready), opt-in per device, free, to replace what SMS did.
+2. Spam protection for sign-up and listings: rate limits per phone and IP, a new-farm review queue for admins, report a farm.
+3. Partner exports (CSV of the county figures) and a monthly county price summary partners can share.
 4. Optional: B2C payouts after go-live; a farm availability calendar for bookings; vet ratings and fees.

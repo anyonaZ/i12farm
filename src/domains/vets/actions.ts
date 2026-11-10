@@ -5,7 +5,6 @@ import { getViewer } from '@/lib/auth/viewer';
 import { recordEvent } from '@/lib/analytics/server';
 import { dbMessage, withUser } from '@/lib/db';
 import { toInternational } from '@/lib/phone';
-import { dispatchSoon } from '@/domains/notifications/dispatch';
 
 type Result<T = undefined> = { ok: true; data: T } | { ok: false; error: string; detail?: string };
 
@@ -44,7 +43,6 @@ export async function requestVet(input: VetRequestInput): Promise<Result<{ numbe
       });
       return r;
     });
-    dispatchSoon();
     revalidatePath('/vets');
     return { ok: true, data: { number: row.number, vets: row.vets_alerted } };
   } catch (error) {
@@ -64,7 +62,6 @@ export async function acceptVetRequest(requestId: string, vetFarmId: string): Pr
     const e = error as { code?: string };
     return { ok: false, error: e.code === '55000' ? 'taken' : 'failed', detail: dbMessage(error) };
   }
-  dispatchSoon();
   revalidatePath('/vets');
   return { ok: true, data: undefined };
 }
@@ -80,7 +77,6 @@ export async function closeVetRequest(requestId: string, outcome: 'completed' | 
   } catch (error) {
     return { ok: false, error: 'failed', detail: dbMessage(error) };
   }
-  dispatchSoon();
   revalidatePath('/vets');
   return { ok: true, data: undefined };
 }

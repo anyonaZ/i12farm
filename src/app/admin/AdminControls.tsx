@@ -11,6 +11,7 @@ import {
   recordRefund,
   runUpkeep,
   saveTradeSettings,
+  saveVetSettings,
   setCommission,
   setRoles,
   setUserStatus,
@@ -302,20 +303,17 @@ export function PayoutImport() {
 export function TradeSettingsForm({
   autoCompleteDays,
   unpaidHours,
-  reminderHours,
   declineHours,
   plans,
 }: {
   autoCompleteDays: number;
   unpaidHours: number;
-  reminderHours: number;
   declineHours: number;
   plans: string;
 }) {
   const t = useTranslations('admin');
   const [days, setDays] = useState(String(autoCompleteDays));
   const [hours, setHours] = useState(String(unpaidHours));
-  const [remind, setRemind] = useState(String(reminderHours));
   const [decline, setDecline] = useState(String(declineHours));
   const [planText, setPlanText] = useState(plans);
   const { pending, message, run } = useRun();
@@ -339,16 +337,6 @@ export function TradeSettingsForm({
         inputMode="numeric"
         value={hours}
         onChange={(e) => setHours(e.target.value.replace(/\D/g, ''))}
-        className="input tabular-nums"
-      />
-      <label htmlFor="set-remind" className="text-sm font-bold">
-        {t('reminderHours')}
-      </label>
-      <input
-        id="set-remind"
-        inputMode="numeric"
-        value={remind}
-        onChange={(e) => setRemind(e.target.value.replace(/\D/g, ''))}
         className="input tabular-nums"
       />
       <label htmlFor="set-decline" className="text-sm font-bold">
@@ -375,7 +363,6 @@ export function TradeSettingsForm({
             saveTradeSettings({
               autoCompleteDays: Number(days),
               unpaidHours: Number(hours),
-              reminderHours: Number(remind),
               declineHours: Number(decline),
               plans: planText,
             }),
@@ -425,6 +412,41 @@ export function UpkeepButton() {
           {message}
         </p>
       ) : null}
+    </div>
+  );
+}
+
+export function VetSettingsForm({ vetHours }: { vetHours: number }) {
+  const t = useTranslations('admin');
+  const [hours, setHours] = useState(String(vetHours));
+  const [message, setMessage] = useState('');
+  const [pending, start] = useTransition();
+  return (
+    <div className="flex flex-col gap-2.5">
+      <label htmlFor="vet-hours" className="text-sm font-bold">
+        {t('vetHours')}
+      </label>
+      <input
+        id="vet-hours"
+        inputMode="numeric"
+        value={hours}
+        onChange={(e) => setHours(e.target.value.replace(/\D/g, ''))}
+        className="input tabular-nums"
+      />
+      <button
+        type="button"
+        disabled={pending}
+        className="btn-primary"
+        onClick={() =>
+          start(async () => {
+            const r = await saveVetSettings({ vetHours: Number(hours) });
+            setMessage(r.ok ? t('done') : r.error);
+          })
+        }
+      >
+        {t('save')}
+      </button>
+      {message ? <p className="text-xs font-semibold text-soil">{message}</p> : null}
     </div>
   );
 }

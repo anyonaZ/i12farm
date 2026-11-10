@@ -1,5 +1,5 @@
 import 'server-only';
-import { getSql, withUser } from '@/lib/db';
+import { withUser } from '@/lib/db';
 import type { Viewer } from '@/lib/auth/viewer';
 
 export type VetRequestStatus = 'open' | 'accepted' | 'completed' | 'cancelled' | 'expired';
@@ -79,10 +79,4 @@ export function listVetFarms(countyCode: number | null): Promise<VetFarm[]> {
     order by f.county_code = ${countyCode ?? 0} desc, f.verified_at is null, f.name
     limit 12`,
   );
-}
-
-export async function ussdCode(): Promise<string> {
-  const [row] = await getSql()<{ code: string }[]>`
-    select coalesce((select value #>> '{}' from public.platform_settings where key = 'ussd_code'), '') as code`;
-  return row?.code ?? '';
 }

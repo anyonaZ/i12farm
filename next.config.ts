@@ -3,25 +3,38 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
-// Where the browser may load things from. Map tiles come from OpenFreeMap (vector)
-// or OpenStreetMap (image fallback); photos from this site or the bucket in
+// Where the browser may load things from. Maps come from Google (when
+// NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is set), OpenFreeMap (vector) or OpenStreetMap
+// (image fallback); photos from this site or the bucket in
 // NEXT_PUBLIC_MEDIA_URL. Next.js needs inline scripts for its page data.
 const media = process.env.NEXT_PUBLIC_MEDIA_URL ? new URL(process.env.NEXT_PUBLIC_MEDIA_URL).origin : '';
 const tiles = 'https://tiles.openfreemap.org https://tile.openstreetmap.org';
+// Google Maps, only when a key is set (Google's published allowlist for the Maps JavaScript API).
+const google = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  ? {
+      script: "'unsafe-eval' https://*.googleapis.com https://*.gstatic.com *.google.com https://*.ggpht.com *.googleusercontent.com blob:",
+      img: 'https://*.googleapis.com https://*.gstatic.com *.google.com *.googleusercontent.com',
+      connect: 'https://*.googleapis.com *.google.com https://*.gstatic.com data: blob:',
+      font: 'https://fonts.gstatic.com',
+      style: 'https://fonts.googleapis.com',
+      frame: 'frame-src *.google.com',
+    }
+  : { script: '', img: '', connect: '', font: '', style: '', frame: '' };
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: ${tiles} ${media}`.trim(),
-  "font-src 'self' data:",
-  `connect-src 'self' ${tiles} ${media}`.trim(),
+  `script-src 'self' 'unsafe-inline' ${google.script}`.trim(),
+  `style-src 'self' 'unsafe-inline' ${google.style}`.trim(),
+  `img-src 'self' data: blob: ${tiles} ${media} ${google.img}`.trim(),
+  `font-src 'self' data: ${google.font}`.trim(),
+  `connect-src 'self' ${tiles} ${media} ${google.connect}`.trim(),
   "worker-src 'self' blob:",
   "child-src blob:",
+  google.frame,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self' https://accounts.google.com",
   "object-src 'none'",
-].join('; ');
+].filter(Boolean).join('; ');
 
 const SECURITY_HEADERS = [
   { key: 'Content-Security-Policy', value: csp },

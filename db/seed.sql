@@ -82,7 +82,7 @@ insert into public.listings (farm_id, type, product_slug, title, unit, price_kes
   ('10000000-0000-4000-8000-000000000007', 'livestock',  'piglets',         'Weaned piglets',                 'head',   4500,  10),
   ('10000000-0000-4000-8000-000000000008', 'service',    'vet-visit',       'On-farm vet visit',              'visit',  1500, null);
 
--- Phase 3: a partner organisation (sends SMS broadcasts after admin review),
+-- A partner organisation (county office, cooperative, NGO: sees county insights),
 -- and a phone for the vet farm so vet-request SMS reach it.
 insert into auth.users (id, email, phone, password_hash, password_changed_at, meta)
 values

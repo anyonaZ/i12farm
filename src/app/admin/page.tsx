@@ -18,7 +18,7 @@ import {
   UserRow,
 } from './AdminControls';
 import { InsightsView } from './Insights';
-import { ReachView } from './Reach';
+import { VetRequestsView } from './VetRequests';
 
 export const metadata = { title: 'Admin', robots: { index: false } };
 
@@ -47,7 +47,7 @@ export default async function AdminPage({
     { key: 'people', label: t('users'), icon: 'user' as const },
     { key: 'farms', label: t('farms'), icon: 'badge' as const },
     { key: 'money', label: t('money'), icon: 'wallet' as const },
-    { key: 'reach', label: t('reach'), icon: 'megaphone' as const },
+    { key: 'vets', label: t('vetsTab'), icon: 'cross' as const },
     { key: 'settings', label: t('settings'), icon: 'clipboard' as const },
   ];
 
@@ -73,7 +73,7 @@ export default async function AdminPage({
         ))}
       </nav>
 
-      {tab === 'reach' ? <ReachView viewer={viewer} /> : null}
+      {tab === 'vets' ? <VetRequestsView viewer={viewer} /> : null}
 
       {tab === 'people' ? (
         <>
@@ -203,7 +203,6 @@ export default async function AdminPage({
             <TradeSettingsForm
               autoCompleteDays={Number(settings.auto_complete_days ?? 3)}
               unpaidHours={Number(settings.unpaid_cancel_hours ?? 48)}
-              reminderHours={Number(settings.paid_reminder_hours ?? 6)}
               declineHours={Number(settings.paid_decline_hours ?? 36)}
               plans={((settings.premium_plans as { days: number; price: number }[] | undefined) ?? [])
                 .map((p) => `${p.days}, ${p.price}`)

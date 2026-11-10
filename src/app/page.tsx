@@ -6,7 +6,8 @@ import type { Locale } from '@/i18n/config';
 
 // Explore: full-screen map of published farms, search, category chips and a
 // bottom sheet of the farms in view.
-export default async function ExplorePage() {
+export default async function ExplorePage({ searchParams }: { searchParams: Promise<{ q?: string; county?: string }> }) {
+  const sp = await searchParams;
   const locale = (await getLocale()) as Locale;
   const [categories, pilots] = await Promise.all([listFarmCategories(locale), listPilotCounties()]);
 
@@ -25,6 +26,8 @@ export default async function ExplorePage() {
       <ExploreClient
         categories={(categories ?? []).map((c) => ({ slug: c.slug, name: c.name }))}
         counties={(pilots ?? []).map((c) => ({ ...c, focus: COUNTY_FOCUS[c.code] ?? null }))}
+        initialQ={(sp.q ?? '').slice(0, 80)}
+        initialCounty={pilots?.find((c) => String(c.code) === sp.county)?.code ?? null}
       />
     </main>
   );

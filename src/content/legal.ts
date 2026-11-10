@@ -1,7 +1,7 @@
 // Privacy notice and terms, in both languages. A DRAFT written for the pilot:
 // have a Kenyan lawyer review it before launch (Data Protection Act 2019,
 // ODPC registration, consumer protection). Change UPDATED when you edit it.
-export const UPDATED = '2026-11-04';
+export const UPDATED = '2026-11-10';
 export const CONTACT = process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? '';
 
 export interface LegalSection {
@@ -23,7 +23,8 @@ export const PRIVACY: Record<'en' | 'sw', Doc> = {
           '- Your account: name, phone number, email (optional), password (only as a scrambled hash), language and county.',
           '- Farms: name, farmer, description, products, prices, photos, phone and WhatsApp numbers, and the exact location you pin.',
           '- Orders and payments: what was ordered, amounts, your M-Pesa number and receipt, and the order history.',
-          '- Messages between buyers and farms, reviews, vet requests and partner messages.',
+          '- Messages between buyers and farms, reviews and vet requests.',
+          '- Words typed into search, with the county being looked at, but without your name, account or phone number, so we can show which products buyers look for in each county. Deleted after 180 days.',
           '- How the app is used (pages opened, buttons tapped), so we can improve it. This is not sold or shared.',
         ],
       },
@@ -33,26 +34,26 @@ export const PRIVACY: Record<'en' | 'sw', Doc> = {
           '- Everyone: published farm details, products, prices, photos, reviews, and the farm’s public phone. The farm’s pin is approximate (about 1 km) unless the farm chooses exact.',
           '- A farm you order from: your name, phone and delivery note for that order.',
           '- A vet who accepts your request: your name and phone. Vets see neither before accepting.',
-          '- Partners who send SMS news: only how many farms receive it, never phone numbers.',
+          '- Partners (county offices, cooperatives): only county totals, such as how many farms, the middle price or what buyers searched for (only words searched from 3 or more phones), never names or phone numbers.',
           '- i12farm staff: what is needed to run payments, payouts and support. Every staff action on accounts is logged.',
         ],
       },
       {
         heading: 'Services we use',
         body: [
-          'Safaricom M-Pesa (payments), Africa’s Talking (SMS and USSD), an email provider (sign-in links), Google (only if you sign in with Google), and our hosting and photo storage providers. They receive only what they need for that job.',
+          'Safaricom M-Pesa (payments), Google Maps (shows the map; Google sees which part of the map you view), an email provider (sign-in links), Google (only if you sign in with Google), and our hosting and photo storage providers. They receive only what they need for that job.',
         ],
       },
       {
         heading: 'How long we keep it',
         body: [
-          'Your account stays until you delete it. Orders, payments and the money ledger are kept as long as tax and payment laws require, without your name or contact once you delete your account. SMS and app-usage records are kept for up to two years.',
+          'Your account stays until you delete it. Orders, payments and the money ledger are kept as long as tax and payment laws require, without your name or contact once you delete your account. App-usage records are kept for up to two years.',
         ],
       },
       {
         heading: 'Your rights',
         body: [
-          'Under Kenya’s Data Protection Act 2019 you can see the data we hold, correct it, object to its use, and have it deleted. In the app: Account → Download my data, and Account → Delete my account. Reply STOP to any partner SMS to stop them.',
+          'Under Kenya’s Data Protection Act 2019 you can see the data we hold, correct it, object to its use, and have it deleted. In the app: Account → Download my data, and Account → Delete my account.',
           'You can also complain to the Office of the Data Protection Commissioner (ODPC).',
         ],
       },
@@ -69,7 +70,8 @@ export const PRIVACY: Record<'en' | 'sw', Doc> = {
           '- Akaunti yako: jina, nambari ya simu, barua pepe (si lazima), nenosiri (kwa njia iliyofichwa tu), lugha na kaunti.',
           '- Mashamba: jina, mkulima, maelezo, bidhaa, bei, picha, nambari za simu na WhatsApp, na mahali halisi ulipoweka alama.',
           '- Oda na malipo: kilichoagizwa, kiasi, nambari yako ya M-Pesa na risiti, na historia ya oda.',
-          '- Ujumbe kati ya wanunuzi na mashamba, maoni, maombi ya daktari na ujumbe wa washirika.',
+          '- Ujumbe kati ya wanunuzi na mashamba, maoni na maombi ya daktari.',
+          '- Maneno yanayoandikwa kwenye utafutaji, pamoja na kaunti inayotazamwa, bila jina lako, akaunti wala nambari ya simu, ili tuonyeshe wanunuzi wanatafuta bidhaa gani katika kila kaunti. Yanafutwa baada ya siku 180.',
           '- Jinsi app inavyotumika (kurasa zilizofunguliwa, vitufe vilivyobonyezwa), ili tuiboreshe. Hatuuzi wala kushiriki taarifa hizi.',
         ],
       },
@@ -79,26 +81,26 @@ export const PRIVACY: Record<'en' | 'sw', Doc> = {
           '- Kila mtu: maelezo ya shamba lililochapishwa, bidhaa, bei, picha, maoni, na simu ya shamba. Alama ya shamba ni ya kukadiria (karibu kilomita 1) isipokuwa shamba likichagua mahali halisi.',
           '- Shamba unaloagiza kutoka kwake: jina lako, simu na maelezo ya kupeleka kwa oda hiyo.',
           '- Daktari anayekubali ombi lako: jina lako na simu. Madaktari hawazioni kabla ya kukubali.',
-          '- Washirika wanaotuma habari kwa SMS: idadi ya mashamba yanayopokea tu, kamwe si nambari za simu.',
+          '- Washirika (ofisi za kaunti, vyama vya ushirika): jumla za kaunti tu, kama idadi ya mashamba, bei ya kati au kile wanunuzi walitafuta (maneno yaliyotafutwa kutoka simu 3 au zaidi tu), kamwe si majina wala nambari za simu.',
           '- Wafanyakazi wa i12farm: kinachohitajika kuendesha malipo na usaidizi. Kila hatua yao kwenye akaunti hurekodiwa.',
         ],
       },
       {
         heading: 'Huduma tunazotumia',
         body: [
-          'Safaricom M-Pesa (malipo), Africa’s Talking (SMS na USSD), mtoa huduma wa barua pepe (viungo vya kuingia), Google (ukiingia kwa Google tu), na watoa huduma wa seva na kuhifadhi picha. Wanapata tu kinachohitajika kwa kazi hiyo.',
+          'Safaricom M-Pesa (malipo), Google Maps (huonyesha ramani; Google huona sehemu ya ramani unayotazama), mtoa huduma wa barua pepe (viungo vya kuingia), Google (ukiingia kwa Google tu), na watoa huduma wa seva na kuhifadhi picha. Wanapata tu kinachohitajika kwa kazi hiyo.',
         ],
       },
       {
         heading: 'Tunahifadhi kwa muda gani',
         body: [
-          'Akaunti yako inabaki hadi uifute. Oda, malipo na daftari la pesa huhifadhiwa kwa muda sheria za kodi na malipo zinavyotaka, bila jina lako wala mawasiliano ukifuta akaunti. Kumbukumbu za SMS na matumizi ya app huhifadhiwa hadi miaka miwili.',
+          'Akaunti yako inabaki hadi uifute. Oda, malipo na daftari la pesa huhifadhiwa kwa muda sheria za kodi na malipo zinavyotaka, bila jina lako wala mawasiliano ukifuta akaunti. Kumbukumbu za matumizi ya app huhifadhiwa hadi miaka miwili.',
         ],
       },
       {
         heading: 'Haki zako',
         body: [
-          'Chini ya Sheria ya Kulinda Data ya Kenya 2019 unaweza kuona data tuliyo nayo, kuirekebisha, kupinga matumizi yake, na kuifuta. Kwenye app: Akaunti → Pakua data yangu, na Akaunti → Futa akaunti yangu. Jibu STOP kwa SMS yoyote ya mshirika kuzisimamisha.',
+          'Chini ya Sheria ya Kulinda Data ya Kenya 2019 unaweza kuona data tuliyo nayo, kuirekebisha, kupinga matumizi yake, na kuifuta. Kwenye app: Akaunti → Pakua data yangu, na Akaunti → Futa akaunti yangu.',
           'Unaweza pia kulalamika kwa Ofisi ya Kamishna wa Kulinda Data (ODPC).',
         ],
       },
@@ -133,9 +135,7 @@ export const TERMS: Record<'en' | 'sw', Doc> = {
       },
       {
         heading: 'Vets and partners',
-        body: [
-          'Vet requests connect farmers with vets; the vet and the farmer agree the visit and its fee between themselves. Partner SMS are reviewed by i12farm before they are sent.',
-        ],
+        body: ['Vet requests connect farmers with vets; the vet and the farmer agree the visit and its fee between themselves.'],
       },
       {
         heading: 'Fair use',
@@ -170,7 +170,7 @@ export const TERMS: Record<'en' | 'sw', Doc> = {
       {
         heading: 'Madaktari na washirika',
         body: [
-          'Maombi ya daktari huwaunganisha wakulima na madaktari; daktari na mkulima hukubaliana kuhusu ziara na malipo yake wenyewe. SMS za washirika hukaguliwa na i12farm kabla ya kutumwa.',
+          'Maombi ya daktari huwaunganisha wakulima na madaktari; daktari na mkulima hukubaliana kuhusu ziara na malipo yake wenyewe.',
         ],
       },
       {

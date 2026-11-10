@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import type { GeoJSONSource, Map as MlMap, MapLayerMouseEvent, StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -12,6 +12,10 @@ const STYLE_URL = 'https://tiles.openfreemap.org/styles/positron';
 
 // Browsers without WebGL get a plain image-tile map instead (Leaflet).
 const RasterMap = dynamic(() => import('./RasterMap'), { ssr: false });
+// Google Maps when a key is configured; the free maps above are the fallback.
+const GoogleMap = dynamic(() => import('./GoogleMap'), { ssr: false });
+const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
+let googleFailed = false; // once Google fails on this page, don't try it again
 
 // When the map style can't be downloaded, pins still draw on a plain background.
 const OFFLINE_STYLE: StyleSpecification = {
@@ -101,10 +105,23 @@ function toGeoJSON(points: MapPoint[], selectedId: string | null | undefined) {
 }
 
 export function FarmMap(props: Props) {
-  const [mode, setMode] = useState<'vector' | 'raster' | null>(null);
+  const locale = useLocale();
+  const [mode, setMode] = useState<'google' | 'vector' | 'raster' | null>(null);
   useEffect(() => {
-    setMode(webglAvailable() ? 'vector' : 'raster');
+    const free = webglAvailable() ? 'vector' : 'raster';
+    setMode(GOOGLE_KEY && !googleFailed ? 'google' : free);
   }, []);
+  if (mode === 'google')
+    return (
+      <GoogleMap
+        {...props}
+        locale={locale}
+        onFail={() => {
+          googleFailed = true;
+          setMode(webglAvailable() ? 'vector' : 'raster');
+        }}
+      />
+    );
   if (mode === 'raster') return <RasterMap {...props} />;
   return <VectorMap {...props} active={mode === 'vector'} onFail={() => setMode('raster')} />;
 }

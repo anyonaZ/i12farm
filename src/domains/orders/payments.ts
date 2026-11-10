@@ -2,7 +2,6 @@ import 'server-only';
 import { getSql, withUser } from '@/lib/db';
 import { mpesaMode, parseCallback, simulatedCallback, stkPush, stkQuery, type StkCallback } from '@/lib/mpesa';
 import { recordEvent } from '@/lib/analytics/server';
-import { dispatchSoon } from '@/domains/notifications/dispatch';
 
 // Payment orchestration: ask M-Pesa for an STK prompt, then record the
 // result exactly once. The database function record_payment_result() holds
@@ -64,7 +63,6 @@ export async function applyResult(cb: StkCallback, raw: unknown, confirm: boolea
   const [{ result }] = await sql<{ result: string }[]>`
     select public.record_payment_result(${cb.checkoutRequestId}, ${cb.resultCode}, ${cb.resultDesc},
                                         ${cb.receipt}, ${cb.amount}, ${sql.json(raw as never)}) as result`;
-  dispatchSoon();
   if (result === 'paid' || result === 'failed' || result === 'paid_after_cancel' || result === 'underpaid') {
     const [payment] = await sql<{ order_id: string | null; promotion_id: string | null }[]>`
       select order_id, promotion_id from public.payments where checkout_request_id = ${cb.checkoutRequestId}`;

@@ -223,3 +223,109 @@ begin
   end if;
 end;
 $$;
+
+-- ---------------------------------------------------------------------------
+-- Phase 4 demo data, so the prices page and partner insights have something to
+-- show. Made up. Runs once (skipped when older price history already exists).
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  buyer uuid := '00000000-0000-4000-8000-0000000000b9';  -- a demo-only buyer (cannot sign in)
+  r     record;
+  o     record;
+  w     integer;
+  i     integer := 0;
+  base  numeric;
+  p     numeric;
+begin
+  if exists (select 1 from public.price_history where observed_at < now() - interval '2 days') then
+    return;
+  end if;
+
+  -- 12 weeks of earlier prices for goods: a gentle wave around today's price,
+  -- a little lower further back. Older rows than the real (current) one.
+  for r in
+    select l.id, l.farm_id, l.product_slug, l.unit, l.price_kes, f.county_code,
+           (('x' || substr(md5(l.id::text), 1, 6))::bit(24)::integer % 7) as h
+    from public.listings l join public.farms f on f.id = l.farm_id
+    where l.type in ('produce', 'livestock', 'input') and l.price_kes is not null
+  loop
+    for w in 1..11 loop
+      base := r.price_kes * (1 + 0.07 * sin((w + r.h) / 1.7) - 0.006 * w);
+      p := case when base < 100 then round(base) when base < 1000 then round(base / 5) * 5 else round(base / 50) * 50 end;
+      insert into public.price_history (listing_id, farm_id, product_slug, county_code, unit, price_kes, quantity, status, observed_at)
+      values (r.id, r.farm_id, r.product_slug, r.county_code, r.unit, greatest(p, 1), null, 'active',
+              now() - make_interval(weeks => w, hours => 30 + r.h * 7));
+    end loop;
+  end loop;
+
+  -- What buyers searched for: distinct (made-up) devices per county.
+  insert into public.search_log (searched_at, term, county_code, results, searcher)
+  select now() - make_interval(days => (n * 3 + length(t.term)) % 40, hours => n),
+         t.term, t.county, case when t.found then 1 + n % 3 else 0 end,
+         md5('demo-searcher:' || t.county || ':' || t.term || ':' || n)
+  from (values
+    ('sheep', 47::smallint, 6, false), ('quail eggs', 47, 4, false), ('milk', 47, 7, true), ('mushrooms', 47, 3, false),
+    ('pork', 47, 5, true), ('avocado', 47, 4, false),
+    ('fish', 42, 8, true), ('goat', 42, 5, false), ('tomatoes', 42, 3, false), ('vet', 42, 4, true),
+    ('honey', 43, 5, true), ('beef', 43, 3, false), ('tilapia', 43, 6, true), ('dairy goat', 43, 3, false),
+    ('eggs', 22, 9, true), ('rabbit', 22, 4, true), ('pork', 22, 3, false), ('kienyeji', 22, 5, true),
+    ('maize', 44, 4, false), ('chicks', 44, 3, false), ('mangoes', 44, 5, true),
+    ('rare pedigree x', 47, 2, false)  -- only 2 devices: never shown
+  ) as t(term, county, searchers, found)
+  cross join lateral generate_series(1, t.searchers) n;
+  -- One person typing "mi", "mil", "milk": counted once, as "milk".
+  insert into public.search_log (searched_at, term, county_code, results, searcher) values
+    (now() - interval '3 days',                         'mi',   47, 5, md5('demo-typist')),
+    (now() - interval '3 days' + interval '1 second',   'mil',  47, 3, md5('demo-typist')),
+    (now() - interval '3 days' + interval '2 seconds',  'milk', 47, 3, md5('demo-typist'));
+
+  -- Paid orders over the last two months, all completed, from a demo-only buyer
+  -- so the dev buyer's own order list stays clean.
+  insert into auth.users (id, phone, password_hash, meta)
+  values (buyer, '254700000099', 'demo-no-sign-in', '{"full_name":"Demo Buyer"}') on conflict do nothing;
+  insert into public.profiles (id, full_name, phone) values (buyer, 'Demo Buyer', '254700000099') on conflict (id) do nothing;
+  perform set_config('app.user_id', buyer::text, true);
+  for r in
+    select l.id, l.farm_id, l.price_kes, row_number() over (order by f.county_code, l.id) as k
+    from public.listings l join public.farms f on f.id = l.farm_id
+    where f.status = 'published' and l.status = 'active' and l.price_kes between 40 and 6000
+      and l.type in ('produce', 'livestock') and f.county_code in (42, 43, 47)
+      and l.product_slug in ('fresh-milk', 'eggs', 'tilapia', 'kale-sukuma', 'honey', 'kienyeji-chicken', 'piglets')
+  loop
+    for w in 1..(1 + r.k::integer % 2) loop
+      exit when i >= 24;
+      i := i + 1;
+      select * into o from public.place_order(jsonb_build_object('farm_id', r.farm_id,
+        'items', jsonb_build_array(jsonb_build_object('listing_id', r.id, 'quantity', 1 + (i % 3))), 'buyer_phone', '0700000099'));
+      perform public.record_payment_request(o.id, '254700000099', o.subtotal_kes::integer, 'demo-' || i, 'ws_CO_DEMO_' || i, buyer);
+      perform public.record_payment_result('ws_CO_DEMO_' || i, 0, 'Demo payment', 'DEMO' || lpad(i::text, 6, '0'), o.subtotal_kes, '{}');
+      perform public.apply_order_status(o.id, 'accepted', 'Demo', null);
+      perform public.apply_order_status(o.id, 'ready', 'Demo', null);
+      perform public.apply_order_status(o.id, 'completed', 'Demo', null);
+      update public.orders set paid_at = now() - make_interval(days => (i * 5) % 58 + 1), created_at = now() - make_interval(days => (i * 5) % 58 + 1)
+       where id = o.id;
+    end loop;
+  end loop;
+  perform set_config('app.user_id', '', true);
+
+  -- Vet requests (closed long ago, so nothing is waiting for a vet).
+  for r in
+    select * from (values (42::smallint, 'dairy', 4), (42, 'poultry', 3), (42, 'pigs', 1), (43, 'dairy', 3), (43, 'goats', 2), (47, 'poultry', 3)) v(county, animal, n)
+  loop
+    for w in 1..r.n loop
+      i := i + 1;
+      perform public.create_service_request(null::uuid, '07000' || lpad(i::text, 5, '0'), 'Demo farmer', r.county::smallint, null::text, r.animal::text, 'Demo request', 'today', 'web');
+    end loop;
+  end loop;
+  update public.service_requests set status = case when (('x' || substr(md5(id::text), 1, 2))::bit(8)::integer % 4) = 0 then 'expired' else 'cancelled' end,
+         closed_at = now() - interval '1 day', created_at = created_at - interval '5 days'
+   where contact_name = 'Demo farmer' and status = 'open';
+
+  -- Buyers tapping Call / WhatsApp / Directions.
+  insert into public.contact_events (farm_id, anonymous_id, channel, created_at)
+  select f.id, 'demo-' || n, (array['call', 'whatsapp', 'directions']::public.contact_channel[])[1 + n % 3], now() - make_interval(days => n % 30)
+  from public.farms f cross join generate_series(1, 4) n
+  where f.status = 'published';
+end;
+$$;
