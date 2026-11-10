@@ -3,9 +3,10 @@
  * - Pages: network-first, falling back to the last cached copy, then /offline.
  * - Farm photos: cache-first with a small cap, so recently seen farms work offline.
  * - API and auth calls are never cached.
+ * - Push notifications: shows them, and opens the right page when tapped.
  * Bump VERSION to force every phone to drop old caches.
  */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL = `i12f-shell-${VERSION}`;
 const PAGES = `i12f-pages-${VERSION}`;
 const MEDIA = `i12f-media-${VERSION}`;
@@ -84,4 +85,40 @@ self.addEventListener('fetch', (event) => {
     if (PRIVATE.some((p) => url.pathname.startsWith(p))) return;
     event.respondWith(networkFirstPage(request));
   }
+});
+
+// Push notifications from i12farm (see src/lib/push.ts). The payload is
+// {title, body, url, tag}; a notification with the same tag replaces the last.
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: 'i12farm', body: event.data ? event.data.text() : '' };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'i12farm', {
+      body: data.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: data.tag,
+      data: { url: data.url || '/' },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if (w.url.startsWith(self.location.origin) && 'focus' in w) {
+          w.navigate(url);
+          return w.focus();
+        }
+      }
+      return self.clients.openWindow(url);
+    }),
+  );
 });

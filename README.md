@@ -146,6 +146,27 @@ How it fits together:
   Paying by hand with a reference (and the payout CSV) still works for money
   that is not in a batch.
 
+## Charges and commission
+
+- i12farm's commission: `commission_bps` (10% by default, Admin → Settings), fixed on each order when it is placed.
+- **Pesi's charges are carried by farmers** (decided 10 Nov 2026), set in Admin → Settings → Pesi charges, all 0 until Switchlink confirms its price list:
+  - collecting the buyer's payment: fixed on the order when paid, taken from the farmer's share at completion (the order page shows it);
+  - sending a payout: by channel (M-Pesa, bank, paybill, till), taken from the payout; the batch page shows the charge and what is sent.
+  - Refund transfers are carried by i12farm (memo `pesi_cost` in the ledger).
+- A rule is bands of "up to amount, charge" plus an optional percent.
+
+## Push notifications
+
+Free web push. Make keys once with `npx web-push generate-vapid-keys` and set
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT`, then
+rebuild. Database triggers queue notifications (`push_outbox`) in the same
+transaction as the event; the server sends them right after the request that
+caused them, whenever an open app checks its badges (at most every 20 s), and
+from `/api/cron/maintenance`. Works on Android Chrome and desktop browsers; on
+iPhone only after "Add to Home Screen". Tested here against a local stand-in of
+a push service (encrypted payload decrypted, Kiswahili text, dead devices
+switched off); real delivery through Google's push service needs a real phone.
+
 ## Maps (Google Maps, with a free fallback)
 
 Without a key the app uses MapLibre on free OpenFreeMap tiles (and a Leaflet

@@ -84,7 +84,8 @@ export default async function BatchPage({
             <span className="text-sm text-soil">{t('progress', { done, total: live.length, failed: b.failed, flying: b.in_flight })}</span>
           ) : null}
         </div>
-        <BatchActions batchId={b.id} status={b.status} total={b.total_kes} lines={b.lines} inFlight={b.in_flight} />
+        {b.fees_kes > 0 ? <p className="text-sm text-soil">{t('feesTotal', { fees: kes(b.fees_kes) })}</p> : null}
+        <BatchActions batchId={b.id} status={b.status} total={b.total_kes - b.fees_kes} lines={b.lines} inFlight={b.in_flight} />
       </section>
 
       <section className="card gap-0 p-0">
@@ -122,7 +123,14 @@ export default async function BatchPage({
                         <span className="block text-xs font-semibold text-forest">⚠ {t('nameDiffers', { saved: l.saved_name! })}</span>
                       ) : null}
                     </td>
-                    <td className="px-4 py-3 text-right font-bold tabular-nums">{kes(l.amount_kes)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      <b>{kes(l.amount_kes)}</b>
+                      {l.fee_kes > 0 ? (
+                        <span className="block text-xs text-soil">
+                          {t('netOf', { net: kes(l.amount_kes - l.fee_kes), fee: kes(l.fee_kes) })}
+                        </span>
+                      ) : null}
+                    </td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${LINE_STYLE[l.status]}`}>
                         {t(`status_${l.status}`)}

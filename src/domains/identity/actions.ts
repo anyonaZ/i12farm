@@ -1,5 +1,6 @@
 'use server';
 
+import { createHash } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
@@ -78,10 +79,21 @@ export async function signUp(_prev: FormState, form: FormData): Promise<FormStat
   const weak = passwordProblem(password);
   if (weak) return { error: weak, values };
   if (form.get('consent') !== 'on') return { error: 'consent', values };
+  // Bots fill every field; people never see this one.
+  if (str(form, 'website')) return { error: 'saveFailed', values };
+  // At most a few new accounts per network per hour (setting signups_per_network_hour).
+  const { ip } = await requestInfo();
+  const network = createHash('sha256')
+    .update(`i12farm-signup:${ip ?? 'unknown'}`)
+    .digest('hex');
+  const [{ allowed }] = await getSql()<{ allowed: boolean }[]>`select public.signup_allowed(${network}) as allowed`;
+  if (!allowed) return { error: 'tooManySignups', values };
 
   const locale = (await getLocale()) === 'sw' ? 'sw' : 'en';
   const created = await createAccount({ fullName, phone, email, password, locale, consentVersion: CONSENT_VERSION });
   if (!created.ok) return { error: created.error, values };
+  await getSql()`with gone as (delete from auth.signup_networks where at < now() - interval '2 days')
+                 insert into auth.signup_networks (ip_hash) values (${network})`;
 
   await startSession(created.userId, 'sign_up');
   await withUser(created.userId, (tx) =>

@@ -7,6 +7,8 @@ import { listCounties } from '@/domains/reference/queries';
 import { requireViewer } from '@/lib/auth/viewer';
 import { displayPhone } from '@/lib/phone';
 import { LegalLinks } from '@/components/LegalPage';
+import { PushToggle } from '@/components/notify/PushToggle';
+import { withUser } from '@/lib/db';
 import { ClaimForm, DataControls, PasswordForm, ProfileForm, SignInDetailsForm, SignOutOthersButton } from './AccountForms';
 
 export const metadata = { title: 'Account', robots: { index: false } };
@@ -41,6 +43,13 @@ function device(ua: string | null): string {
 export default async function AccountPage({ searchParams }: { searchParams: Promise<{ set?: string }> }) {
   const viewer = await requireViewer('/account');
   const t = await getTranslations('account');
+  const tn = await getTranslations('notify');
+  const [prefsRow] = await withUser(
+    viewer.id,
+    (tx) => tx<{ push_prefs: { orders: boolean; messages: boolean; vets: boolean; payouts: boolean } }[]>`
+    select push_prefs from public.profiles where id = ${viewer.id}`,
+  );
+  const pushPrefs = prefsRow?.push_prefs;
   const format = await getFormatter();
   const [{ set }, sessions, counties] = await Promise.all([searchParams, listMySessions(viewer), listCounties()]);
 
@@ -107,6 +116,11 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
           <PasswordForm hasPassword={viewer.hasPassword} prompt={false} />
         </section>
       ) : null}
+
+      <section className="card gap-3" id="notifications">
+        <h2 className="text-lg font-bold">{tn('title')}</h2>
+        <PushToggle prefs={pushPrefs} />
+      </section>
 
       <section className="card gap-3">
         <h2 className="text-lg font-bold">{t('devices')}</h2>

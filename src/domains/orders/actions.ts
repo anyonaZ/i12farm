@@ -7,6 +7,7 @@ import { dbMessage, withUser } from '@/lib/db';
 import { toInternational } from '@/lib/phone';
 import { refreshPayment, requestPayment, simulatePayment } from './payments';
 import type { CartLine, OrderStatus } from './types';
+import { kickPush } from '@/lib/push';
 
 type Result<T = undefined> = { ok: true; data: T } | { ok: false; error: string; detail?: string };
 
@@ -86,6 +87,7 @@ export async function payOrder(orderId: string, phone?: string): Promise<Result<
 }
 
 export async function checkPayment(orderId: string): Promise<Result<{ state: string }>> {
+  kickPush();
   const viewer = await getViewer();
   if (!viewer) return { ok: false, error: 'signedOut' };
   const state = await refreshPayment(viewer.id, orderId);
@@ -93,6 +95,7 @@ export async function checkPayment(orderId: string): Promise<Result<{ state: str
 }
 
 export async function simulate(orderId: string, outcome: 'success' | 'cancel'): Promise<Result<{ state: string }>> {
+  kickPush();
   const viewer = await getViewer();
   if (!viewer) return { ok: false, error: 'signedOut' };
   const state = await simulatePayment(viewer.id, orderId, outcome);
@@ -101,6 +104,7 @@ export async function simulate(orderId: string, outcome: 'success' | 'cancel'): 
 }
 
 export async function changeOrderStatus(orderId: string, status: OrderStatus, note?: string): Promise<Result> {
+  kickPush();
   const viewer = await getViewer();
   if (!viewer) return { ok: false, error: 'signedOut' };
   try {

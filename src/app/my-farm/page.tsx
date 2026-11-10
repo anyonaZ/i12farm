@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PushToggle } from '@/components/notify/PushToggle';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
 import { FarmCover } from '@/components/farm/FarmCover';
@@ -54,6 +55,7 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
         <LanguageSwitch />
       </header>
 
+      {rows.length ? <PushToggle compact prompt={t('notify.promptFarm')} /> : null}
       <nav className="grid grid-cols-2 gap-2 lg:grid-cols-4" aria-label={t('myFarmPlus.account')}>
         <Link
           href="/orders"

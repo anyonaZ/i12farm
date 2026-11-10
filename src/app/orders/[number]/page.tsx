@@ -96,9 +96,15 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
               <span>{t('commission', { pct: order.commission_bps / 100 })}</span>
               <span className="tabular-nums">− {kes(order.commission_kes)}</span>
             </span>
+            {Number(order.collection_fee_kes) > 0 ? (
+              <span className="flex justify-between text-soil">
+                <span>{t('collectionFee')}</span>
+                <span className="tabular-nums">− {kes(order.collection_fee_kes)}</span>
+              </span>
+            ) : null}
             <span className="flex justify-between font-bold">
               <span>{t('payout')}</span>
-              <span className="tabular-nums">{kes(order.farmer_payout_kes)}</span>
+              <span className="tabular-nums">{kes(Number(order.farmer_payout_kes) - Number(order.collection_fee_kes))}</span>
             </span>
             <span className="text-xs text-soil">{t('heldNote')}</span>
           </div>

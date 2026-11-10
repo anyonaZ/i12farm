@@ -161,6 +161,15 @@ function CreateAccount({ next }: { next: string }) {
   return (
     <form action={action} className="flex flex-col gap-3.5" onSubmit={() => track('auth.sign_in_started', { method: 'sign_up' })}>
       <input type="hidden" name="next" value={next} />
+      {/* Left empty by people; bots fill it in. */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute -left-[9999px] h-px w-px opacity-0"
+      />
       <ErrorLine state={state} />
       <div className="flex flex-col gap-1.5">
         <label htmlFor="su-name" className="text-sm font-bold">

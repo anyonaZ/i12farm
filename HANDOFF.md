@@ -44,7 +44,7 @@ recorded with time and county, because that data is the long-term asset.
 | Order upkeep | Orders left "ready" complete automatically after 3 days (setting), unpaid orders cancel after 48 hours, silent M-Pesa prompts expire after 1 hour (a late success still counts). `run_maintenance()` runs nightly and from Admin → Settings |
 | Bookings | Training and farm tours go through the same cart and M-Pesa flow, with a visit date (tomorrow to 4 months ahead) and morning/afternoon slot; the farm confirms by accepting |
 | Featured listings | Farms pay by M-Pesa to appear first on the map and in search with a Featured badge. Plans are a setting: 7 days KES 200, 30 days KES 600 (**placeholder prices**). A second plan starts when the first ends |
-| Payouts | Through Pesi in admin-approved batches (`/admin/payouts`). Each farm saves where its money goes (M-Pesa, bank, paybill, till) in My Farm, checked with Pesi. Pesi's fees: **not decided** (nothing is deducted from farmers yet). Fallback: payout CSV out, results CSV in, or record by hand |
+| Payouts | Through Pesi in admin-approved batches (`/admin/payouts`). Each farm saves where its money goes (M-Pesa, bank, paybill, till) in My Farm, checked with Pesi. **Pesi's charges are carried by farmers** (decided 10 Nov 2026): collection charge from the farmer's share, payout charge from the payout; refund transfers carried by i12farm. Amounts in Admin → Settings, 0 until Switchlink's price list arrives. Fallback: payout CSV out, results CSV in, or record by hand |
 | Dashboards | Built into Admin → Insights (no Metabase): KPIs, weekly paid value, view→contact→order funnel, pilot counties, top products, CSV exports |
 | Seed farm | Homa Organica, Benedict Kotonya, Lang'ata (Nairobi): pigs and racing pigeons, `/f/homa-organica`. Phone, prices and stock are placeholders until Benedict confirms |
 
@@ -54,6 +54,8 @@ recorded with time and county, because that data is the long-term asset.
 | Insight privacy | Partners and the public see aggregates only. Groups smaller than 3 (setting `insight_min_count`) are hidden or folded into "Other". Searches are logged without user id or IP (hashed device id), kept 180 days; the public "wanted" list shows everyday farm words only |
 | Demo mode | `npm run dev` always simulates. A production build refuses simulated payments, open callbacks and "Simulate: pay" unless `DEMO_MODE=true` is set on purpose (a banner then says nothing is real). Without Pesi keys and without demo mode, checkout says payments are not switched on yet |
 | Unanswered paid orders | The order waits on the farm's Orders badge; at 36 h it is declined and the buyer's refund is due (setting in Admin → Settings). The 6 h reminder SMS went with SMS |
+| Notifications | Free web push instead of SMS (decided 10 Nov 2026). Opt-in per device, per-topic switches, text in the person's language. Needs VAPID keys |
+| Safety | Report a farm; 3 different reporters hide an unverified farm until review (verified farms never auto-hidden); 3 new farms/day per account; 5 sign-ups/hour per network; honeypot field. All limits are settings |
 | Account deletion | Name, phone, email, password, saved farms and Google link removed; farms only that person managed are hidden; orders, payments and ledger kept without the name (tax/payment records). Blocked while orders are open, money is owed to them, or they manage unclaimed farms |
 | Privacy | Draft privacy notice and terms at `/privacy` and `/terms` (`src/content/legal.ts`), linked from sign-up. **Needs a Kenyan lawyer's review and a decision on ODPC registration** before launch. Set `NEXT_PUBLIC_CONTACT_EMAIL` |
 
@@ -69,6 +71,22 @@ Still open: commission rate, featured-listing prices, annual subscription, domai
 | 3 Reach | Built 23 Oct in simulate mode (SMS alerts, USSD menu, vet requests, partner broadcasts). **10 Nov: SMS, USSD and broadcasts removed by decision**; vet requests stay, in the app; Admin → Reach became Admin → Vet requests |
 | 3.5 Hardening | **Done (4 Nov)** after the audit: demo mode locked in production builds, Next.js / Nodemailer / MapLibre upgraded (0 advisories), security headers, backup job skips without secrets, privacy notice + terms + download my data + delete my account, unanswered paid orders reminded then declined and refunded, edit farm and products after publishing, agent farm list with search, wizard drafts, tab badges, forgiving search, branded 404, clean farm links, link previews, sitemap |
 | 4 Insight | **Built (10 Nov)**: public `/prices` (weekly county median per product, 12-week chart with range and table, change over 4 weeks, "buyers looked for and found little"), "County median" beside prices on farm pages, partner `/partner` county insights (farms by type, on sale and medians, orders and value, buyer contacts, vet requests by animal, most searched and not found; 30/90/365 days), anonymous search log. Google Maps integrated with the free map as fallback |
+
+Verified on 10 Nov 2026 (Phase 6 and charges): 136 database checks (17 new:
+push subscriptions private and moved to whoever signed in last on a shared
+phone, paid order → farm, answers → buyer, topics off send nothing, one waiting
+message notification per conversation, sender queue shape, can't report own
+farm, one report per person, 3 reporters hide an unverified farm but never a
+verified one, reports admin-only, admin restore, 3 new farms/day, 5
+sign-ups/hour/network, 6-hour nudge once; fee bands, collection charge fixed at
+payment and taken at completion, payout charge on the line and its own ledger
+memo, payout smaller than the charge refused). Push sending against a local
+HTTPS stand-in: VAPID-signed, aes128gcm, payload decrypted to the Kiswahili
+"Oda mpya #ABC123", a 410 device switched off. Browser: My Farm prompt,
+Account notifications (in this sandbox the browser can't reach Google's push
+service, so subscribing shows "Couldn't turn on notifications"), report a farm
+→ Admin → Farms shows it with the note, Pesi charges saved from Settings.
+NOT verified: a notification arriving on a real phone.
 
 Verified on 10 Nov 2026 (payout batches): 119 database checks (batches
 replace single payouts: only admins prepare, a draft reserves the money,
@@ -194,6 +212,9 @@ src/domains/                       farms, reference, identity, orders (+payments
                                    promotions, admin (+insights.ts), vets, insights (prices, demand, county)
 src/components/map/                FarmMap (picks Google / MapLibre / Leaflet), GoogleMap, RasterMap
 src/components/insight/            PriceChart (hover + table), Sparkline
+src/lib/push.ts                    web push sender (outbox → text in the person's language → devices)
+src/components/notify/PushToggle   notifications switch (Account) and prompts (My Farm, Vets)
+src/components/farm/ReportFarm     "Report this farm"; admin side in src/app/admin/ReportedFarms.tsx
 src/lib/rate-limit.ts              in-memory limits on events, contact taps, messages, uploads
 src/lib/db.ts                      Postgres pool, withUser() (RLS context), dbMessage()
 src/lib/auth/                      password (scrypt), session, viewer, accounts, google
@@ -208,7 +229,7 @@ src/lib/cart.ts                    one-farm cart in localStorage
 messages/en.json, sw.json          all UI text (keys must match in both)
 db/migrations/                     schema source of truth (platform → foundation → … → trade)
 db/seed.sql, seed_demo.sql         dev accounts + 8 test farms; 28 demo farms incl. Homa Organica
-db/tests/                          security_test.sql, trade_test.sql, phase2b_test.sql, vets_test.sql, hardening_test.sql, insight_test.sql, pesi_test.sql (+ PostGIS stand-in)
+db/tests/                          security_test.sql, trade_test.sql, phase2b_test.sql, vets_test.sql, hardening_test.sql, insight_test.sql, pesi_test.sql, safety_test.sql (+ PostGIS stand-in)
 scripts/db.mjs                     migrate / status / seed / reset
 scripts/test-db.sh                 fresh database, all migrations, seed, all test files
 .github/workflows/                 ci.yml (build + DB tests), backup.yml (rollup + order upkeep + encrypted dump)
@@ -287,10 +308,25 @@ the final domain.
 | 5a Pesi groundwork | **Done 10 Nov**: client, collections moved from Daraja, callback, payout/refund engine, payout accounts, bank list, stand-in, tests | — |
 | 5b Payouts in the app | **Done 10 Nov**: My Farm → "Where we send your money" (name checked with Pesi) and payout history; `/admin/payouts`: Pesi balance, everything due, prepare batch, review names, take lines out, cancel, approve and send, live status, "Check with Pesi"; manual and CSV kept as fallback. Still to do: statement reconciliation against Pesi's transaction history | Who carries Pesi's fees (open) |
 | 5c Pesi go-live | Test on Pesi SIT with real credentials, replace the guessed response shapes with real samples, register the callback, then production | Switchlink answers (below) |
-| 6 Keep people informed | Web push (new order, payment, message, vet request, order ready), opt-in per phone; spam protection (sign-up and listing limits per phone/IP, new-farm review queue, report a farm) | — |
+| 6 Keep people informed | **Done 10 Nov**: web push (new paid order, farm's answers, messages, vet requests and acceptance, payout sent, 6-hour nudge), Account → Notifications with topics, prompts on My Farm and Vets; report a farm + auto-hide + Admin → Farms review; new-farm and sign-up limits; honeypot. Also: Pesi charges carried by farmers (settings, order page, batch page) | VAPID keys (free) |
 | 7 Ads | Sponsored farm cards, top search spot, vet spotlight, Prices-page banner; self-serve from My Farm, paid through Pesi, admin review, "Sponsored" label, view/tap/call stats | Ad prices per placement per county |
 | 8 Library | Farming books: book pages, free preview, buy through Pesi, in-app PDF reader (PDF.js), private files with per-buyer watermark, offline reading, author payouts through Pesi | Who sells (i12farm only or approved authors), commission, tax advice on e-book sales |
 | Later | Partner CSV exports and a monthly county price summary; booking calendar; vet ratings and fees; photos in messages | — |
+
+**Ways to earn without squeezing farmers and vets (proposed 10 Nov, not decided)**
+The rule of thumb: keep basic use free for farmers and vets, keep the
+commission modest, and charge the sides that have more money (buyers,
+institutions, companies) or that choose to pay for extra.
+1. Commission (built, 10%): make it tiered and capped, e.g. lower for small farms or orders, a cap per order so a KES 85,000 heifer doesn't pay KES 8,500, a little higher for agro-dealers selling inputs.
+2. A small buyer service fee per order (like Airbnb's guest fee), so farmers keep more.
+3. Featured listings (built) and ads (step 7): paid only by those who choose.
+4. Optional Pro plan for farms, vets and agro-dealers: lower commission, more photos/video, farm analytics, priority support.
+5. Institutional insight subscriptions: county governments, NGOs, input companies, processors, banks and insurers pay for county dashboards, CSV exports and a price index feed (aggregates only).
+6. Business buyer accounts: hotels, schools, supermarkets, processors: standing orders, invoices, monthly fee.
+7. Partner referral fees: insurers, input-credit lenders, seed/feed companies pay for farmers who sign up through i12farm (only with the farmer's consent).
+8. Delivery: a margin on deliveries arranged with partner riders.
+9. Library (step 8): commission on book sales; paid courses with experts.
+10. Sponsored content: an input company sponsors the weekly price summary or a training video (clearly labelled).
 
 **Questions for Switchlink before going live**
 1. The response body of `initiateStkPush`, `FetchIPNStatus` and `Disburse/Single` (the document shows none).

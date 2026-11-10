@@ -193,3 +193,42 @@ export async function saveVetSettings(input: { vetHours: number }) {
     }),
   );
 }
+
+// ---------------------------------------------------------------------------
+// Pesi charges carried by farmers (fee rules: bands + percent)
+// ---------------------------------------------------------------------------
+
+type FeeRuleText = { bands: string; percent: string };
+
+/** "1000, 15\n5000, 25\n*, 40" + "1.5" → { bands: [{upto: 1000, fee: 15}, …, {upto: null, fee: 40}], percent: 1.5 } */
+function parseFeeRule(r: FeeRuleText): { percent: number; bands: { upto: number | null; fee: number }[] } | null {
+  const bands: { upto: number | null; fee: number }[] = [];
+  for (const line of r.bands
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)) {
+    const [upto, fee] = line.split(/[,;\s]+/).filter(Boolean);
+    const f = Number(fee);
+    const u = upto === '*' ? null : Number(upto);
+    if (!Number.isFinite(f) || f < 0 || (u !== null && !(u > 0))) return null;
+    bands.push({ upto: u, fee: f });
+  }
+  bands.sort((a, b) => (a.upto ?? Infinity) - (b.upto ?? Infinity));
+  const percent = r.percent.trim() === '' ? 0 : Number(r.percent);
+  if (!Number.isFinite(percent) || percent < 0 || percent > 10) return null;
+  return { percent, bands };
+}
+
+export async function saveFeeSettings(input: { collection: FeeRuleText; payout: Record<'M' | 'B' | 'PAYBILL' | 'TILL', FeeRuleText> }) {
+  const collection = parseFeeRule(input.collection);
+  const payout = Object.fromEntries((['M', 'B', 'PAYBILL', 'TILL'] as const).map((c) => [c, parseFeeRule(input.payout[c])]));
+  if (!collection || Object.values(payout).some((r) => !r)) {
+    return { ok: false as const, error: 'one band per line: "up to, charge" (or "*, charge"); percent 0 to 10' };
+  }
+  return run((me) =>
+    withUser(me, async (tx) => {
+      await tx`select public.admin_set_setting('pesi_collection_fee', ${tx.json(collection)})`;
+      await tx`select public.admin_set_setting('pesi_payout_fees', ${tx.json(payout as never)})`;
+    }),
+  );
+}

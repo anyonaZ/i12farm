@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PushToggle } from '@/components/notify/PushToggle';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
@@ -24,6 +25,7 @@ const STATUS_STYLE: Record<string, string> = {
 
 export default async function VetsPage() {
   const t = await getTranslations('vets');
+  const tn = await getTranslations('notify');
   const locale = (await getLocale()) as Locale;
   const format = await getFormatter();
   const viewer = await getViewer();
@@ -71,6 +73,7 @@ export default async function VetsPage() {
         </div>
 
         <div className="flex flex-col gap-5">
+          {myFarms.length ? <PushToggle compact prompt={tn('promptVet')} /> : null}
           {myFarms.length ? (
             <section className="flex flex-col gap-2.5">
               <h2 className="text-lg font-bold">{t('inbox')}</h2>

@@ -124,6 +124,7 @@ export const TERMS: Record<'en' | 'sw', Doc> = {
         body: [
           '- If a farm declines or does not answer a paid order in time, the order is declined and the buyer is refunded in full.',
           '- Once a buyer confirms receipt (or does not respond within a few days of the order being ready), the farm is paid.',
+          "- What the farm receives: the order total, less i12farm's commission (shown on every order) and the charges of Pesi Pay, our payment provider, for collecting the payment and for sending the payout. Payouts go out in batches approved by i12farm, to the M-Pesa number, bank account, paybill or till the farm chose.",
           '- Problems with an order: message the farm in the app first, then contact i12farm.',
         ],
       },
@@ -158,6 +159,7 @@ export const TERMS: Record<'en' | 'sw', Doc> = {
         body: [
           '- Shamba likikataa au lisipojibu oda iliyolipwa kwa wakati, oda hukataliwa na mnunuzi hurudishiwa pesa zote.',
           '- Mnunuzi akithibitisha amepokea (au asipojibu siku chache baada ya oda kuwa tayari), shamba hulipwa.',
+          '- Shamba hupokea: jumla ya oda, ukiondoa kamisheni ya i12farm (inaonyeshwa kwenye kila oda) na ada za Pesi Pay, mtoa huduma wetu wa malipo, za kupokea malipo na kutuma malipo ya shamba. Malipo hutumwa kwa makundi yanayoidhinishwa na i12farm, kwa nambari ya M-Pesa, akaunti ya benki, paybill au till ambayo shamba lilichagua.',
           '- Tatizo na oda: tuma ujumbe kwa shamba kwenye app kwanza, kisha wasiliana na i12farm.',
         ],
       },

@@ -139,7 +139,8 @@
       "link": "Kiungo hicho cha kuingia kimeisha muda au kimeshatumika.",
       "callback": "Kuingia hakukukamilika. Tafadhali jaribu tena.",
       "deletePhrase": "Andika neno hilo sawasawa kuthibitisha.",
-      "deleteBlocked": "Akaunti haiwezi kufutwa bado."
+      "deleteBlocked": "Akaunti haiwezi kufutwa bado.",
+      "tooManySignups": "Akaunti mpya nyingi sana kutoka mtandao huu. Jaribu tena baada ya saa moja."
     },
     "consentLinks": "Soma taarifa ya faragha na masharti."
   },
@@ -447,7 +448,8 @@
       "morning": "asubuhi",
       "afternoon": "mchana"
     },
-    "booking": "Nafasi"
+    "booking": "Nafasi",
+    "collectionFee": "Ada ya malipo ya Pesi"
   },
   "farmPage": {
     "message": "Ujumbe",
@@ -886,6 +888,117 @@
     "refused": "Pesi imekataa: {list}",
     "checked": "Yamehakikiwa {checked}; {changed} yamekamilika.",
     "manualNote": "Kulipa kwa mkono (nje ya Pesi) bado kunawezekana hapa chini; pesa iliyo kwenye kundi haiwezi kulipwa kwa mkono.",
-    "open": "Fungua malipo"
+    "open": "Fungua malipo",
+    "fee": "Ada ya Pesi",
+    "netOf": "{net} imetumwa · ada ya Pesi {fee}",
+    "feesTotal": "Ada za Pesi zinazobebwa na mashamba: {fees}",
+    "feesTitle": "Ada za Pesi (zinabebwa na wakulima)",
+    "feesIntro": "Hutolewa kwenye pesa za mkulima: ada ya kupokea malipo kwenye kila oda iliyolipwa, na ada ya kutuma kwenye kila malipo. Ada za kurudisha pesa zinabebwa na i12farm. Mstari mmoja kwa kila kiwango: \"hadi kiasi, ada\" (tumia * kwa \"kiasi chochote\"), na asilimia ukipenda. Acha tupu kwa hakuna ada hadi Switchlink ithibitishe bei zake.",
+    "feesCollection": "Kupokea malipo ya mnunuzi",
+    "feesPayout": "Kutuma malipo kwa {channel}",
+    "percent": "pamoja na % ya kiasi",
+    "feesSaved": "Ada zimehifadhiwa.",
+    "feesExample": "Hakuna ada. Mfano:\n1000, 15\n*, 30",
+    "feesSave": "Hifadhi ada"
+  },
+  "push": {
+    "orderPaid": {
+      "title": "Oda mpya #{number}",
+      "body": "Imelipwa KES {total}. Ikubali au uikatae kwenye app."
+    },
+    "orderWaiting": {
+      "title": "Oda #{number} inasubiri",
+      "body": "Mnunuzi amelipa. Kubali au kataa mapema, la sivyo itakataliwa yenyewe."
+    },
+    "orderAccepted": {
+      "title": "{farm} imekubali oda yako",
+      "body": "Oda #{number} inaandaliwa."
+    },
+    "orderReady": {
+      "title": "Oda yako iko tayari",
+      "body": "Oda #{number} kutoka {farm} iko tayari."
+    },
+    "orderDeclined": {
+      "title": "Oda #{number} imekataliwa",
+      "body": "{farm} haikuweza kuichukua. Utarudishiwa pesa zako."
+    },
+    "messageToFarm": {
+      "title": "Ujumbe mpya kwa {farm}",
+      "body": "{text}"
+    },
+    "messageToBuyer": {
+      "title": "{farm} imejibu",
+      "body": "{text}"
+    },
+    "vetRequest": {
+      "title": "Mkulima anahitaji daktari",
+      "body": "{animal}{near}{today}"
+    },
+    "vetAccepted": {
+      "title": "Daktari anakuja",
+      "body": "{vet} amechukua ombi lako. Fungua app upate nambari yake."
+    },
+    "payoutSent": {
+      "title": "Malipo yametumwa",
+      "body": "KES {amount} iko njiani kwako."
+    },
+    "test": {
+      "title": "Arifa zimewashwa",
+      "body": "Utapata habari za i12farm hapa."
+    },
+    "vetNear": {
+      "title": "",
+      "body": " karibu na {place}"
+    },
+    "vetToday": {
+      "title": "",
+      "body": " · leo"
+    }
+  },
+  "notify": {
+    "title": "Arifa",
+    "intro": "Pata arifa kwenye simu hii kuhusu oda mpya, ujumbe, maombi ya daktari na malipo, hata app ikiwa imefungwa. Bure.",
+    "turnOn": "Washa arifa kwenye simu hii",
+    "turnOff": "Zima kwenye simu hii",
+    "on": "Zimewashwa kwenye simu hii",
+    "off": "Zimezimwa kwenye simu hii",
+    "blocked": "Arifa za i12farm zimezuiwa kwenye kivinjari hiki. Ziruhusu kwenye mipangilio ya kivinjari, kisha jaribu tena.",
+    "unsupported": "Kivinjari hiki hakiwezi kuonyesha arifa. Kwenye Android tumia Chrome; kwenye iPhone ongeza i12farm kwenye skrini ya mwanzo kwanza.",
+    "notConfigured": "Arifa bado hazijawashwa kwa tovuti hii.",
+    "topics": "Niambie kuhusu",
+    "topic_orders": "Oda",
+    "topic_messages": "Ujumbe",
+    "topic_vets": "Maombi ya daktari",
+    "topic_payouts": "Malipo",
+    "test": "Tuma jaribio",
+    "testSent": "Jaribio limetumwa. Litafika baada ya sekunde chache.",
+    "saved": "Imehifadhiwa.",
+    "error": "Haikuhifadhiwa: {reason}",
+    "promptFarm": "Pata habari za oda mpya papo hapo",
+    "promptVet": "Pata habari za maombi ya daktari katika kaunti yako papo hapo",
+    "subscribeFailed": "Imeshindwa kuwasha arifa kwenye simu hii. Angalia mtandao kisha jaribu tena.",
+    "turnOnShort": "Washa"
+  },
+  "report": {
+    "title": "Ripoti shamba hili",
+    "intro": "Tuambie kuna shida gani. i12farm hukagua kila ripoti; shamba lililoripotiwa na watu kadhaa hufichwa hadi tukague.",
+    "reason_fake": "Shamba hili halipo",
+    "reason_scam": "Waliomba pesa nje ya app / utapeli",
+    "reason_wrong_info": "Bidhaa, bei au mahali si sahihi",
+    "reason_offensive": "Picha au maandishi yasiyofaa",
+    "reason_other": "Kitu kingine",
+    "note": "Nini kilitokea? (si lazima)",
+    "send": "Tuma ripoti",
+    "sent": "Asante. Tutaiangalia.",
+    "already": "Umeshaliripoti shamba hili.",
+    "signIn": "Ingia ili kuripoti shamba.",
+    "cancel": "Ghairi",
+    "adminTitle": "Mashamba yaliyoripotiwa",
+    "adminNone": "Hakuna ripoti zilizo wazi.",
+    "adminHidden": "Limefichwa hadi likaguliwe",
+    "reports": "{n, plural, one {Ripoti 1} other {Ripoti #}}",
+    "dismiss": "Puuza (liache wazi)",
+    "suspend": "Liache limefichwa",
+    "restore": "Lirudishe"
   }
 }

@@ -5,6 +5,7 @@ import { getViewer } from '@/lib/auth/viewer';
 import { recordEvent } from '@/lib/analytics/server';
 import { dbMessage, withUser } from '@/lib/db';
 import { toInternational } from '@/lib/phone';
+import { kickPush } from '@/lib/push';
 
 type Result<T = undefined> = { ok: true; data: T } | { ok: false; error: string; detail?: string };
 
@@ -18,6 +19,7 @@ export interface VetRequestInput {
 }
 
 export async function requestVet(input: VetRequestInput): Promise<Result<{ number: string; vets: number }>> {
+  kickPush();
   const viewer = await getViewer();
   if (!viewer) return { ok: false, error: 'signedOut' };
   const phone = toInternational(input.phone) ?? viewer.phone ?? toInternational(viewer.contactPhone);
@@ -51,6 +53,7 @@ export async function requestVet(input: VetRequestInput): Promise<Result<{ numbe
 }
 
 export async function acceptVetRequest(requestId: string, vetFarmId: string): Promise<Result> {
+  kickPush();
   const viewer = await getViewer();
   if (!viewer) return { ok: false, error: 'signedOut' };
   try {

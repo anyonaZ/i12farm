@@ -9,6 +9,7 @@ import { ContactBar } from '@/components/farm/ContactBar';
 import { SaveButton } from '@/components/farm/SaveButton';
 import { FarmMiniMap } from '@/components/farm/FarmMiniMap';
 import { FarmViewTracker } from '@/components/farm/FarmViewTracker';
+import { ReportFarm } from '@/components/farm/ReportFarm';
 import { CartBar } from '@/components/cart/CartBar';
 import { CartStepper } from '@/components/cart/CartStepper';
 import { getFarmBySlug, isFarmSaved, listFarmReviews } from '@/domains/farms/queries';
@@ -274,6 +275,8 @@ export default async function FarmPage({ params }: Params) {
                   : t('farm.approxNote')}
             </p>
           </section>
+
+          {!mine ? <ReportFarm farmId={farm.id} signedIn={Boolean(viewer)} back={`/f/${farm.slug}`} /> : null}
         </div>
 
         {/* Desktop side panel: order, message, contact. Phones use the bottom bars instead. */}

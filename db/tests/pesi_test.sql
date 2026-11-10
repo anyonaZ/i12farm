@@ -214,6 +214,98 @@ do $$ begin
   raise notice 'ok  farms see their own payouts; buyers see none; batches are admin-only';
 end $$;
 
+-- Pesi charges carried by farmers
+reset role;
+select set_config('app.user_id', '', false);
+do $$ begin
+  if public.fee_for('{"percent": 1, "bands": [{"upto": 100, "fee": 0}, {"upto": 1000, "fee": 15}, {"upto": null, "fee": 40}]}', 500) <> 20
+     or public.fee_for('{"bands": [{"upto": 100, "fee": 0}, {"upto": 1000, "fee": 15}, {"upto": null, "fee": 40}]}', 50000) <> 40
+     or public.fee_for('{}', 500) <> 0 then
+    raise exception 'FAIL: fee_for';
+  end if;
+  raise notice 'ok  fee rules: bands plus percent; no rule means no charge';
+end $$;
+
+set role authenticated;
+select set_config('app.user_id', :'admin', false);
+do $$ begin
+  begin
+    perform public.admin_set_setting('pesi_collection_fee', '{"percent": 50}');
+    raise exception 'FAIL: silly fee accepted';
+  exception when invalid_parameter_value then null;
+  end;
+  perform public.admin_set_setting('pesi_collection_fee', '{"percent": 1, "bands": []}');
+  perform public.admin_set_setting('pesi_payout_fees', '{"M": {"bands": [{"upto": null, "fee": 30}]}, "B": {"bands": []}, "PAYBILL": {"bands": []}, "TILL": {"bands": []}}');
+end $$;
+
+reset role;
+select set_config('app.user_id', '', false);
+select id as milk from public.listings where farm_id = :'farm1' and product_slug = 'fresh-milk' \gset
+set role authenticated;
+select set_config('app.user_id', :'buyer', false);
+select id as fo, subtotal_kes::integer as famt from public.place_order(jsonb_build_object('farm_id', :'farm1',
+  'items', jsonb_build_array(jsonb_build_object('listing_id', :'milk', 'quantity', 20)), 'buyer_phone', '0712345678')) \gset
+reset role;
+select set_config('app.user_id', '', false);
+select public.record_payment_request(:'fo', '254712345678', :famt, 'pesi', 'I12P' || repeat('f', 24), :'buyer');
+select public.record_payment_result('I12P' || repeat('f', 24), 0, 'ok', 'TRACEFEE1', :famt, '{}');
+select set_config('test.fo', :'fo', false);
+do $$
+declare
+  o public.orders;
+begin
+  select * into o from public.orders where id = current_setting('test.fo')::uuid;
+  if o.collection_fee_kes <> round(o.subtotal_kes / 100, 2) then
+    raise exception 'FAIL: collection fee not fixed at payment (%)', o.collection_fee_kes;
+  end if;
+  perform public.apply_order_status(o.id, 'accepted', 't', null);
+  perform public.apply_order_status(o.id, 'ready', 't', null);
+  perform public.apply_order_status(o.id, 'completed', 't', null);
+  if (select amount_kes from public.ledger_entries where order_id = o.id and kind = 'payout_due') <> o.farmer_payout_kes - o.collection_fee_kes
+     or (select amount_kes from public.ledger_entries where order_id = o.id and kind = 'collection_fee') <> o.collection_fee_kes then
+    raise exception 'FAIL: collection fee not taken from the farmer''s share';
+  end if;
+  raise notice 'ok  Pesi''s collection charge is fixed when paid and taken from the farmer''s share';
+end $$;
+
+set role authenticated;
+select set_config('app.user_id', :'admin', false);
+select (select due_kes from public.admin_payout_candidates() x where x.farm_id = :'farm1' and x.kind = 'payout') as fdue \gset
+select id as batch3 from public.admin_create_payout_batch(jsonb_build_array(jsonb_build_object(
+  'kind', 'payout', 'farm_id', :'farm1', 'amount', :fdue, 'channel', 'M', 'reference', 'I12D' || repeat('5', 24)))) \gset
+do $$ begin
+  if (select fee_kes from public.disbursements where partner_transaction_id = 'I12D' || repeat('5', 24)) <> 30 then
+    raise exception 'FAIL: payout fee not on the line';
+  end if;
+end $$;
+select count(*) from public.admin_approve_payout_batch(:'batch3');
+reset role;
+select set_config('app.user_id', '', false);
+select public.record_disbursement_result('I12D' || repeat('5', 24), 'completed', 'AC100', 'ok', 'trace-fee', '{}');
+do $$ begin
+  if (select amount_kes from public.ledger_entries where kind = 'payout_fee' and reference = 'Pesi trace-fee') <> 30 then
+    raise exception 'FAIL: payout fee memo missing';
+  end if;
+  if (select coalesce(sum(amount_kes) filter (where kind = 'payout_due'), 0) - coalesce(sum(amount_kes) filter (where kind = 'payout_sent'), 0)
+        from public.ledger_entries where farm_id = '10000000-0000-4000-8000-000000000001') <> 0 then
+    raise exception 'FAIL: farm still shows money due after a full payout with fee';
+  end if;
+  raise notice 'ok  Pesi''s payout charge comes out of the payout and is shown as its own line';
+end $$;
+
+set role authenticated;
+select set_config('app.user_id', :'admin', false);
+do $$ begin
+  perform public.admin_set_setting('pesi_payout_fees', '{"M": {"bands": [{"upto": null, "fee": 30}]}}');
+  perform public.admin_create_payout_batch(jsonb_build_array(jsonb_build_object(
+    'kind', 'payout', 'farm_id', '10000000-0000-4000-8000-000000000001', 'amount', 20, 'channel', 'M', 'reference', 'I12D' || repeat('6', 24))));
+  raise exception 'FAIL: payout smaller than the fee accepted';
+exception when invalid_parameter_value then
+  raise notice 'ok  a payout smaller than Pesi''s charge waits for more';
+end $$;
+select public.admin_set_setting('pesi_collection_fee', '{"percent": 0, "bands": []}');
+select public.admin_set_setting('pesi_payout_fees', '{"M": {"percent": 0, "bands": []}, "B": {"percent": 0, "bands": []}, "PAYBILL": {"percent": 0, "bands": []}, "TILL": {"percent": 0, "bands": []}}');
+
 reset role;
 select set_config('app.user_id', '', false);
 \echo 'All Pesi tests passed.'

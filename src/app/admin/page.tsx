@@ -12,12 +12,14 @@ import {
   FarmVerifyButton,
   PayoutForm,
   PayoutImport,
+  PesiFeesForm,
   RefundForm,
   TradeSettingsForm,
   UpkeepButton,
   UserRow,
 } from './AdminControls';
 import { InsightsView } from './Insights';
+import { ReportedFarms } from './ReportedFarms';
 import { VetRequestsView } from './VetRequests';
 
 export const metadata = { title: 'Admin', robots: { index: false } };
@@ -107,6 +109,7 @@ export default async function AdminPage({
 
       {tab === 'farms' ? (
         <>
+          <ReportedFarms viewer={viewer} />
           <Link
             href={all ? '/admin?tab=farms' : '/admin?tab=farms&all=1'}
             className="inline-flex min-h-11 items-center self-start text-sm font-bold text-sprout-deep"
@@ -222,6 +225,9 @@ export default async function AdminPage({
                 .map((p) => `${p.days}, ${p.price}`)
                 .join('\n')}
             />
+          </section>
+          <section className="card gap-3">
+            <PesiFeesForm collection={settings.pesi_collection_fee as never} payout={settings.pesi_payout_fees as never} />
           </section>
           <section className="card gap-3">
             <UpkeepButton />

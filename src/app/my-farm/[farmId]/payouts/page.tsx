@@ -77,7 +77,14 @@ export default async function FarmPayoutsPage({ params }: { params: Promise<{ fa
               <li key={p.id} className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-3.5">
                 <span className="text-sm text-soil">{when(p.completed_at ?? p.requested_at)}</span>
                 <span className="flex items-center gap-2">
-                  <b className="tabular-nums">{kes(p.amount_kes)}</b>
+                  <span className="text-right">
+                    <b className="block tabular-nums">{kes(p.amount_kes - p.fee_kes)}</b>
+                    {p.fee_kes > 0 ? (
+                      <span className="block text-xs text-soil">
+                        {t('payouts.fee')} {kes(p.fee_kes)}
+                      </span>
+                    ) : null}
+                  </span>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${STATUS_STYLE[p.status] ?? 'bg-line'}`}>
                     {t(`payouts.status_${p.status}` as never)}
                   </span>

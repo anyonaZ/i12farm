@@ -103,6 +103,7 @@ export interface FarmPayout {
   id: string;
   kind: 'payout' | 'refund';
   amount_kes: number;
+  fee_kes: number;
   status: string;
   status_description: string | null;
   requested_at: string;
@@ -113,7 +114,7 @@ export async function farmPayouts(viewer: Viewer, farmId: string): Promise<FarmP
   return withUser(
     viewer.id,
     (tx) => tx<FarmPayout[]>`
-    select id, kind, amount_kes::float8 as amount_kes, status, status_description,
+    select id, kind, amount_kes::float8 as amount_kes, fee_kes::float8 as fee_kes, status, status_description,
            requested_at::text as requested_at, completed_at::text as completed_at
     from public.disbursements
     where farm_id = ${farmId} and kind = 'payout' and status <> 'cancelled'
@@ -228,8 +229,8 @@ export async function prepareBatch(
 export async function approveAndSend(admin: Viewer, batchId: string): Promise<{ sent: number; refused: Skipped[] }> {
   const lines = await withUser(
     admin.id,
-    (tx) => tx<{ partner_transaction_id: string; kind: string; amount_kes: string; receiver: Disbursement }[]>`
-    select partner_transaction_id, kind, amount_kes, receiver from public.admin_approve_payout_batch(${batchId})`,
+    (tx) => tx<{ partner_transaction_id: string; kind: string; amount_kes: string; fee_kes: string; receiver: Disbursement }[]>`
+    select partner_transaction_id, kind, amount_kes, fee_kes, receiver from public.admin_approve_payout_batch(${batchId})`,
   );
   const [batch] = await withUser(
     admin.id,
@@ -242,7 +243,8 @@ export async function approveAndSend(admin: Viewer, batchId: string): Promise<{ 
     try {
       await disburse({
         ...line.receiver,
-        amount: Number(line.amount_kes),
+        // Farmers carry Pesi's charge: Pesi is sent the amount less the fee.
+        amount: Number(line.amount_kes) - Number(line.fee_kes),
         partnerTransactionId: ref,
         purpose: line.kind === 'payout' ? 'i12farm sales payout' : 'i12farm refund',
         remarks: `i12farm ${batch?.number ?? ''} ${line.kind}`,
@@ -338,6 +340,7 @@ export interface BatchSummary {
   approved_by_name: string | null;
   lines: number;
   total_kes: number;
+  fees_kes: number;
   completed_kes: number;
   failed: number;
   in_flight: number;
@@ -351,6 +354,7 @@ export async function listBatches(admin: Viewer): Promise<BatchSummary[]> {
            b.approved_at::text as approved_at, pa.full_name as approved_by_name,
            count(d.id) filter (where d.status <> 'cancelled')::int as lines,
            coalesce(sum(d.amount_kes) filter (where d.status <> 'cancelled'), 0)::float8 as total_kes,
+           coalesce(sum(d.fee_kes) filter (where d.status <> 'cancelled'), 0)::float8 as fees_kes,
            coalesce(sum(d.amount_kes) filter (where d.status = 'completed'), 0)::float8 as completed_kes,
            count(d.id) filter (where d.status = 'failed')::int as failed,
            count(d.id) filter (where d.status in ('requested', 'processing'))::int as in_flight
@@ -369,6 +373,7 @@ export interface BatchLine {
   farm_name: string;
   order_number: string | null;
   amount_kes: number;
+  fee_kes: number;
   channel: Channel;
   receiver: Disbursement;
   validated_name: string | null;
@@ -387,7 +392,7 @@ export async function getBatch(admin: Viewer, id: string): Promise<{ batch: Batc
   const lines = await withUser(
     admin.id,
     (tx) => tx<BatchLine[]>`
-    select d.id, d.kind, f.name as farm_name, o.number as order_number, d.amount_kes::float8 as amount_kes, d.channel, d.receiver,
+    select d.id, d.kind, f.name as farm_name, o.number as order_number, d.amount_kes::float8 as amount_kes, d.fee_kes::float8 as fee_kes, d.channel, d.receiver,
            d.validated_name, a.registered_name as saved_name, d.status, d.status_description, d.trace_id,
            d.requested_at::text as requested_at, d.completed_at::text as completed_at
     from public.disbursements d

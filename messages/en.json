@@ -139,7 +139,8 @@
       "link": "That sign-in link has expired or was already used.",
       "callback": "Sign-in didn't finish. Please try again.",
       "deletePhrase": "Type the word exactly to confirm.",
-      "deleteBlocked": "The account can't be deleted yet."
+      "deleteBlocked": "The account can't be deleted yet.",
+      "tooManySignups": "Too many new accounts from this network. Try again in an hour."
     },
     "consentLinks": "Read the privacy notice and terms."
   },
@@ -447,7 +448,8 @@
       "morning": "morning",
       "afternoon": "afternoon"
     },
-    "booking": "Booking"
+    "booking": "Booking",
+    "collectionFee": "Pesi payment charge"
   },
   "farmPage": {
     "message": "Message",
@@ -886,6 +888,117 @@
     "refused": "Pesi refused: {list}",
     "checked": "Checked {checked}; {changed} finished.",
     "manualNote": "Paying by hand (outside Pesi) is still possible below; money in a batch can't be paid by hand.",
-    "open": "Open payouts"
+    "open": "Open payouts",
+    "fee": "Pesi charge",
+    "netOf": "{net} sent · Pesi charge {fee}",
+    "feesTotal": "Pesi charges carried by farms: {fees}",
+    "feesTitle": "Pesi charges (carried by farmers)",
+    "feesIntro": "Taken from the farmer's money: the collection charge from each paid order, the payout charge from each payout. Refund charges are carried by i12farm. One line per band: \"up to amount, charge\" (use * for \"any amount\"), plus an optional percent. Leave empty for no charge until Switchlink confirms its prices.",
+    "feesCollection": "Collecting a buyer's payment",
+    "feesPayout": "Sending a payout to {channel}",
+    "percent": "plus % of the amount",
+    "feesSaved": "Charges saved.",
+    "feesExample": "No charge. Example:\n1000, 15\n*, 30",
+    "feesSave": "Save charges"
+  },
+  "push": {
+    "orderPaid": {
+      "title": "New order #{number}",
+      "body": "Paid KES {total}. Accept or decline it in the app."
+    },
+    "orderWaiting": {
+      "title": "Order #{number} is waiting",
+      "body": "The buyer has paid. Accept or decline soon, or it is declined automatically."
+    },
+    "orderAccepted": {
+      "title": "{farm} accepted your order",
+      "body": "Order #{number} is being prepared."
+    },
+    "orderReady": {
+      "title": "Your order is ready",
+      "body": "Order #{number} from {farm} is ready."
+    },
+    "orderDeclined": {
+      "title": "Order #{number} was declined",
+      "body": "{farm} could not take it. Your money will be refunded."
+    },
+    "messageToFarm": {
+      "title": "New message for {farm}",
+      "body": "{text}"
+    },
+    "messageToBuyer": {
+      "title": "{farm} replied",
+      "body": "{text}"
+    },
+    "vetRequest": {
+      "title": "A farmer needs a vet",
+      "body": "{animal}{near}{today}"
+    },
+    "vetAccepted": {
+      "title": "A vet is coming",
+      "body": "{vet} took your request. Open the app for their number."
+    },
+    "payoutSent": {
+      "title": "Payout sent",
+      "body": "KES {amount} is on its way to you."
+    },
+    "test": {
+      "title": "Notifications are on",
+      "body": "You will hear from i12farm here."
+    },
+    "vetNear": {
+      "title": "",
+      "body": " near {place}"
+    },
+    "vetToday": {
+      "title": "",
+      "body": " · today"
+    }
+  },
+  "notify": {
+    "title": "Notifications",
+    "intro": "Get a notification on this phone for new orders, messages, vet requests and payouts, even when the app is closed. Free.",
+    "turnOn": "Turn on notifications on this phone",
+    "turnOff": "Turn off on this phone",
+    "on": "On for this phone",
+    "off": "Off for this phone",
+    "blocked": "Notifications are blocked for i12farm in this browser. Allow them in the browser settings, then try again.",
+    "unsupported": "This browser can't show notifications. On Android use Chrome; on iPhone add i12farm to the home screen first.",
+    "notConfigured": "Notifications are not switched on for this site yet.",
+    "topics": "Tell me about",
+    "topic_orders": "Orders",
+    "topic_messages": "Messages",
+    "topic_vets": "Vet requests",
+    "topic_payouts": "Payouts",
+    "test": "Send a test",
+    "testSent": "Test sent. It should arrive in a few seconds.",
+    "saved": "Saved.",
+    "error": "Could not save: {reason}",
+    "promptFarm": "Hear about new orders straight away",
+    "promptVet": "Hear about vet requests in your county straight away",
+    "subscribeFailed": "Couldn't turn on notifications on this phone. Check the internet connection and try again.",
+    "turnOnShort": "Turn on"
+  },
+  "report": {
+    "title": "Report this farm",
+    "intro": "Tell us what is wrong. i12farm checks every report; a farm reported by several people is hidden until we look.",
+    "reason_fake": "This farm doesn't exist",
+    "reason_scam": "Asked for money outside the app / scam",
+    "reason_wrong_info": "Wrong products, prices or place",
+    "reason_offensive": "Offensive photos or text",
+    "reason_other": "Something else",
+    "note": "What happened? (optional)",
+    "send": "Send report",
+    "sent": "Thank you. We will look at it.",
+    "already": "You have already reported this farm.",
+    "signIn": "Sign in to report a farm.",
+    "cancel": "Cancel",
+    "adminTitle": "Reported farms",
+    "adminNone": "No open reports.",
+    "adminHidden": "Hidden until reviewed",
+    "reports": "{n, plural, one {1 report} other {# reports}}",
+    "dismiss": "Dismiss (keep it public)",
+    "suspend": "Keep it hidden",
+    "restore": "Restore it"
   }
 }

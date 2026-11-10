@@ -34,6 +34,8 @@ export interface OrderDetail extends OrderSummary {
   commission_bps: number;
   commission_kes: number;
   farmer_payout_kes: number;
+  /** Pesi's charge for collecting the payment, carried by the farm (0 until paid). */
+  collection_fee_kes: number;
   paid_at: string | null;
   completed_at: string | null;
   i_am_buyer: boolean;

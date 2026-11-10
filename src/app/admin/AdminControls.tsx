@@ -10,6 +10,7 @@ import {
   recordPayout,
   recordRefund,
   runUpkeep,
+  saveFeeSettings,
   saveTradeSettings,
   saveVetSettings,
   setCommission,
@@ -447,6 +448,70 @@ export function VetSettingsForm({ vetHours }: { vetHours: number }) {
         {t('save')}
       </button>
       {message ? <p className="text-xs font-semibold text-soil">{message}</p> : null}
+    </div>
+  );
+}
+
+type FeeRule = { percent?: number; bands?: { upto: number | null; fee: number }[] };
+const ruleText = (r: FeeRule | undefined) => ({
+  bands: (r?.bands ?? []).map((b) => `${b.upto ?? '*'}, ${b.fee}`).join('\n'),
+  percent: r?.percent ? String(r.percent) : '',
+});
+
+/** Pesi charges carried by farmers: collection charge per paid order, payout charge per channel. */
+export function PesiFeesForm({ collection, payout }: { collection: FeeRule | undefined; payout: Record<string, FeeRule> | undefined }) {
+  const t = useTranslations('payouts');
+  const channels = ['M', 'B', 'PAYBILL', 'TILL'] as const;
+  const [rules, setRules] = useState(
+    () =>
+      ({
+        collection: ruleText(collection),
+        ...Object.fromEntries(channels.map((c) => [c, ruleText(payout?.[c])])),
+      }) as Record<'collection' | (typeof channels)[number], { bands: string; percent: string }>,
+  );
+  const { pending, message, run } = useRun();
+  const set = (k: keyof typeof rules, field: 'bands' | 'percent', v: string) => setRules((r) => ({ ...r, [k]: { ...r[k], [field]: v } }));
+  const block = (k: keyof typeof rules, label: string) => (
+    <fieldset key={k} className="flex flex-col gap-1.5 rounded-xl border border-line p-3">
+      <legend className="px-1 text-sm font-bold">{label}</legend>
+      <textarea
+        rows={3}
+        value={rules[k].bands}
+        placeholder={t('feesExample')}
+        onChange={(e) => set(k, 'bands', e.target.value)}
+        className="input min-h-20 py-2 font-mono text-sm"
+        aria-label={label}
+      />
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          inputMode="decimal"
+          value={rules[k].percent}
+          onChange={(e) => set(k, 'percent', e.target.value.replace(/[^\d.]/g, ''))}
+          className="input w-20 tabular-nums"
+        />
+        {t('percent')}
+      </label>
+    </fieldset>
+  );
+  return (
+    <div className="flex flex-col gap-2.5">
+      <h2 className="text-lg font-bold">{t('feesTitle')}</h2>
+      <p className="text-sm text-soil">{t('feesIntro')}</p>
+      {block('collection', t('feesCollection'))}
+      <div className="grid gap-2.5 sm:grid-cols-2">{channels.map((c) => block(c, t('feesPayout', { channel: t(`channel${c}`) })))}</div>
+      <button
+        type="button"
+        className="btn-primary"
+        disabled={pending}
+        onClick={() =>
+          run(() =>
+            saveFeeSettings({ collection: rules.collection, payout: { M: rules.M, B: rules.B, PAYBILL: rules.PAYBILL, TILL: rules.TILL } }),
+          )
+        }
+      >
+        {t('feesSave')}
+      </button>
+      {message ? <p className="text-sm font-semibold">{message}</p> : null}
     </div>
   );
 }

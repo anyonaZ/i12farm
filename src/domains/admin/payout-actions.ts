@@ -13,6 +13,7 @@ import {
   type PayoutAccountInput,
   type Skipped,
 } from './disbursements';
+import { kickPush } from '@/lib/push';
 
 type Result<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -43,6 +44,7 @@ export async function prepareBatchAction(
 }
 
 export async function approveBatchAction(batchId: string): Promise<Result<{ sent: number; refused: Skipped[] }>> {
+  kickPush();
   const viewer = await admin();
   if (!viewer) return { ok: false, error: 'Admins only' };
   try {
@@ -79,6 +81,7 @@ export async function cancelBatchAction(batchId: string): Promise<Result> {
 }
 
 export async function checkBatchAction(batchId: string): Promise<Result<{ checked: number; changed: number }>> {
+  kickPush();
   const viewer = await admin();
   if (!viewer) return { ok: false, error: 'Admins only' };
   try {

@@ -6,6 +6,7 @@ import { recordEvent } from '@/lib/analytics/server';
 import { dbMessage, withUser } from '@/lib/db';
 import { allow } from '@/lib/rate-limit';
 import { messagesAfter, type MessageRow } from './queries';
+import { kickPush } from '@/lib/push';
 
 type Result<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -22,6 +23,7 @@ export async function openConversation(farmId: string, back: string): Promise<vo
 }
 
 export async function sendMessage(conversationId: string, body: string, afterId: number): Promise<Result<MessageRow[]>> {
+  kickPush();
   const viewer = await getViewer();
   if (!viewer) return { ok: false, error: 'signedOut' };
   if (!allow(`msg:${viewer.id}`, 20, 60_000)) return { ok: false, error: 'Too many messages. Wait a minute.' };
