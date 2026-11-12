@@ -329,3 +329,14 @@ begin
   where f.status = 'published';
 end;
 $$;
+
+-- Demo history is old news: mark every demo conversation as read by its
+-- buyer and by the farm's owner and manager, so badges start at zero.
+insert into public.conversation_reads (conversation_id, user_id, last_read_message_id)
+select distinct c.id, u.uid, (select max(m.id) from public.messages m where m.conversation_id = c.id)
+from public.conversations c
+join public.farms f on f.id = c.farm_id
+cross join lateral (values (c.buyer_id), (f.owner_id), (f.managed_by)) u(uid)
+where u.uid is not null and exists (select 1 from public.messages m where m.conversation_id = c.id)
+on conflict (conversation_id, user_id) do update
+  set last_read_message_id = greatest(public.conversation_reads.last_read_message_id, excluded.last_read_message_id);

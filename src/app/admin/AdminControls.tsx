@@ -83,7 +83,7 @@ export function UserRow({
           return (
             <label
               key={r}
-              className={`chip min-h-9 cursor-pointer px-3 text-xs font-bold ${on ? 'border-forest bg-forest text-white' : ''}`}
+              className={`chip min-h-11 cursor-pointer px-3.5 text-sm font-bold ${on ? 'border-forest bg-forest text-white' : ''}`}
             >
               <input
                 type="checkbox"
@@ -102,8 +102,12 @@ export function UserRow({
           <button
             type="button"
             disabled={pending}
-            className="btn-primary min-h-10 w-auto px-4 text-sm"
-            onClick={() => run(() => setRoles(user.id, roles))}
+            className="btn-primary min-h-11 w-auto px-4 text-sm"
+            onClick={() => {
+              const name = user.full_name || user.email || user.phoneDisplay || '';
+              if (roles.includes('admin') && !user.roles.includes('admin') && !window.confirm(t('confirmAdmin', { name }))) return;
+              run(() => setRoles(user.id, roles));
+            }}
           >
             {t('saveRoles')}
           </button>
@@ -111,7 +115,7 @@ export function UserRow({
         <button
           type="button"
           disabled={pending}
-          className="btn-secondary min-h-10 w-auto px-4 text-sm"
+          className="btn-secondary min-h-11 w-auto px-4 text-sm"
           onClick={() =>
             run(async () => {
               const r = await issueSignInLink(user.id);
@@ -127,8 +131,12 @@ export function UserRow({
           <button
             type="button"
             disabled={pending}
-            className="btn-secondary min-h-10 w-auto px-4 text-sm"
-            onClick={() => run(() => setUserStatus(user.id, user.status === 'active' ? 'suspended' : 'active'))}
+            className="btn-secondary min-h-11 w-auto px-4 text-sm"
+            onClick={() => {
+              const name = user.full_name || user.email || user.phoneDisplay || '';
+              if (user.status === 'active' && !window.confirm(t('confirmSuspend', { name }))) return;
+              run(() => setUserStatus(user.id, user.status === 'active' ? 'suspended' : 'active'));
+            }}
           >
             {user.status === 'active' ? t('suspend') : t('activate')}
           </button>
@@ -149,15 +157,18 @@ export function UserRow({
   );
 }
 
-export function FarmVerifyButton({ farmId, verified }: { farmId: string; verified: boolean }) {
+export function FarmVerifyButton({ farmId, farmName, verified }: { farmId: string; farmName: string; verified: boolean }) {
   const t = useTranslations('admin');
   const { pending, run } = useRun();
   return (
     <button
       type="button"
       disabled={pending}
-      className={`${verified ? 'btn-secondary' : 'btn-primary'} min-h-10 w-auto shrink-0 px-3.5 text-sm`}
-      onClick={() => run(() => verifyFarm(farmId, !verified))}
+      className={`${verified ? 'btn-secondary' : 'btn-primary'} min-h-11 w-auto shrink-0 px-3.5 text-sm`}
+      onClick={() => {
+        if (!window.confirm(t(verified ? 'confirmUnverify' : 'confirmVerify', { farm: farmName }))) return;
+        run(() => verifyFarm(farmId, !verified));
+      }}
     >
       {verified ? t('unverify') : t('verify')}
     </button>
@@ -177,19 +188,19 @@ export function PayoutForm({ farmId, due }: { farmId: string; due: number }) {
           inputMode="numeric"
           value={amount}
           onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ''))}
-          className="input min-h-10 tabular-nums"
+          className="input min-h-11 tabular-nums"
         />
         <input
           aria-label={t('reference')}
           placeholder={t('reference')}
           value={ref}
           onChange={(e) => setRef(e.target.value.toUpperCase())}
-          className="input min-h-10 font-mono"
+          className="input min-h-11 font-mono"
         />
         <button
           type="button"
           disabled={pending || !ref}
-          className="btn-primary col-span-2 min-h-10 text-sm"
+          className="btn-primary col-span-2 min-h-11 text-sm"
           onClick={() => run(() => recordPayout(farmId, Number(amount), ref))}
         >
           {t('recordPayout')}
@@ -212,12 +223,12 @@ export function RefundForm({ orderId }: { orderId: string }) {
           placeholder={t('reference')}
           value={ref}
           onChange={(e) => setRef(e.target.value.toUpperCase())}
-          className="input min-h-10 font-mono"
+          className="input min-h-11 font-mono"
         />
         <button
           type="button"
           disabled={pending || !ref}
-          className="btn-primary min-h-10 w-auto px-3 text-sm"
+          className="btn-primary min-h-11 w-auto px-3 text-sm"
           onClick={() => run(() => recordRefund(orderId, ref))}
         >
           {t('recordRefund')}

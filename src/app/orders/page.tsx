@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
@@ -8,7 +9,7 @@ import { requireViewer } from '@/lib/auth/viewer';
 import { kes } from '@/lib/format';
 import { StatusPill } from './StatusPill';
 
-export const metadata = { title: 'Orders', robots: { index: false } };
+export const generateMetadata = titled('orders', { robots: { index: false } });
 
 export default async function OrdersPage() {
   const viewer = await requireViewer('/orders');
@@ -63,7 +64,7 @@ async function OrderList({ orders, side }: { orders: OrderSummary[]; side: 'buye
             className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-3.5"
           >
             <span className="min-w-0">
-              <span className="block truncate font-bold">{side === 'buyer' ? o.farm_name : (o.buyer_name ?? t('buyer'))}</span>
+              <span className="block truncate font-bold">{side === 'buyer' ? o.farm_name : (o.buyer_name ?? (o.buyer_phone_tail ? t('buyerWithPhone', { last: o.buyer_phone_tail }) : t('buyer')))}</span>
               <span className="block truncate text-sm text-soil">
                 #{o.number} · {format.relativeTime(new Date(o.created_at))}
               </span>

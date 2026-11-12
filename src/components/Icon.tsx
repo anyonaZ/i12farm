@@ -96,6 +96,7 @@ export function Icon({ name, size = 20, className }: { name: IconName; size?: nu
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
+      data-icon={name}
       className={className}
     >
       <path d={ICON_PATHS[name]} />

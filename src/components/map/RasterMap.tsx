@@ -1,5 +1,6 @@
 'use client';
 
+import { mapColors } from '@/lib/theme-colors';
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -15,7 +16,6 @@ import type { FarmMapProps } from './FarmMap';
 // RASTER_TILES at a provider or a self-hosted tile server.
 const RASTER_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-const COLORS = { pin: '#067647', stroke: '#ffffff', selected: '#053B2B', verified: '#B6F04A' };
 
 export default function RasterMap({
   center,
@@ -37,8 +37,8 @@ export default function RasterMap({
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
-  const latest = useRef({ onSelect, onMoveEnd, onCenterChange, padding });
-  latest.current = { onSelect, onMoveEnd, onCenterChange, padding };
+  const latest = useRef({ onSelect, onMoveEnd, onCenterChange, padding, fitPoints });
+  latest.current = { onSelect, onMoveEnd, onCenterChange, padding, fitPoints };
 
   useEffect(() => {
     if (!container.current) return;
@@ -75,7 +75,7 @@ export default function RasterMap({
     if (centerPin) map.on('move', () => latest.current.onCenterChange?.(map.getCenter().lng, map.getCenter().lat));
     if (interactive) map.on('click', () => latest.current.onSelect?.(null));
     setTimeout(report, 0);
-    if (fitPoints?.length) fitTo(map, fitPoints, latest.current.padding);
+    if (latest.current.fitPoints?.length) fitTo(map, latest.current.fitPoints, latest.current.padding);
 
     return () => {
       map.remove();
@@ -93,9 +93,9 @@ export default function RasterMap({
       const selected = p.id === selectedId;
       const marker = L.circleMarker([p.lat, p.lng], {
         radius: selected ? 11 : 8,
-        color: p.verified ? COLORS.verified : COLORS.stroke,
+        color: p.verified ? mapColors().verified : mapColors().pinStroke,
         weight: p.verified ? 4 : 2.5,
-        fillColor: selected ? COLORS.selected : COLORS.pin,
+        fillColor: selected ? mapColors().selected : mapColors().pin,
         fillOpacity: 1,
         bubblingMouseEvents: false,
       });
@@ -125,8 +125,8 @@ export default function RasterMap({
           viewBox="0 0 40 52"
           aria-hidden="true"
         >
-          <path d="M20 51C14 42 2 33 2 20a18 18 0 0 1 36 0c0 13-12 22-18 31z" fill="#053B2B" />
-          <circle cx="20" cy="20" r="7" fill="#B6F04A" />
+          <path d="M20 51C14 42 2 33 2 20a18 18 0 0 1 36 0c0 13-12 22-18 31z" style={{ fill: 'var(--color-forest)' }} />
+          <circle cx="20" cy="20" r="7" style={{ fill: 'var(--color-lime)' }} />
         </svg>
       ) : null}
     </div>

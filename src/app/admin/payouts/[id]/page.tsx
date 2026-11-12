@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
@@ -8,7 +9,7 @@ import { kes } from '@/lib/format';
 import { BATCH_STYLE } from '../styles';
 import { BatchActions, RemoveLine } from '../PayoutControls';
 
-export const metadata = { title: 'Payout batch', robots: { index: false } };
+export const generateMetadata = titled('payoutBatch', { robots: { index: false } });
 
 const LINE_STYLE: Record<string, string> = {
   queued: 'bg-mint',
@@ -16,7 +17,7 @@ const LINE_STYLE: Record<string, string> = {
   processing: 'bg-mint text-sprout-deep',
   completed: 'bg-sprout/15 text-sprout-deep',
   failed: 'bg-amber/20',
-  cancelled: 'bg-line text-soil',
+  cancelled: 'bg-line text-forest',
 };
 
 function where(r: Record<string, string | undefined>): string {

@@ -34,7 +34,7 @@ export function ClaimCode({ farmId }: { farmId: string }) {
       <button
         type="button"
         disabled={pending}
-        className="btn-secondary min-h-10 text-sm"
+        className="btn-secondary min-h-11 text-sm"
         onClick={() =>
           start(async () => {
             const r = await issueClaimCode(farmId);
@@ -152,7 +152,7 @@ export function StockEditor({ listingId, quantity, label }: { listingId: string;
       </label>
       <input
         id={`qty-${listingId}`}
-        className="input min-h-9 w-20 px-2 tabular-nums"
+        className="input min-h-11 w-20 px-2 tabular-nums"
         inputMode="numeric"
         value={value}
         aria-label={`${t('stock')}: ${label}`}
@@ -162,7 +162,7 @@ export function StockEditor({ listingId, quantity, label }: { listingId: string;
         }}
       />
       {changed ? (
-        <button type="submit" disabled={pending} className="text-sm font-bold text-sprout-deep">
+        <button type="submit" disabled={pending} className="min-h-11 px-2 text-sm font-bold text-sprout-deep">
           {t('saveStock')}
         </button>
       ) : saved ? (

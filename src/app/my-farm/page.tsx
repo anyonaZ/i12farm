@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { PushToggle } from '@/components/notify/PushToggle';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -14,7 +15,7 @@ import type { Locale } from '@/i18n/config';
 import { FarmList } from './FarmList';
 import { ManagedFarmCard } from './ManagedFarmCard';
 
-export const metadata = { title: 'My Farm' };
+export const generateMetadata = titled('myFarm');
 
 const PILOT_TARGET = 100;
 // More farms than this (agents) → a searchable list; each farm's tools open on its own page.
@@ -129,6 +130,8 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
             <div
               className="h-3 overflow-hidden rounded-full bg-white/20"
               role="progressbar"
+              aria-label={t('myFarm.pilotTarget')}
+              aria-valuetext={t('myFarm.target', { n: total })}
               aria-valuemin={0}
               aria-valuemax={PILOT_TARGET}
               aria-valuenow={total}

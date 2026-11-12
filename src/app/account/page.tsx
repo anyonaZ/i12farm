@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
@@ -11,7 +12,7 @@ import { PushToggle } from '@/components/notify/PushToggle';
 import { withUser } from '@/lib/db';
 import { ClaimForm, DataControls, PasswordForm, ProfileForm, SignInDetailsForm, SignOutOthersButton } from './AccountForms';
 
-export const metadata = { title: 'Account', robots: { index: false } };
+export const generateMetadata = titled('account', { robots: { index: false } });
 
 function device(ua: string | null): string {
   if (!ua) return '—';

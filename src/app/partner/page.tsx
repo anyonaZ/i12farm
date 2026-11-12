@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { getFormatter, getLocale, getTranslations } from 'next-intl/server';
 import { Icon, type IconName } from '@/components/Icon';
@@ -8,7 +9,7 @@ import { requireViewer } from '@/lib/auth/viewer';
 import { kes } from '@/lib/format';
 import type { Locale } from '@/i18n/config';
 
-export const metadata = { title: 'County insights', robots: { index: false } };
+export const generateMetadata = titled('partner', { robots: { index: false } });
 
 const PERIODS = [30, 90, 365] as const;
 
@@ -82,7 +83,7 @@ export default async function PartnerPage({ searchParams }: { searchParams: Prom
               href={href({ days: d })}
               scroll={false}
               aria-current={d === days ? 'page' : undefined}
-              className={`inline-flex h-8 items-center rounded-full px-3 text-sm font-semibold ${d === days ? 'bg-forest text-white' : 'text-soil hover:bg-mint'}`}
+              className={`inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold ${d === days ? 'bg-forest text-white' : 'text-soil hover:bg-mint'}`}
             >
               {t('partner.days', { n: d })}
             </Link>
@@ -178,7 +179,7 @@ export default async function PartnerPage({ searchParams }: { searchParams: Prom
             </div>
             <Link
               href={county ? `/prices?county=${county.code}` : '/prices'}
-              className="shrink-0 text-sm font-bold text-sprout-deep underline"
+              className="inline-flex min-h-11 shrink-0 items-center text-sm font-bold text-sprout-deep underline"
             >
               {t('partner.priceTrends')}
             </Link>

@@ -36,7 +36,7 @@ export function CartStepper({ farm, listing }: Props) {
         <div className="flex gap-2">
           <button
             type="button"
-            className="btn-primary min-h-10 text-sm"
+            className="btn-primary min-h-11 text-sm"
             onClick={() => {
               setConfirming(false);
               setLine(farm, listing.id, {
@@ -52,7 +52,7 @@ export function CartStepper({ farm, listing }: Props) {
           >
             {t('replace')}
           </button>
-          <button type="button" className="btn-secondary min-h-10 text-sm" onClick={() => setConfirming(false)}>
+          <button type="button" className="btn-secondary min-h-11 text-sm" onClick={() => setConfirming(false)}>
             {t('keep')}
           </button>
         </div>
@@ -65,7 +65,7 @@ export function CartStepper({ farm, listing }: Props) {
       <button
         type="button"
         onClick={() => (otherFarm ? setConfirming(true) : change(1))}
-        className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-sprout-deep px-4 text-sm font-bold text-white"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-sprout-deep px-4 text-sm font-bold text-white"
       >
         <Icon name="plus" size={16} />
         {listing.booking ? t('book') : t('add')}

@@ -3,7 +3,10 @@
     "name": "i12farm",
     "tagline": "Kila shamba, kwenye ramani.",
     "offline": "Uko nje ya mtandao. Kurasa ulizotembelea karibuni bado zinafanya kazi.",
-    "demoBanner": "Majaribio: malipo si halisi. Hakuna oda halisi hapa."
+    "demoBanner": "Majaribio: malipo si halisi. Hakuna oda halisi hapa.",
+    "skip": "Ruka hadi maudhui",
+    "scrollBack": "Rudi nyuma",
+    "scrollMore": "Ona zaidi"
   },
   "nav": {
     "explore": "Gundua",
@@ -142,7 +145,9 @@
       "deleteBlocked": "Akaunti haiwezi kufutwa bado.",
       "tooManySignups": "Akaunti mpya nyingi sana kutoka mtandao huu. Jaribu tena baada ya saa moja."
     },
-    "consentLinks": "Soma taarifa ya faragha na masharti."
+    "consentLinks": "Soma taarifa ya faragha na masharti.",
+    "titleUp": "Jiunge na i12farm",
+    "subtitleUp": "Akaunti moja ya kuagiza kutoka mashambani, kuweka shamba lako na kuzungumza na wanunuzi."
   },
   "language": {
     "label": "Lugha",
@@ -449,7 +454,14 @@
       "afternoon": "mchana"
     },
     "booking": "Nafasi",
-    "collectionFee": "Ada ya malipo ya Pesi"
+    "collectionFee": "Ada ya malipo ya Pesi",
+    "cancelAccepted": "Siwezi kuitimiza",
+    "confirmCancelAccepted": "Ghairi na urudishe pesa",
+    "receivedQuestion": "Umepokea kila ulichoagiza?",
+    "receivedWarn": "Ukithibitisha, oda inafungwa. Huwezi kubadilisha baadaye.",
+    "receivedYes": "Ndiyo, nimepokea",
+    "notYet": "Bado",
+    "buyerWithPhone": "Mnunuzi ···{last}"
   },
   "farmPage": {
     "message": "Ujumbe",
@@ -573,7 +585,11 @@
     "declineHours": "Saa baada ya malipo kabla oda isiyojibiwa kukataliwa na pesa kurudishwa",
     "back": "Rudi",
     "vetsTab": "Madaktari",
-    "vetSettings": "Maombi ya daktari"
+    "vetSettings": "Maombi ya daktari",
+    "confirmAdmin": "Mpe {name} mamlaka kamili ya msimamizi? Ataona taarifa za kila mtu na anaweza kuhamisha pesa.",
+    "confirmSuspend": "Msimamishe {name}? Atatolewa na hataweza kuingia hadi umrejeshe.",
+    "confirmVerify": "Thibitisha {farm}? Wanunuzi wataona alama ya Limethibitishwa.",
+    "confirmUnverify": "Ondoa alama ya Limethibitishwa kwa {farm}?"
   },
   "featured": {
     "badge": "Linaangaziwa",
@@ -647,7 +663,9 @@
     "error": "Haikutumwa: {detail}",
     "today_short": "Leo",
     "week_short": "Wiki hii",
-    "becomeVet": "Wewe ni daktari? Weka huduma yako na aina \"Huduma za mifugo\" upate maombi."
+    "becomeVet": "Wewe ni daktari? Weka huduma yako na aina \"Huduma za mifugo\" upate maombi.",
+    "countiesWithVets": "Kaunti zenye madaktari kwenye i12farm",
+    "otherCounties": "Kaunti nyingine"
   },
   "partner": {
     "title": "Takwimu za kaunti",
@@ -1000,5 +1018,43 @@
     "dismiss": "Puuza (liache wazi)",
     "suspend": "Liache limefichwa",
     "restore": "Lirudishe"
+  },
+  "titles": {
+    "admin": "Msimamizi",
+    "payoutBatch": "Kundi la malipo",
+    "payouts": "Malipo kwa mashamba",
+    "signIn": "Ingia",
+    "createAccount": "Fungua akaunti",
+    "orders": "Oda",
+    "order": "Oda #{number}",
+    "account": "Akaunti",
+    "notFound": "Haikupatikana",
+    "editFarm": "Hariri shamba",
+    "myFarm": "Shamba Langu",
+    "payoutDetails": "Tunapotuma pesa zako",
+    "featureFarm": "Angazia shamba lako",
+    "pinFarm": "Weka shamba lako",
+    "vets": "Madaktari wa mifugo",
+    "farmNotFound": "Shamba halikupatikana",
+    "checkout": "Malipo",
+    "prices": "Bei za soko",
+    "partner": "Takwimu za kaunti",
+    "terms": "Masharti ya matumizi",
+    "messages": "Ujumbe",
+    "inbox": "Ujumbe",
+    "privacy": "Ilani ya faragha"
+  },
+  "forms": {
+    "required": "Tafadhali jaza hapa.",
+    "choose": "Tafadhali chagua moja.",
+    "tick": "Weka alama hapa ili kuendelea.",
+    "tooShort": "Tumia angalau herufi {n}.",
+    "tooLong": "Tumia herufi {n} au chache.",
+    "email": "Andika barua pepe kama name@example.com.",
+    "format": "Angalia jinsi ulivyoandika.",
+    "min": "Weka {n} au zaidi.",
+    "max": "Weka {n} au chini.",
+    "step": "Tumia namba kamili.",
+    "number": "Andika namba."
   }
 }

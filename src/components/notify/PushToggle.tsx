@@ -144,7 +144,7 @@ export function PushToggle({ prefs, compact, prompt }: { prefs?: PushPrefs; comp
               <label key={k} className="flex min-h-11 items-center gap-3 text-sm">
                 <input
                   type="checkbox"
-                  className="size-5 accent-[#067647]"
+                  className="size-5 accent-sprout-deep"
                   checked={topics[k]}
                   onChange={() => toggleTopic(k)}
                   disabled={pending}

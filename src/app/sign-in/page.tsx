@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { LogoMark } from '@/components/Logo';
@@ -8,7 +9,9 @@ import { safeNextPath } from '@/lib/http';
 import { LegalLinks } from '@/components/LegalPage';
 import { SignInForm } from './SignInForm';
 
-export const metadata = { title: 'Sign in' };
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  return titled((await searchParams).tab === 'up' ? 'createAccount' : 'signIn')();
+}
 
 export default async function SignInPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string; tab?: string }> }) {
   const t = await getTranslations('auth');
@@ -21,19 +24,19 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
       <div className="flex justify-end">
         <LanguageSwitch />
       </div>
-      <div className="flex flex-col items-center gap-3 text-center">
-        <LogoMark size={56} />
-        <h1 className="text-2xl font-extrabold">{t('title')}</h1>
-        <p className="max-w-[32ch] text-soil">{t('subtitle')}</p>
-      </div>
-      {error ? (
-        <p role="alert" className="rounded-xl bg-amber/15 px-4 py-3 text-sm font-medium">
-          {t.has(`errors.${error}`) ? t(`errors.${error}`) : t('error')}
-        </p>
-      ) : null}
-      <div className="card">
-        <SignInForm next={safeNext} google={isGoogleConfigured} startTab={tab === 'up' ? 'up' : 'in'} />
-      </div>
+      <SignInForm
+        next={safeNext}
+        google={isGoogleConfigured}
+        startTab={tab === 'up' ? 'up' : 'in'}
+        logo={<LogoMark size={56} />}
+        error={
+          error ? (
+            <p role="alert" className="rounded-xl bg-amber/15 px-4 py-3 text-sm font-medium">
+              {t.has(`errors.${error}`) ? t(`errors.${error}`) : t('error')}
+            </p>
+          ) : null
+        }
+      />
       <p className="text-center text-sm text-soil">{t('noEmail')}</p>
       <LegalLinks />
     </main>

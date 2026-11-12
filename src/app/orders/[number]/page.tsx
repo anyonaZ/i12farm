@@ -10,7 +10,10 @@ import { displayPhone, toInternational } from '@/lib/phone';
 import { StatusPill } from '../StatusPill';
 import { BuyerActions, FarmActions, PaymentPanel, ReviewForm } from './OrderActions';
 
-export const metadata = { title: 'Order', robots: { index: false } };
+export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
+  const t = await getTranslations('titles');
+  return { title: t('order', { number: (await params).number.toUpperCase() }), robots: { index: false } };
+}
 
 export default async function OrderPage({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -38,7 +41,7 @@ export default async function OrderPage({ params }: { params: Promise<{ number: 
         <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
           <h1 className="text-xl font-extrabold">{t('order', { number: order.number })}</h1>
           <p className="max-w-full truncate text-sm text-soil">
-            {order.i_am_buyer ? order.farm_name : (order.buyer_name ?? t('buyer'))} ·{' '}
+            {order.i_am_buyer ? order.farm_name : (order.buyer_name ?? (order.buyer_phone_tail ? t('buyerWithPhone', { last: order.buyer_phone_tail }) : t('buyer')))} ·{' '}
             {t('placedOn', { when: format.relativeTime(new Date(order.created_at)) })}
           </p>
           <StatusPill status={order.status} label={t(`status.${order.status}`)} />

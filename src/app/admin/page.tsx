@@ -1,6 +1,8 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
+import { ScrollRow } from '@/components/ScrollRow';
 import { adminListFarms, adminListUsers, adminMoney } from '@/domains/admin/queries';
 import { requireRole } from '@/lib/auth/viewer';
 import { kes } from '@/lib/format';
@@ -22,7 +24,7 @@ import { InsightsView } from './Insights';
 import { ReportedFarms } from './ReportedFarms';
 import { VetRequestsView } from './VetRequests';
 
-export const metadata = { title: 'Admin', robots: { index: false } };
+export const generateMetadata = titled('admin', { robots: { index: false } });
 
 export default async function AdminPage({
   searchParams,
@@ -30,7 +32,10 @@ export default async function AdminPage({
   searchParams: Promise<{ q?: string; tab?: string; all?: string; days?: string }>;
 }) {
   const viewer = await requireRole('admin', '/admin');
-  const { q = '', tab = 'people', all, days: daysParam } = await searchParams;
+  const { q = '', tab: tabParam, all, days: daysParam } = await searchParams;
+  const TABS = ['insights', 'people', 'farms', 'money', 'vets', 'settings'] as const;
+  // An old or mistyped link (?tab=orders) opens People instead of an empty page.
+  const tab = (TABS as readonly string[]).includes(tabParam ?? '') ? (tabParam as (typeof TABS)[number]) : 'people';
   const days = daysParam === '90' ? 90 : daysParam === '7' ? 7 : 30;
   const t = await getTranslations('admin');
   const tp = await getTranslations('payouts');
@@ -62,19 +67,19 @@ export default async function AdminPage({
         </Link>
         <h1 className="text-2xl font-extrabold">{t('title')}</h1>
       </header>
-      <nav className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none]" aria-label={t('title')}>
+      <ScrollRow as="nav" className="-mx-4 gap-1.5 px-4 pb-1 lg:mx-0 lg:px-0" label={t('title')}>
         {tabs.map((x) => (
           <Link
             key={x.key}
             href={`/admin?tab=${x.key}`}
             aria-current={tab === x.key ? 'page' : undefined}
-            className={`flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-full border px-3.5 text-sm font-bold ${tab === x.key ? 'border-forest bg-forest text-white' : 'border-line bg-surface text-soil'}`}
+            className={`flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-bold ${tab === x.key ? 'border-forest bg-forest text-white' : 'border-line bg-surface text-soil'}`}
           >
             <Icon name={x.icon} size={16} />
             {x.label}
           </Link>
         ))}
-      </nav>
+      </ScrollRow>
 
       {tab === 'vets' ? <VetRequestsView viewer={viewer} /> : null}
 
@@ -131,7 +136,7 @@ export default async function AdminPage({
                     {f.owner_claimed ? ` · ${t('claimed')}` : ''}
                   </span>
                 </span>
-                <FarmVerifyButton farmId={f.id} verified={f.verified} />
+                <FarmVerifyButton farmId={f.id} farmName={f.name} verified={f.verified} />
               </li>
             ))}
           </ul>

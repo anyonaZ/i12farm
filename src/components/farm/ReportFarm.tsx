@@ -19,13 +19,13 @@ export function ReportFarm({ farmId, signedIn, back }: { farmId: string; signedI
   if (done) return <p className="text-sm font-semibold text-sprout-deep">{done}</p>;
   if (!open)
     return (
-      <button type="button" onClick={() => setOpen(true)} className="self-start text-sm text-soil underline">
+      <button type="button" onClick={() => setOpen(true)} className="inline-flex min-h-11 items-center self-start text-sm text-soil underline">
         {t('title')}
       </button>
     );
   if (!signedIn)
     return (
-      <Link href={`/sign-in?next=${encodeURIComponent(back)}`} className="self-start text-sm font-bold text-sprout-deep underline">
+      <Link href={`/sign-in?next=${encodeURIComponent(back)}`} className="inline-flex min-h-11 items-center self-start text-sm font-bold text-sprout-deep underline">
         {t('signIn')}
       </Link>
     );
@@ -45,8 +45,8 @@ export function ReportFarm({ farmId, signedIn, back }: { farmId: string; signedI
       <p className="text-sm text-soil">{t('intro')}</p>
       <fieldset className="flex flex-col gap-1">
         {REASONS.map((r) => (
-          <label key={r} className="flex min-h-10 items-center gap-2.5 text-sm">
-            <input type="radio" name="reason" checked={reason === r} onChange={() => setReason(r)} className="size-4 accent-[#067647]" />
+          <label key={r} className="flex min-h-11 items-center gap-2.5 text-sm">
+            <input type="radio" name="reason" checked={reason === r} onChange={() => setReason(r)} className="size-4 accent-sprout-deep" />
             {t(`reason_${r}`)}
           </label>
         ))}

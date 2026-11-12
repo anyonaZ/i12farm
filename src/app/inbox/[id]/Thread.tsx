@@ -77,7 +77,7 @@ export function Thread({ conversationId, initial, otherName }: { conversationId:
           m.kind === 'order' ? (
             <div key={m.id} className="mx-auto my-1 rounded-full bg-mint px-3 py-1 text-center text-xs font-semibold text-soil">
               {m.order_number ? (
-                <Link href={`/orders/${m.order_number}`} className="text-sprout-deep underline">
+                <Link href={`/orders/${m.order_number}`} className="hit font-semibold text-sprout-deep underline">
                   {t('inbox.orderLink', { number: m.order_number })}
                 </Link>
               ) : null}{' '}
@@ -92,7 +92,7 @@ export function Thread({ conversationId, initial, otherName }: { conversationId:
               >
                 {m.body}
               </div>
-              <span className="mt-0.5 px-1 text-[11px] text-soil">
+              <span className="mt-0.5 px-1 text-xs text-soil">
                 {m.mine ? t('inbox.you') : otherName} · {time(m.created_at)}
               </span>
             </div>

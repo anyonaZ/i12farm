@@ -19,7 +19,7 @@ export function TakeRequest({ requestId, farms }: { requestId: string; farms: { 
         <select
           value={farm}
           onChange={(e) => setFarm(e.target.value)}
-          className="input min-h-10 w-auto flex-1 text-sm"
+          className="input min-h-11 w-auto flex-1 text-sm"
           aria-label={t('inbox')}
         >
           {farms.map((f) => (
@@ -39,7 +39,7 @@ export function TakeRequest({ requestId, farms }: { requestId: string; farms: { 
             else setError(res.detail ?? res.error);
           })
         }
-        className="btn-primary min-h-10 w-auto px-5 text-sm"
+        className="btn-primary min-h-11 w-auto px-5 text-sm"
       >
         <Icon name="check" size={16} />
         {t('take')}
@@ -65,7 +65,7 @@ export function RequestActions({ requestId, canCancel, canComplete }: { requestI
   return (
     <div className="flex flex-wrap gap-2">
       {canComplete ? (
-        <button type="button" disabled={pending} onClick={() => act('completed')} className="btn-secondary min-h-10 w-auto px-4 text-sm">
+        <button type="button" disabled={pending} onClick={() => act('completed')} className="btn-secondary min-h-11 w-auto px-4 text-sm">
           <Icon name="check" size={16} />
           {t('markDone')}
         </button>
@@ -75,7 +75,7 @@ export function RequestActions({ requestId, canCancel, canComplete }: { requestI
           type="button"
           disabled={pending}
           onClick={() => act('cancelled')}
-          className="min-h-10 rounded-full px-4 text-sm font-semibold text-soil underline"
+          className="min-h-11 rounded-full px-4 text-sm font-semibold text-soil underline"
         >
           {t('cancel')}
         </button>

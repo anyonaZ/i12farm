@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
@@ -9,7 +10,7 @@ import { payoutWhere } from '@/app/my-farm/payout-where';
 import { PrepareBatch, type CandidateRow } from './PayoutControls';
 import { BATCH_STYLE } from './styles';
 
-export const metadata = { title: 'Payouts', robots: { index: false } };
+export const generateMetadata = titled('payouts', { robots: { index: false } });
 
 // Admin: money out through Pesi, in batches you approve.
 export default async function PayoutsPage() {

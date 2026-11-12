@@ -26,7 +26,7 @@ export function ListingControls({ listingId, status, label }: { listingId: strin
         type="button"
         disabled={pending}
         onClick={() => act(paused ? 'active' : 'paused')}
-        className="inline-flex min-h-10 items-center rounded-full border border-line px-3.5 font-semibold"
+        className="inline-flex min-h-11 items-center rounded-full border border-line px-3.5 font-semibold"
         aria-label={`${paused ? t('resume') : t('pause')}: ${label}`}
       >
         {paused ? t('resume') : t('pause')}
@@ -36,7 +36,7 @@ export function ListingControls({ listingId, status, label }: { listingId: strin
           type="button"
           disabled={pending}
           onClick={() => act('archived')}
-          className="inline-flex min-h-10 items-center rounded-full bg-red-700 px-3.5 font-semibold text-white"
+          className="inline-flex min-h-11 items-center rounded-full bg-red-700 px-3.5 font-semibold text-white"
         >
           {t('removeConfirm')}
         </button>
@@ -44,7 +44,7 @@ export function ListingControls({ listingId, status, label }: { listingId: strin
         <button
           type="button"
           onClick={() => setConfirm(true)}
-          className="inline-flex min-h-10 items-center rounded-full px-3 font-semibold text-soil underline"
+          className="inline-flex min-h-11 items-center rounded-full px-3 font-semibold text-soil underline"
           aria-label={`${t('remove')}: ${label}`}
         >
           {t('remove')}

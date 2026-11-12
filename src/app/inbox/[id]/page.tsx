@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -6,7 +7,7 @@ import { getConversation } from '@/domains/messaging/queries';
 import { requireViewer } from '@/lib/auth/viewer';
 import { Thread } from './Thread';
 
-export const metadata = { title: 'Messages', robots: { index: false } };
+export const generateMetadata = titled('messages', { robots: { index: false } });
 
 export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -25,7 +26,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <h1 className="truncate text-lg font-bold">{conv.i_am_buyer ? conv.farm_name : conv.other_name}</h1>
           <p className="truncate text-sm text-soil">{conv.i_am_buyer ? conv.other_name : t('aboutFarm', { farm: conv.farm_name })}</p>
         </div>
-        <Link href={`/f/${conv.farm_slug}`} className="shrink-0 text-sm font-bold text-sprout-deep">
+        <Link href={`/f/${conv.farm_slug}`} className="inline-flex min-h-11 shrink-0 items-center px-1 text-sm font-bold text-sprout-deep">
           {t('viewFarm')}
         </Link>
       </header>

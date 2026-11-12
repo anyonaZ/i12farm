@@ -57,6 +57,38 @@ export function CheckoutForm({
   const [visitSlot, setVisitSlot] = useState<'morning' | 'afternoon'>('morning');
   const [pending, start] = useTransition();
 
+  // A visitor who chooses delivery and writes a note, then signs in, comes
+  // back to the same choices (kept for this browser tab only).
+  const draftKey = `i12f:checkout:${farm.id}`;
+  const [restored, setRestored] = useState(false);
+  useEffect(() => {
+    try {
+      const d = JSON.parse(sessionStorage.getItem(draftKey) ?? 'null') as {
+        fulfilment?: 'pickup' | 'delivery';
+        note?: string;
+        visitDate?: string;
+        visitSlot?: 'morning' | 'afternoon';
+      } | null;
+      if (d) {
+        if (d.fulfilment === 'pickup' || d.fulfilment === 'delivery') setFulfilment(d.fulfilment);
+        if (typeof d.note === 'string') setNote(d.note);
+        if (typeof d.visitDate === 'string') setVisitDate(d.visitDate);
+        if (d.visitSlot === 'morning' || d.visitSlot === 'afternoon') setVisitSlot(d.visitSlot);
+      }
+    } catch {
+      /* storage blocked: start fresh */
+    }
+    setRestored(true);
+  }, [draftKey]);
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify({ fulfilment, note, visitDate, visitSlot }));
+    } catch {
+      /* storage blocked */
+    }
+  }, [restored, draftKey, fulfilment, note, visitDate, visitSlot]);
+
   // Re-price the cart from the live listings; drop anything no longer on sale.
   useEffect(() => {
     if (!cart || cart.farmId !== farm.id) return;
@@ -135,6 +167,11 @@ export function CheckoutForm({
         return;
       }
       clearCart();
+      try {
+        sessionStorage.removeItem(draftKey);
+      } catch {
+        /* storage blocked */
+      }
       router.push(`/orders/${result.data.number}`);
     });
   }

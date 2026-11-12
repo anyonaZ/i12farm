@@ -20,11 +20,26 @@ interface Props {
   /** bar: fixed above the phone tab bar (hidden on desktop). panel: inside the desktop side panel.
    *  share: only the round Share button, for the photo header on phones. */
   variant?: 'bar' | 'panel' | 'share';
+  /** bar only: when the farm shares no phone, the bar offers in-app messaging instead. */
+  message?: () => Promise<void>;
+  messageLabel?: string;
 }
 
 // Every tap is written to contact_events before the phone app opens. That
 // row is Phase 1's proof that a buyer wanted this farm.
-export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, listingId, lng, lat, variant = 'bar' }: Props) {
+export function ContactBar({
+  farmId,
+  farmName,
+  farmerName,
+  phone,
+  whatsapp,
+  listingId,
+  lng,
+  lat,
+  variant = 'bar',
+  message,
+  messageLabel,
+}: Props) {
   const t = useTranslations('farm');
   const [copied, setCopied] = useState(false);
 
@@ -65,6 +80,38 @@ export function ContactBar({ farmId, farmName, farmerName, phone, whatsapp, list
       >
         <Icon name={copied ? 'check' : 'share'} />
       </button>
+    );
+  }
+
+  // A farm with no phone: show one clear way to reach it, not an empty bar.
+  if (!panel && !tel && !wa) {
+    if (!message && (lng === null || lat === null)) return null;
+    return (
+      <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 border-t border-line bg-surface px-4 py-3 lg:hidden">
+        <div className="mx-auto flex max-w-md gap-2">
+          {message ? (
+            <form action={message} className="min-w-0 flex-1">
+              <button type="submit" className="btn-primary">
+                <Icon name="chat" size={18} />
+                {messageLabel}
+              </button>
+            </form>
+          ) : null}
+          {lng !== null && lat !== null ? (
+            <a
+              href={`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`}
+              target="_blank"
+              rel="noopener"
+              onClick={() => log('directions')}
+              className={message ? 'grid size-12 shrink-0 place-items-center rounded-full border border-line' : 'btn-secondary'}
+              aria-label={t('directions')}
+            >
+              <Icon name="route" />
+              {message ? null : t('directions')}
+            </a>
+          ) : null}
+        </div>
+      </div>
     );
   }
 

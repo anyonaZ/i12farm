@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
@@ -8,7 +9,7 @@ import { displayPhone } from '@/lib/phone';
 import { pesiMode } from '@/lib/pesi';
 import { CheckoutForm } from './CheckoutForm';
 
-export const metadata = { title: 'Checkout', robots: { index: false } };
+export const generateMetadata = titled('checkout', { robots: { index: false } });
 
 export default async function CheckoutPage({ searchParams }: { searchParams: Promise<{ farm?: string }> }) {
   const { farm: slug } = await searchParams;

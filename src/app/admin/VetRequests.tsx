@@ -9,8 +9,8 @@ const STATUS: Record<string, string> = {
   open: 'bg-amber/20',
   accepted: 'bg-sprout/15 text-sprout-deep',
   completed: 'bg-mint',
-  cancelled: 'bg-line text-soil',
-  expired: 'bg-line text-soil',
+  cancelled: 'bg-line text-forest',
+  expired: 'bg-line text-forest',
 };
 
 /** Admin → Vets: recent vet requests and how long open ones stay open. */

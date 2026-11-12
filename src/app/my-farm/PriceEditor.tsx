@@ -44,7 +44,7 @@ export function PriceEditor({
       </label>
       <input
         id={`price-${listingId}`}
-        className="input min-h-10 tabular-nums"
+        className="input min-h-11 tabular-nums"
         inputMode="numeric"
         value={value}
         onChange={(e) => {
@@ -52,7 +52,7 @@ export function PriceEditor({
           setStatus('idle');
         }}
       />
-      <button type="submit" disabled={!changed || pending} className="btn-secondary min-h-10 w-auto px-3.5 text-sm">
+      <button type="submit" disabled={!changed || pending} className="btn-secondary min-h-11 w-auto px-3.5 text-sm">
         {t('savePrice')}
       </button>
       {history.length > 1 || status !== 'idle' ? (

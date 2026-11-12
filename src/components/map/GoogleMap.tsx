@@ -1,5 +1,6 @@
 'use client';
 
+import { mapColors } from '@/lib/theme-colors';
 import { importLibrary, setOptions } from '@googlemaps/js-api-loader';
 import { MarkerClusterer, type Renderer } from '@googlemaps/markerclusterer';
 import { useEffect, useRef } from 'react';
@@ -17,7 +18,6 @@ import type { FarmMapProps, MapPoint } from './FarmMap';
 const GOOGLE_MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 const MAP_ID = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID';
 
-const COLORS = { pin: '#067647', stroke: '#ffffff', selected: '#053B2B', verified: '#B6F04A', halo: '#12B76A' };
 // Kenya, with a margin: the map can't be dragged off to another continent.
 const KENYA = { north: 6.5, south: -6, west: 32.5, east: 43 };
 
@@ -61,8 +61,8 @@ function pinElement(p: MapPoint, selected: boolean): HTMLElement {
     `width:${size}px`,
     `height:${size}px`,
     'border-radius:50%',
-    `background:${selected ? COLORS.selected : COLORS.pin}`,
-    `border:${p.verified ? 4 : 2.5}px solid ${p.verified ? COLORS.verified : COLORS.stroke}`,
+    `background:${selected ? mapColors().selected : mapColors().pin}`,
+    `border:${p.verified ? 4 : 2.5}px solid ${p.verified ? mapColors().verified : mapColors().pinStroke}`,
     'box-shadow:0 1px 4px rgba(0,0,0,.35)',
     'box-sizing:border-box',
     'transform:translateY(50%)', // centre the dot on the farm, not its bottom edge
@@ -78,8 +78,8 @@ const clusterRenderer: Renderer = {
       `width:${size}px`,
       `height:${size}px`,
       'border-radius:50%',
-      `background:${COLORS.selected}`,
-      `box-shadow:0 0 0 6px ${COLORS.halo}55`,
+      `background:${mapColors().selected}`,
+      `box-shadow:0 0 0 6px ${mapColors().clusterHalo}55`,
       'color:#fff',
       'font:700 13px/1 system-ui,sans-serif',
       'display:grid',
@@ -114,8 +114,8 @@ export default function GoogleMap({
   const mapRef = useRef<google.maps.Map | null>(null);
   const markers = useRef(new Map<string, google.maps.marker.AdvancedMarkerElement>());
   const clusterer = useRef<MarkerClusterer | null>(null);
-  const latest = useRef({ points, selectedId, onSelect, onMoveEnd, onCenterChange, padding, onFail });
-  latest.current = { points, selectedId, onSelect, onMoveEnd, onCenterChange, padding, onFail };
+  const latest = useRef({ points, selectedId, onSelect, onMoveEnd, onCenterChange, padding, onFail, fitPoints });
+  latest.current = { points, selectedId, onSelect, onMoveEnd, onCenterChange, padding, onFail, fitPoints };
 
   useEffect(() => {
     let cancelled = false;
@@ -165,7 +165,7 @@ export default function GoogleMap({
             if (c) latest.current.onCenterChange?.(c.lng(), c.lat());
           });
         }
-        if (fitPoints?.length) fit(map, fitPoints, latest.current.padding);
+        if (latest.current.fitPoints?.length) fit(map, latest.current.fitPoints, latest.current.padding);
       })
       .catch((error: unknown) => {
         console.warn('Google Maps unavailable, using the free map instead:', error);
@@ -254,8 +254,8 @@ export default function GoogleMap({
           viewBox="0 0 40 52"
           aria-hidden="true"
         >
-          <path d="M20 51C14 42 2 33 2 20a18 18 0 0 1 36 0c0 13-12 22-18 31z" fill="#053B2B" />
-          <circle cx="20" cy="20" r="7" fill="#B6F04A" />
+          <path d="M20 51C14 42 2 33 2 20a18 18 0 0 1 36 0c0 13-12 22-18 31z" style={{ fill: 'var(--color-forest)' }} />
+          <circle cx="20" cy="20" r="7" style={{ fill: 'var(--color-lime)' }} />
         </svg>
       ) : null}
     </div>

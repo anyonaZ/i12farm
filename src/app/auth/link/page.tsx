@@ -1,7 +1,8 @@
+import { titled } from '@/lib/titles';
 import { getTranslations } from 'next-intl/server';
 import { LogoMark } from '@/components/Logo';
 
-export const metadata = { title: 'Sign in', robots: { index: false } };
+export const generateMetadata = titled('signIn', { robots: { index: false } });
 
 // Landing page for one-time sign-in links. Nothing happens until the person taps the button.
 export default async function LinkPage({ searchParams }: { searchParams: Promise<{ token?: string; next?: string }> }) {

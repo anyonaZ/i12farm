@@ -12,6 +12,7 @@ export async function getOrder(viewer: Viewer, number: string): Promise<OrderDet
     viewer.id,
     (tx) => tx<OrderDetail[]>`
     select o.id, o.number, o.status, o.subtotal_kes, o.created_at::text as created_at, o.fulfilment, o.buyer_name,
+           right(o.buyer_phone, 3) as buyer_phone_tail,
            o.delivery_note, o.visit_date::text as visit_date, o.visit_slot, o.buyer_phone, o.commission_bps, o.commission_kes, o.farmer_payout_kes, o.collection_fee_kes,
            o.paid_at::text as paid_at, o.completed_at::text as completed_at,
            f.name as farm_name, f.slug as farm_slug,
@@ -45,6 +46,7 @@ export async function listOrders(viewer: Viewer, side: 'buyer' | 'farm', limit =
     const filter = side === 'buyer' ? tx`o.buyer_id = ${viewer.id}` : tx`public.can_manage_farm(o.farm_id) and o.buyer_id <> ${viewer.id}`;
     return tx<OrderSummary[]>`
       select o.id, o.number, o.status, o.subtotal_kes, o.created_at::text as created_at, o.fulfilment, o.buyer_name,
+             right(o.buyer_phone, 3) as buyer_phone_tail,
              f.name as farm_name, f.slug as farm_slug,
              (select count(*)::int from public.order_items i where i.order_id = o.id) as item_count
       from public.orders o

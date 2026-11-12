@@ -46,11 +46,11 @@ export async function InsightsView({ data }: { data: Insights }) {
         ))}
       </nav>
 
-      <dl className="grid grid-cols-3 gap-2">
+      <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {tiles.map(([label, value]) => (
           <div key={label} className="flex min-w-0 flex-col-reverse rounded-2xl border border-line bg-surface p-3">
             <dt className="text-xs leading-tight text-soil">{label}</dt>
-            <dd className="truncate text-lg font-extrabold tabular-nums">{value}</dd>
+            <dd className="text-lg font-extrabold leading-tight tabular-nums [overflow-wrap:anywhere]">{value}</dd>
           </div>
         ))}
       </dl>
@@ -67,7 +67,8 @@ export async function InsightsView({ data }: { data: Insights }) {
 
       <section className="card gap-2 p-0">
         <h2 className="px-5 pt-4 text-base font-bold">{t('byCounty')}</h2>
-        <div className="overflow-x-auto">
+        {/* Focusable so keyboard users can scroll the table sideways on a phone. */}
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={t('byCounty')}>
           <table className="w-full min-w-[22rem] text-sm tabular-nums">
             <thead className="text-xs text-soil">
               <tr>
@@ -96,7 +97,7 @@ export async function InsightsView({ data }: { data: Insights }) {
         {data.products.length === 0 ? (
           <p className="px-5 pb-4 text-sm text-soil">{t('noData')}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={t('topProducts')}>
             <table className="w-full min-w-[22rem] text-sm tabular-nums">
               <thead className="text-xs text-soil">
                 <tr>
@@ -141,10 +142,10 @@ export async function InsightsView({ data }: { data: Insights }) {
 
 function WeeklyBars({ weeks, emptyText }: { weeks: Insights['weekly']; emptyText: string }) {
   const W = 340;
-  const H = 150;
-  const top = 18;
-  const bottom = 22;
-  const left = 34;
+  const H = 160;
+  const top = 20;
+  const bottom = 24;
+  const left = 40;
   const max = Math.max(...weeks.map((w) => w.gmv), 0);
   if (max === 0) return <p className="text-sm text-soil">{emptyText}</p>;
   const nice = niceMax(max);
@@ -159,14 +160,14 @@ function WeeklyBars({ weeks, emptyText }: { weeks: Insights['weekly']; emptyText
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      className="w-full"
+      className="w-full max-w-2xl"
       role="img"
       aria-label={weeks.map((w) => `${label(w.week)}: KES ${Math.round(w.gmv)}`).join('; ')}
     >
       {[0, 0.5, 1].map((f) => (
         <g key={f}>
           <line x1={left} x2={W} y1={y(nice * f)} y2={y(nice * f)} stroke="var(--color-line)" strokeWidth={1} />
-          <text x={left - 6} y={y(nice * f) + 3.5} textAnchor="end" fontSize={10} fill="var(--color-soil)">
+          <text x={left - 6} y={y(nice * f) + 3.5} textAnchor="end" fontSize={13} fill="var(--color-soil)">
             {short(nice * f)}
           </text>
         </g>
@@ -187,12 +188,12 @@ function WeeklyBars({ weeks, emptyText }: { weeks: Insights['weekly']; emptyText
               />
             ) : null}
             {i === peak ? (
-              <text x={x + barW / 2} y={y(w.gmv) - 5} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--color-forest)">
+              <text x={x + barW / 2} y={y(w.gmv) - 5} textAnchor="middle" fontSize={13} fontWeight={700} fill="var(--color-forest)">
                 {short(w.gmv)}
               </text>
             ) : null}
             {i % 3 === 0 || i === weeks.length - 1 ? (
-              <text x={x + barW / 2} y={H - 6} textAnchor="middle" fontSize={9.5} fill="var(--color-soil)">
+              <text x={x + barW / 2} y={H - 6} textAnchor="middle" fontSize={12.5} fill="var(--color-soil)">
                 {label(w.week)}
               </text>
             ) : null}

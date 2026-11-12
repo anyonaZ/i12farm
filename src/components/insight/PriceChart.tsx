@@ -80,23 +80,23 @@ export function PriceChart({
         <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="block w-full touch-pan-y" role="img" aria-label={labels.chart}>
           {ticks.map((t) => (
             <g key={t}>
-              <line x1={m.left} x2={W - m.right} y1={y(t)} y2={y(t)} stroke="#d8eadf" strokeWidth="1" />
-              <text x={m.left - 8} y={y(t)} dy="0.32em" textAnchor="end" fontSize="12" fill="#5b6b63">
+              <line x1={m.left} x2={W - m.right} y1={y(t)} y2={y(t)} stroke="var(--color-line)" strokeWidth="1" />
+              <text x={m.left - 8} y={y(t)} dy="0.32em" textAnchor="end" fontSize="12" fill="var(--color-soil)">
                 {money(t)}
               </text>
             </g>
           ))}
           {points.map((p, i) =>
             i % every === 0 || i === points.length - 1 ? (
-              <text key={p.week} x={x(i)} y={H - 8} textAnchor="middle" fontSize="12" fill="#5b6b63">
+              <text key={p.week} x={x(i)} y={H - 8} textAnchor="middle" fontSize="12" fill="var(--color-soil)">
                 {day(p.week)}
               </text>
             ) : null,
           )}
-          <path d={band} fill="#12b76a" opacity="0.18" />
-          <path d={line} fill="none" stroke="#067647" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+          <path d={band} fill="var(--color-sprout)" opacity="0.18" />
+          <path d={line} fill="none" stroke="var(--color-sprout-deep)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
           {h ? (
-            <line x1={x(hover!)} x2={x(hover!)} y1={m.top} y2={m.top + ih} stroke="#053b2b" strokeWidth="1" strokeDasharray="3 3" />
+            <line x1={x(hover!)} x2={x(hover!)} y1={m.top} y2={m.top + ih} stroke="var(--color-forest)" strokeWidth="1" strokeDasharray="3 3" />
           ) : null}
           {points.map((p, i) => (
             <circle
@@ -104,8 +104,8 @@ export function PriceChart({
               cx={x(i)}
               cy={y(p.median)}
               r={hover === i ? 6 : i === points.length - 1 ? 4.5 : 0}
-              fill="#067647"
-              stroke="#fff"
+              fill="var(--color-sprout-deep)"
+              stroke="var(--color-surface)"
               strokeWidth="2"
             />
           ))}

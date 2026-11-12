@@ -7,67 +7,101 @@ import { track } from '@/lib/analytics/track';
 
 const initial: FormState = {};
 
-export function SignInForm({ next, google, startTab }: { next: string; google: boolean; startTab: 'in' | 'up' }) {
+export function SignInForm({
+  next,
+  google,
+  startTab,
+  logo,
+  error,
+}: {
+  next: string;
+  google: boolean;
+  startTab: 'in' | 'up';
+  logo: React.ReactNode;
+  error: React.ReactNode;
+}) {
   const t = useTranslations('auth');
-  const [tab, setTab] = useState<'in' | 'up'>(startTab);
+  const tt = useTranslations('titles');
+  const [tab, setTabState] = useState<'in' | 'up'>(startTab);
   const [forgot, setForgot] = useState(false);
 
+  // The heading, browser tab title and link follow the chosen tab, so a
+  // refresh or a shared link opens the same one.
+  function setTab(next: 'in' | 'up') {
+    setTabState(next);
+    document.title = `${tt(next === 'up' ? 'createAccount' : 'signIn')} · i12farm`;
+    const url = new URL(window.location.href);
+    if (next === 'up') url.searchParams.set('tab', 'up');
+    else url.searchParams.delete('tab');
+    window.history.replaceState(window.history.state, '', url);
+  }
+
   return (
-    <div className="flex flex-col gap-5">
-      <div role="tablist" aria-label={t('title')} className="grid grid-cols-2 rounded-full bg-mint p-1">
-        {(['in', 'up'] as const).map((key) => (
-          <button
-            key={key}
-            role="tab"
-            type="button"
-            aria-selected={tab === key}
-            onClick={() => setTab(key)}
-            className={`min-h-11 rounded-full text-sm font-bold ${tab === key ? 'bg-surface text-forest shadow-sm' : 'text-soil'}`}
-          >
-            {key === 'in' ? t('tabSignIn') : t('tabSignUp')}
-          </button>
-        ))}
+    <>
+      <div className="flex flex-col items-center gap-3 text-center">
+        {logo}
+        <h1 className="text-2xl font-extrabold">{tab === 'up' ? t('titleUp') : t('title')}</h1>
+        <p className="max-w-[32ch] text-soil">{tab === 'up' ? t('subtitleUp') : t('subtitle')}</p>
       </div>
-
-      {tab === 'in' ? <PasswordSignIn next={next} /> : <CreateAccount next={next} />}
-
-      {google ? (
-        <>
-          <div className="flex items-center gap-3 text-sm text-soil" aria-hidden="true">
-            <span className="h-px flex-1 bg-line" />
-            {t('or')}
-            <span className="h-px flex-1 bg-line" />
+      {error}
+      <div className="card">
+        <div className="flex flex-col gap-5">
+          <div role="tablist" aria-label={t('title')} className="grid grid-cols-2 rounded-full bg-mint p-1">
+            {(['in', 'up'] as const).map((key) => (
+              <button
+                key={key}
+                role="tab"
+                type="button"
+                aria-selected={tab === key}
+                onClick={() => setTab(key)}
+                className={`min-h-11 rounded-full text-sm font-bold ${tab === key ? 'bg-surface text-forest shadow-sm' : 'text-soil'}`}
+              >
+                {key === 'in' ? t('tabSignIn') : t('tabSignUp')}
+              </button>
+            ))}
           </div>
-          <a
-            href={`/auth/google?next=${encodeURIComponent(next)}`}
-            onClick={() => track('auth.sign_in_started', { method: 'google' })}
-            className="btn-secondary"
-          >
-            <GoogleG />
-            {t('google')}
-          </a>
-        </>
-      ) : null}
 
-      {tab === 'in' ? (
-        <div className="border-t border-line pt-4">
-          <button
-            type="button"
-            className="inline-flex min-h-11 items-center text-sm font-bold text-sprout-deep"
-            aria-expanded={forgot}
-            onClick={() => setForgot((f) => !f)}
-          >
-            {t('forgot')}
-          </button>
-          {forgot ? (
-            <div className="mt-3 flex flex-col gap-3">
-              <p className="text-sm text-soil">{t('forgotBody')}</p>
-              <EmailLink next={next} />
+          {tab === 'in' ? <PasswordSignIn next={next} /> : <CreateAccount next={next} />}
+
+          {google ? (
+            <>
+              <div className="flex items-center gap-3 text-sm text-soil" aria-hidden="true">
+                <span className="h-px flex-1 bg-line" />
+                {t('or')}
+                <span className="h-px flex-1 bg-line" />
+              </div>
+              <a
+                href={`/auth/google?next=${encodeURIComponent(next)}`}
+                onClick={() => track('auth.sign_in_started', { method: 'google' })}
+                className="btn-secondary"
+              >
+                <GoogleG />
+                {t('google')}
+              </a>
+            </>
+          ) : null}
+
+          {tab === 'in' ? (
+            <div className="border-t border-line pt-4">
+              <button
+                type="button"
+                className="inline-flex min-h-11 items-center text-sm font-bold text-sprout-deep"
+                aria-expanded={forgot}
+                onClick={() => setForgot((f) => !f)}
+              >
+                {t('forgot')}
+              </button>
+              {forgot ? (
+                <div className="mt-3 flex flex-col gap-3">
+                  <p className="text-sm text-soil">{t('forgotBody')}</p>
+                  <EmailLink next={next} />
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
-      ) : null}
-    </div>
+      </div>
+    </>
   );
 }
 

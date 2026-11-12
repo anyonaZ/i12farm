@@ -40,7 +40,7 @@ export function FarmMiniMap({
         <svg className="absolute inset-0 h-full w-full opacity-40" aria-hidden="true">
           <defs>
             <pattern id="mini-grid" width="28" height="28" patternUnits="userSpaceOnUse">
-              <path d="M28 0H0V28" fill="none" stroke="#b9d8c4" strokeWidth="1" />
+              <path d="M28 0H0V28" fill="none" stroke="var(--color-line)" strokeWidth="1" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#mini-grid)" />

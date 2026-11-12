@@ -18,6 +18,9 @@
   --color-soil: #5b6b63;
   --color-line: #d8eadf;
   --color-surface: #ffffff;
+  --color-danger: #b42318; /* 6.5:1 on white */
+  --color-muted: #6b7a72; /* placeholders: 4.5:1 on white */
+  --color-map: #e8f3ec; /* map background before tiles load */
 
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 
@@ -40,6 +43,23 @@
     outline: 3px solid var(--color-sprout);
     outline-offset: 2px;
   }
+  ::placeholder {
+    color: var(--color-muted);
+    opacity: 1;
+  }
+  [aria-invalid='true'] {
+    border-color: var(--color-danger) !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }
 
 @layer components {
@@ -55,7 +75,16 @@
   .card {
     @apply flex flex-col rounded-card border border-line bg-surface p-5;
   }
+  /* A small inline link with a 44 px tall tap area that doesn't move the layout. */
+  .hit {
+    @apply relative;
+  }
+  .hit::after {
+    content: '';
+    position: absolute;
+    inset: -0.75rem -0.25rem;
+  }
   .chip {
-    @apply inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-medium text-forest;
+    @apply inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-line bg-surface px-4 text-sm font-medium text-forest;
   }
 }

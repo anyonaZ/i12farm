@@ -50,10 +50,10 @@ export async function LegalLinks() {
   const t = await getTranslations('legal');
   return (
     <p className="flex justify-center gap-4 text-sm text-soil">
-      <Link href="/privacy" className="inline-flex min-h-11 items-center underline">
+      <Link href="/privacy" className="inline-flex min-h-11 items-center px-2 underline">
         {t('privacy')}
       </Link>
-      <Link href="/terms" className="inline-flex min-h-11 items-center underline">
+      <Link href="/terms" className="inline-flex min-h-11 items-center px-2 underline">
         {t('terms')}
       </Link>
     </p>

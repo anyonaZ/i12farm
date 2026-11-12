@@ -1,10 +1,11 @@
+import { titled } from '@/lib/titles';
 import { getLocale } from 'next-intl/server';
 import { requireViewer } from '@/lib/auth/viewer';
 import { COUNTY_FOCUS, listFarmCategories, listPilotCounties, listPilotSubCounties, listProducts } from '@/domains/reference/queries';
 import type { Locale } from '@/i18n/config';
 import { PinWizard } from './PinWizard';
 
-export const metadata = { title: 'Pin your farm' };
+export const generateMetadata = titled('pinFarm');
 
 export default async function NewFarmPage() {
   const viewer = await requireViewer('/my-farm/new');

@@ -11,6 +11,8 @@ export interface OrderSummary {
   created_at: string;
   fulfilment: 'pickup' | 'delivery';
   buyer_name: string | null;
+  /** Last 3 digits of the buyer's phone, to tell unnamed buyers apart. */
+  buyer_phone_tail: string | null;
   farm_name: string | null;
   farm_slug: string | null;
   item_count: number;

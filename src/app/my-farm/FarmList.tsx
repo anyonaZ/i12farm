@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { ScrollRow } from '@/components/ScrollRow';
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Icon } from '@/components/Icon';
@@ -51,7 +52,7 @@ export function FarmList({ farms }: { farms: ManagedFarmRow[] }) {
           ))}
         </select>
       </div>
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]" role="group" aria-label={t('filter')}>
+      <ScrollRow className="-mx-4 gap-2 px-4 lg:mx-0 lg:px-0" label={t('filter')}>
         {(['all', 'orders', 'unclaimed', 'paused'] as const).map((k) => (
           <button
             key={k}
@@ -63,7 +64,7 @@ export function FarmList({ farms }: { farms: ManagedFarmRow[] }) {
             {t(`filters.${k}`)}
           </button>
         ))}
-      </div>
+      </ScrollRow>
       <p className="text-sm text-soil">{t('showing', { n: shown.length, total: farms.length })}</p>
       <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2">
         {shown.map((f) => (

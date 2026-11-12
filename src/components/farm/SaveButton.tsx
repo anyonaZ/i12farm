@@ -33,8 +33,8 @@ export function SaveButton({ farmId, initial, signedIn }: { farmId: string; init
         width="20"
         height="20"
         viewBox="0 0 24 24"
-        fill={saved ? '#F5A524' : 'none'}
-        stroke={saved ? '#F5A524' : 'currentColor'}
+        fill={saved ? 'var(--color-amber)' : 'none'}
+        stroke={saved ? 'var(--color-amber)' : 'currentColor'}
         strokeWidth="1.9"
         aria-hidden="true"
       >

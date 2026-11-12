@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -9,7 +10,7 @@ import { requireViewer } from '@/lib/auth/viewer';
 import type { Locale } from '@/i18n/config';
 import { ManagedFarmCard } from '../ManagedFarmCard';
 
-export const metadata = { title: 'My Farm', robots: { index: false } };
+export const generateMetadata = titled('myFarm', { robots: { index: false } });
 
 // One farm's tools, opened from the agent's farm list.
 export default async function ManagedFarmPage({ params }: { params: Promise<{ farmId: string }> }) {

@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
@@ -9,7 +10,7 @@ import { kes } from '@/lib/format';
 import { payoutWhere } from '../../payout-where';
 import { PayoutAccountForm } from './PayoutAccountForm';
 
-export const metadata = { title: 'Payout details', robots: { index: false } };
+export const generateMetadata = titled('payoutDetails', { robots: { index: false } });
 
 const STATUS_STYLE: Record<string, string> = {
   completed: 'bg-sprout/15 text-sprout-deep',

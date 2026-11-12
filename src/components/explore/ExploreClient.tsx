@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { FarmMap, type Bounds } from '@/components/map/FarmMap';
 import { FarmCard } from '@/components/farm/FarmCard';
+import { ScrollRow } from '@/components/ScrollRow';
 import { Icon, CATEGORY_ICON } from '@/components/Icon';
 import { getAnonymousId, track } from '@/lib/analytics/track';
 import { DESKTOP, useMedia } from '@/lib/use-media';
@@ -43,6 +44,9 @@ export function ExploreClient({ categories, counties, initialQ = '', initialCoun
   // Start with all of Kenya so the list fills even if map tiles are slow or fail to load.
   const bounds = useRef<Bounds | null>({ west: 33.9, south: -4.7, east: 41.9, north: 5.0 });
   const request = useRef(0);
+  // The first load covers all of Kenya; frame the map on those farms once, so
+  // every farm counted at first is also on screen (the count doesn't jump).
+  const framed = useRef(false);
 
   const categoryName = useCallback((slug: string) => categories.find((c) => c.slug === slug)?.name ?? slug, [categories]);
 
@@ -63,7 +67,16 @@ export function ExploreClient({ categories, counties, initialQ = '', initialCoun
     if (county) params.set('county', String(county));
     const response = await fetch(`/api/farms?${params}`).catch(() => null);
     if (id !== request.current || !response?.ok) return;
-    setInView((await response.json()) as FarmSummary[]);
+    const rows = (await response.json()) as FarmSummary[];
+    setInView(rows);
+    if (!framed.current) {
+      framed.current = true;
+      const pts = rows.filter((r) => r.lng !== null && r.lat !== null).map((r) => [r.lng, r.lat] as [number, number]);
+      if (pts.length > 1 && !county) {
+        setFitPoints(pts);
+        setFitKey((k) => k + 1);
+      }
+    }
   }, [cat, county]);
 
   useEffect(() => {
@@ -207,7 +220,7 @@ export function ExploreClient({ categories, counties, initialQ = '', initialCoun
         id="explore-county"
         value={county ?? ''}
         onChange={(e) => chooseCounty(e.target.value)}
-        className="h-9 max-w-[38%] rounded-full bg-mint px-2.5 text-sm font-semibold"
+        className="h-11 max-w-[38%] rounded-full bg-mint px-3 text-sm font-semibold"
       >
         <option value="">{t('allCounties')}</option>
         {counties.map((c) => (
@@ -220,11 +233,7 @@ export function ExploreClient({ categories, counties, initialQ = '', initialCoun
   );
 
   const chips = (
-    <div
-      className="pointer-events-auto -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:px-0"
-      role="toolbar"
-      aria-label={t('categoriesLabel')}
-    >
+    <ScrollRow className="-mx-4 gap-2 px-4 pb-1 lg:mx-0 lg:px-0" role="toolbar" label={t('categoriesLabel')}>
       <Chip pressed={cat === null} onClick={() => setCat(null)}>
         {t('all')}
       </Chip>
@@ -243,12 +252,12 @@ export function ExploreClient({ categories, counties, initialQ = '', initialCoun
       ))}
       <Link
         href="/prices"
-        className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border border-sprout/40 bg-mint px-3.5 text-sm font-semibold text-sprout-deep shadow-sm lg:hidden"
+        className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-sprout/40 bg-mint px-3.5 text-sm font-semibold text-sprout-deep shadow-sm lg:hidden"
       >
         <Icon name="trend" size={16} />
         {tAll('prices.title')}
       </Link>
-    </div>
+    </ScrollRow>
   );
 
   const heading = results ? t('results', { n: list.length }) : t('inArea', { n: list.length });
@@ -367,7 +376,7 @@ function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () =>
       type="button"
       aria-pressed={pressed}
       onClick={onClick}
-      className={`inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold shadow-sm ${
+      className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold shadow-sm ${
         pressed ? 'border-forest bg-forest text-white' : 'border-line bg-surface text-forest'
       }`}
     >

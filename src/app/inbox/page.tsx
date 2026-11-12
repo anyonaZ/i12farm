@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { getFormatter, getTranslations } from 'next-intl/server';
 import { FarmCover } from '@/components/farm/FarmCover';
@@ -5,7 +6,7 @@ import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { listConversations } from '@/domains/messaging/queries';
 import { requireViewer } from '@/lib/auth/viewer';
 
-export const metadata = { title: 'Inbox', robots: { index: false } };
+export const generateMetadata = titled('inbox', { robots: { index: false } });
 
 export default async function InboxPage() {
   const viewer = await requireViewer('/inbox');

@@ -1,9 +1,10 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
 import { LogoMark } from '@/components/Logo';
 
-export const metadata = { title: 'Not found', robots: { index: false } };
+export const generateMetadata = titled('notFound', { robots: { index: false } });
 
 export default async function NotFound() {
   const t = await getTranslations('notFound');

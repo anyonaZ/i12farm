@@ -7,8 +7,8 @@ export function Sparkline({ values, label }: { values: number[]; label: string }
   if (values.length < 2) {
     return (
       <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label}>
-        <line x1={pad} x2={w - pad} y1={h / 2} y2={h / 2} stroke="#d8eadf" strokeWidth="2" strokeDasharray="3 4" />
-        {values.length === 1 ? <circle cx={w - pad} cy={h / 2} r="3.5" fill="#067647" /> : null}
+        <line x1={pad} x2={w - pad} y1={h / 2} y2={h / 2} stroke="var(--color-line)" strokeWidth="2" strokeDasharray="3 4" />
+        {values.length === 1 ? <circle cx={w - pad} cy={h / 2} r="3.5" fill="var(--color-sprout-deep)" /> : null}
       </svg>
     );
   }
@@ -20,8 +20,8 @@ export function Sparkline({ values, label }: { values: number[]; label: string }
   const d = values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} className="overflow-visible">
-      <path d={d} fill="none" stroke="#067647" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={x(values.length - 1)} cy={y(values[values.length - 1])} r="3.5" fill="#067647" stroke="#fff" strokeWidth="2" />
+      <path d={d} fill="none" stroke="var(--color-sprout-deep)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={x(values.length - 1)} cy={y(values[values.length - 1])} r="3.5" fill="var(--color-sprout-deep)" stroke="var(--color-surface)" strokeWidth="2" />
     </svg>
   );
 }

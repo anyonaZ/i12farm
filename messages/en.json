@@ -3,7 +3,10 @@
     "name": "i12farm",
     "tagline": "Every farm, on the map.",
     "offline": "You're offline. Recently viewed pages still work.",
-    "demoBanner": "Demo: payments are simulated. Nothing here is a real order."
+    "demoBanner": "Demo: payments are simulated. Nothing here is a real order.",
+    "skip": "Skip to content",
+    "scrollBack": "Scroll back",
+    "scrollMore": "See more"
   },
   "nav": {
     "explore": "Explore",
@@ -142,7 +145,9 @@
       "deleteBlocked": "The account can't be deleted yet.",
       "tooManySignups": "Too many new accounts from this network. Try again in an hour."
     },
-    "consentLinks": "Read the privacy notice and terms."
+    "consentLinks": "Read the privacy notice and terms.",
+    "titleUp": "Join i12farm",
+    "subtitleUp": "One account to order from farms, pin your farm and talk to buyers."
   },
   "language": {
     "label": "Language",
@@ -449,7 +454,14 @@
       "afternoon": "afternoon"
     },
     "booking": "Booking",
-    "collectionFee": "Pesi payment charge"
+    "collectionFee": "Pesi payment charge",
+    "cancelAccepted": "Can't fulfil it",
+    "confirmCancelAccepted": "Cancel and refund",
+    "receivedQuestion": "Did you get everything you ordered?",
+    "receivedWarn": "Confirming closes the order. You can't undo it.",
+    "receivedYes": "Yes, I got it",
+    "notYet": "Not yet",
+    "buyerWithPhone": "Buyer ···{last}"
   },
   "farmPage": {
     "message": "Message",
@@ -573,7 +585,11 @@
     "declineHours": "Hours after payment before an unanswered order is declined and refunded",
     "back": "Back",
     "vetsTab": "Vets",
-    "vetSettings": "Vet requests"
+    "vetSettings": "Vet requests",
+    "confirmAdmin": "Give {name} full admin powers? They will see everyone’s details and can move money.",
+    "confirmSuspend": "Suspend {name}? They are signed out and can’t sign in until you reactivate them.",
+    "confirmVerify": "Mark {farm} as verified? Buyers will see a Verified badge on it.",
+    "confirmUnverify": "Remove the Verified badge from {farm}?"
   },
   "featured": {
     "badge": "Featured",
@@ -647,7 +663,9 @@
     "error": "Could not send: {detail}",
     "today_short": "Today",
     "week_short": "This week",
-    "becomeVet": "Are you a vet? Pin your practice with the \"Vet services\" category to get requests."
+    "becomeVet": "Are you a vet? Pin your practice with the \"Vet services\" category to get requests.",
+    "countiesWithVets": "Counties with vets on i12farm",
+    "otherCounties": "Other counties"
   },
   "partner": {
     "title": "County insights",
@@ -1000,5 +1018,43 @@
     "dismiss": "Dismiss (keep it public)",
     "suspend": "Keep it hidden",
     "restore": "Restore it"
+  },
+  "titles": {
+    "admin": "Admin",
+    "payoutBatch": "Payout batch",
+    "payouts": "Payouts",
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "orders": "Orders",
+    "order": "Order #{number}",
+    "account": "Account",
+    "notFound": "Not found",
+    "editFarm": "Edit farm",
+    "myFarm": "My Farm",
+    "payoutDetails": "Where we send your money",
+    "featureFarm": "Feature your farm",
+    "pinFarm": "Pin your farm",
+    "vets": "Vets",
+    "farmNotFound": "Farm not found",
+    "checkout": "Checkout",
+    "prices": "Market prices",
+    "partner": "County insights",
+    "terms": "Terms of use",
+    "messages": "Messages",
+    "inbox": "Inbox",
+    "privacy": "Privacy notice"
+  },
+  "forms": {
+    "required": "Please fill this in.",
+    "choose": "Please choose one.",
+    "tick": "Tick this box to continue.",
+    "tooShort": "Use at least {n} characters.",
+    "tooLong": "Use at most {n} characters.",
+    "email": "Enter an email like name@example.com.",
+    "format": "Check how this is written.",
+    "min": "Use {n} or more.",
+    "max": "Use {n} or less.",
+    "step": "Use a whole number.",
+    "number": "Enter a number."
   }
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { mapColors } from '@/lib/theme-colors';
 import dynamic from 'next/dynamic';
 import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
@@ -21,7 +22,7 @@ let googleFailed = false; // once Google fails on this page, don't try it again
 const OFFLINE_STYLE: StyleSpecification = {
   version: 8,
   sources: {},
-  layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#e8f3ec' } }],
+  layers: [{ id: 'background', type: 'background', paint: { 'background-color': mapColors().background } }],
 };
 
 function webglAvailable(): boolean {
@@ -83,14 +84,6 @@ interface Props {
   label: string;
 }
 
-const COLORS = {
-  pin: '#067647',
-  pinStroke: '#ffffff',
-  selected: '#053B2B',
-  verified: '#B6F04A',
-  cluster: '#053B2B',
-  clusterHalo: '#12B76A',
-};
 
 function toGeoJSON(points: MapPoint[], selectedId: string | null | undefined) {
   return {
@@ -150,8 +143,8 @@ function VectorMap({
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const ready = useRef(false);
-  const latest = useRef({ points, selectedId, onSelect, onMoveEnd, onCenterChange, padding });
-  latest.current = { points, selectedId, onSelect, onMoveEnd, onCenterChange, padding };
+  const latest = useRef({ points, selectedId, onSelect, onMoveEnd, onCenterChange, padding, fitPoints });
+  latest.current = { points, selectedId, onSelect, onMoveEnd, onCenterChange, padding, fitPoints };
 
   // Create the map once. maplibre-gl is loaded on demand so it never weighs
   // down pages that don't show a map.
@@ -205,7 +198,7 @@ function VectorMap({
           source: 'farms',
           filter: ['has', 'point_count'],
           paint: {
-            'circle-color': COLORS.clusterHalo,
+            'circle-color': mapColors().clusterHalo,
             'circle-opacity': 0.28,
             'circle-radius': ['step', ['get', 'point_count'], 22, 10, 27, 50, 32],
           },
@@ -216,7 +209,7 @@ function VectorMap({
           source: 'farms',
           filter: ['has', 'point_count'],
           paint: {
-            'circle-color': COLORS.cluster,
+            'circle-color': mapColors().cluster,
             'circle-radius': ['step', ['get', 'point_count'], 16, 10, 21, 50, 26],
           },
         });
@@ -240,14 +233,15 @@ function VectorMap({
           source: 'farms',
           filter: ['!', ['has', 'point_count']],
           paint: {
-            'circle-color': ['case', ['get', 'selected'], COLORS.selected, COLORS.pin],
+            'circle-color': ['case', ['get', 'selected'], mapColors().selected, mapColors().pin],
             'circle-radius': ['case', ['get', 'selected'], 13, 10],
             'circle-stroke-width': ['case', ['get', 'verified'], 4, 2.5],
-            'circle-stroke-color': ['case', ['get', 'verified'], COLORS.verified, COLORS.pinStroke],
+            'circle-stroke-color': ['case', ['get', 'verified'], mapColors().verified, mapColors().pinStroke],
           },
         });
         ready.current = true;
-        if (fitPoints?.length) fit(map, fitPoints, latest.current.padding);
+        // The newest points: a fit asked for while the map was still loading isn't lost.
+        if (latest.current.fitPoints?.length) fit(map, latest.current.fitPoints, latest.current.padding);
       });
 
       if (interactive) {
@@ -327,7 +321,7 @@ function VectorMap({
             className="flex items-center gap-2 rounded-full bg-surface/95 px-3 py-1.5 text-xs font-semibold text-forest shadow"
           >
             {t('offline')}
-            <button type="button" className="font-bold text-sprout-deep underline" onClick={() => window.location.reload()}>
+            <button type="button" className="hit font-bold text-sprout-deep underline" onClick={() => window.location.reload()}>
               {t('retry')}
             </button>
           </p>
@@ -339,8 +333,8 @@ function VectorMap({
           viewBox="0 0 40 52"
           aria-hidden="true"
         >
-          <path d="M20 51C14 42 2 33 2 20a18 18 0 0 1 36 0c0 13-12 22-18 31z" fill="#053B2B" />
-          <circle cx="20" cy="20" r="7" fill="#B6F04A" />
+          <path d="M20 51C14 42 2 33 2 20a18 18 0 0 1 36 0c0 13-12 22-18 31z" style={{ fill: 'var(--color-forest)' }} />
+          <circle cx="20" cy="20" r="7" style={{ fill: 'var(--color-lime)' }} />
         </svg>
       ) : null}
     </div>

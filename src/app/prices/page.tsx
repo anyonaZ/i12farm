@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Icon, CATEGORY_ICON } from '@/components/Icon';
@@ -10,10 +10,9 @@ import { listFarmCategories, listPilotCounties, listProducts } from '@/domains/r
 import { kes } from '@/lib/format';
 import type { Locale } from '@/i18n/config';
 
-export const metadata: Metadata = {
-  title: 'Market prices',
+export const generateMetadata = titled('prices', {
   description: 'Weekly median farm prices by county in Kenya: milk, eggs, chicken, fish, vegetables and more, from farms on i12farm.',
-};
+});
 
 type Search = { searchParams: Promise<{ county?: string; cat?: string; p?: string; u?: string }> };
 
@@ -96,7 +95,7 @@ export default async function PricesPage({ searchParams }: Search) {
             }}
           />
           <details className="text-sm">
-            <summary className="cursor-pointer font-semibold text-sprout-deep">{t('prices.showTable')}</summary>
+            <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-sprout-deep">{t('prices.showTable')}</summary>
             <div className="mt-2 overflow-x-auto">
               <table className="w-full text-left tabular-nums">
                 <thead className="text-soil">
@@ -153,13 +152,13 @@ export default async function PricesPage({ searchParams }: Search) {
       ) : null}
 
       {shown.length ? (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {shown.map((s) => {
             const last = s.points.at(-1)!;
             const p = product(s.product);
             const active = selected === s;
             return (
-              <li key={`${s.product}|${s.unit}`}>
+              <li key={`${s.product}|${s.unit}`} className="min-w-0">
                 <Link
                   href={href({ p: s.product, u: s.unit })}
                   aria-current={active ? 'true' : undefined}
@@ -179,7 +178,7 @@ export default async function PricesPage({ searchParams }: Search) {
                     </div>
                     <Sparkline values={s.points.map((x) => x.median_kes)} label={t('prices.trend')} />
                   </div>
-                  <div className="flex items-end justify-between gap-2">
+                  <div className="flex flex-wrap items-end justify-between gap-x-2 gap-y-1">
                     <p className="text-xl font-extrabold tabular-nums">{kes(last.median_kes)}</p>
                     <Change series={s} label={(pct) => t('prices.change', { pct })} same={t('prices.noChange')} />
                   </div>
@@ -211,7 +210,7 @@ export default async function PricesPage({ searchParams }: Search) {
               ))}
             </ul>
             <p className="text-sm text-soil">{t('prices.wantedHint')}</p>
-            <Link href="/my-farm/new" className="text-sm font-bold text-sprout-deep underline">
+            <Link href="/my-farm/new" className="inline-flex min-h-11 items-center self-start text-sm font-bold text-sprout-deep underline">
               {t('prices.listYours')}
             </Link>
           </>
@@ -231,7 +230,7 @@ function Chip({ href, active, small, children }: { href: string; active: boolean
       href={href}
       scroll={false}
       aria-current={active ? 'page' : undefined}
-      className={`inline-flex shrink-0 items-center rounded-full border px-4 font-semibold whitespace-nowrap ${small ? 'h-9 text-sm' : 'h-10 text-sm'} ${
+      className={`inline-flex shrink-0 items-center rounded-full border px-4 font-semibold whitespace-nowrap h-11 text-sm ${
         active ? 'border-forest bg-forest text-white' : 'border-line bg-surface text-forest hover:bg-mint'
       }`}
     >

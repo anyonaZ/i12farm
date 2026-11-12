@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getFormatter, getTranslations } from 'next-intl/server';
@@ -9,7 +10,7 @@ import { pesiMode } from '@/lib/pesi';
 import { displayPhone } from '@/lib/phone';
 import { FeatureForm } from './FeatureForm';
 
-export const metadata = { title: 'Feature your farm', robots: { index: false } };
+export const generateMetadata = titled('featureFarm', { robots: { index: false } });
 
 export default async function FeaturePage({ params }: { params: Promise<{ farmId: string }> }) {
   const { farmId } = await params;

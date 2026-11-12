@@ -80,3 +80,14 @@ export function listVetFarms(countyCode: number | null): Promise<VetFarm[]> {
     limit 12`,
   );
 }
+
+/** Counties that have at least one published vet service (listed first in the request form). */
+export async function listVetCounties(): Promise<number[]> {
+  const rows = await withUser(
+    null,
+    (tx) => tx<{ county_code: number }[]>`
+    select distinct f.county_code from public.farms f
+    where f.status = 'published' and 'vet-services' = any (f.categories) and f.county_code is not null`,
+  );
+  return rows.map((r) => r.county_code);
+}

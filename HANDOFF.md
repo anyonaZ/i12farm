@@ -72,6 +72,50 @@ Still open: commission rate, featured-listing prices, annual subscription, domai
 | 3.5 Hardening | **Done (4 Nov)** after the audit: demo mode locked in production builds, Next.js / Nodemailer / MapLibre upgraded (0 advisories), security headers, backup job skips without secrets, privacy notice + terms + download my data + delete my account, unanswered paid orders reminded then declined and refunded, edit farm and products after publishing, agent farm list with search, wizard drafts, tab badges, forgiving search, branded 404, clean farm links, link previews, sitemap |
 | 4 Insight | **Built (10 Nov)**: public `/prices` (weekly county median per product, 12-week chart with range and table, change over 4 weeks, "buyers looked for and found little"), "County median" beside prices on farm pages, partner `/partner` county insights (farms by type, on sale and medians, orders and value, buyer contacts, vet requests by animal, most searched and not found; 30/90/365 days), anonymous search log. Google Maps integrated with the free map as fallback |
 
+Pre-production design review and fixes (12 Nov 2026). Zacc asked for a full
+critique, then for every finding fixed **except payments** (he is still
+deciding how payments should work, so payment wording, the long payment
+reference, the M-Pesa/Pesi naming, admin payout/refund buttons and the Money
+tab layout were left as they are). Fixed:
+- Explore on a computer: the category row can now be scrolled with the mouse
+  wheel, ‹ › buttons and dragging (`src/components/ScrollRow.tsx`, also used
+  for the admin tabs and the agent's farm filters). The farm count no longer
+  jumps: the map frames all farms once on first load, and a framing asked for
+  while the map is still loading is kept (MapLibre, Google and Leaflet).
+- Confirmation before anything that can't be undone: buyer "I received it"
+  (second tap, "Yes, I got it" / "Not yet"); admin giving the Admin role,
+  suspending someone, verifying/unverifying a farm. After accepting, the
+  farmer's "Decline" reads "Can't fulfil it" / "Cancel and refund".
+- Checkout keeps delivery choice, note and visit date through sign-in
+  (sessionStorage, this tab only; cleared once the order is placed).
+- Form errors: our own message under the field, in English or Kiswahili,
+  instead of the browser's English bubble (`src/components/FieldErrors.tsx`,
+  works for every form; a field can set `data-error`). Sign-in heading,
+  browser title and link follow the Create account tab (`?tab=up`).
+- Every page title is translated (`titles` in messages, `src/lib/titles.ts`);
+  order pages are titled "Order #ABC123".
+- Tap targets 44 px+ (chips, period buttons, stock box, small links via the
+  `.hit` class), no text under 12 px outside payout pages, grey pills darker
+  (contrast), placeholders 4.5:1, skip-to-content link, named progress bar,
+  keyboard-scrollable admin tables, reduced-motion respected.
+- Market prices no longer overflows phones narrower than 405 px.
+- Admin: unknown `?tab=` opens People; insight tiles wrap instead of cutting
+  off; chart labels readable.
+- Vets: a vet sees requests for them first (also in reading order); the
+  county list puts counties that have vets first.
+- Farm page: a farm with no phone gets "Message the farm" in the bottom bar.
+- Orders show "Buyer ···003" when the buyer gave no name; demo seed marks
+  demo conversations read (no more "115 unread").
+- Theme-ready: logo, map pins, charts and farm covers now take their colours
+  from the tokens in `globals.css` (plus `--color-danger`, `--color-muted`,
+  `--color-map`, `--cover-*`); `<Icon>` carries `data-icon` so a new icon set
+  is a one-file swap. Three looks were mocked on the real screens for Zacc to
+  choose (A Savanna Gold + Phosphor, B Emerald Fresh + Hugeicons, C Red Soil +
+  Tabler; all MIT); waiting on his choice.
+Verified: 136 database checks, production build, all 196 page loads at 360 px
+and 1366 px in both languages (no errors, no sideways scroll, one h1, no raw
+keys), and browser walkthroughs of each fix.
+
 Verified on 10 Nov 2026 (Phase 6 and charges): 136 database checks (17 new:
 push subscriptions private and moved to whoever signed in last on a shared
 phone, paid order → farm, answers → buyer, topics off send nothing, one waiting
@@ -259,7 +303,6 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 ## 8. Known gaps
 
 - Payouts are semi-manual (bulk payment file in, results file out). B2C API automation needs Safaricom go-live and an initiator certificate.
-- **No notifications outside the app** since SMS was removed: a farm only sees a new order or vet request when someone opens the app (badges). Web push (free, works on Android Chrome) is the obvious next step; until then agents should check daily, and the 36 h auto-decline protects buyers.
 - Google Maps untested against real Google (blocked in the build sandbox); the fallback is tested.
 - Prices are asking prices from listings, not prices paid; pilot counties have few farms per product, so medians move with one farm. Units differ by product (litre, tray of 30, 90 kg bag); medians are per product and unit.
 - Searches are logged from Explore only, after the 400 ms typing pause; half-typed words are filtered in SQL. Searches without a county filter take the county nearest the map centre (within 80 km).
@@ -269,6 +312,7 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 - Farms with no phone at all (no public, WhatsApp or owner sign-in phone) can't be paid from the payout file until one is added.
 - After a migration, restart the app server: Postgres refuses cached query plans whose columns changed ("cached plan must not change result type").
 - The privacy notice and terms are drafts (see Decisions).
+- Payment-related findings from the 12 Nov design review are open on purpose until the payment approach is settled: completed-order text still says the farmer "is being paid" (payouts are batched), the payment reference shows in full, M-Pesa/Pesi naming is mixed, admin Record payout/refund have no confirmation, the admin Money → Pesi card is cramped on phones.
 - Bookings have no farm calendar: the farm accepts or declines the date the buyer picked.
 - A Kiswahili native speaker should review all text.
 - Map tiles are not cached offline; pages and photos are.

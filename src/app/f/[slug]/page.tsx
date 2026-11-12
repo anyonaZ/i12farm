@@ -27,7 +27,7 @@ type Params = { params: Promise<{ slug: string }> };
 // comes from the farm itself.
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const farm = await getFarmBySlug((await params).slug);
-  if (!farm) return { title: 'Farm not found' };
+  if (!farm) return { title: (await getTranslations('titles'))('farmNotFound') };
   const place = [farm.place_name, farm.county?.name].filter(Boolean).join(', ');
   const image = publicMediaUrl(farm.media[0]?.storage_path);
   return {
@@ -152,7 +152,7 @@ export default async function FarmPage({ params }: Params) {
             </ul>
           </header>
 
-          {!mine ? (
+          {!mine && (farm.phone_public || farm.whatsapp) ? (
             <form action={message} className="lg:hidden">
               <button type="submit" className="btn-secondary">
                 <Icon name="chat" size={18} />
@@ -199,7 +199,7 @@ export default async function FarmPage({ params }: Params) {
                         <Link
                           href={`/prices?${benchmarks[l.id].scope === 'county' ? `county=${farm.county_code}&` : ''}p=${l.product_slug ?? ''}&u=${l.unit}`}
                           title={t('prices.compareTitle', { n: benchmarks[l.id].farms })}
-                          className="text-xs text-soil underline decoration-line underline-offset-2 hover:text-sprout-deep"
+                          className="hit text-xs text-soil underline decoration-soil/40 underline-offset-2 hover:text-sprout-deep"
                         >
                           {t('prices.compare', { scope: benchmarks[l.id].scope, price: kes(benchmarks[l.id].median_kes) })}
                         </Link>
@@ -335,6 +335,8 @@ export default async function FarmPage({ params }: Params) {
         listingId={farm.listings[0]?.id ?? null}
         lng={farm.public_lng}
         lat={farm.public_lat}
+        message={mine ? undefined : message}
+        messageLabel={t('orders.message')}
       />
     </main>
   );

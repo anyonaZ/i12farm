@@ -298,7 +298,7 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
                 autoComplete="tel"
               />
             </Field>
-            <label className="flex min-h-10 items-center gap-2.5 text-sm">
+            <label className="flex min-h-11 items-center gap-2.5 text-sm">
               <input type="checkbox" checked={waSame} onChange={(e) => setWaSame(e.target.checked)} className="size-5 accent-sprout-deep" />
               {t('waSame')}
             </label>
@@ -438,7 +438,7 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
                 <figure key={p.previewUrl} className="relative aspect-square overflow-hidden rounded-2xl bg-mint">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.previewUrl} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
-                  <figcaption className="absolute bottom-1.5 left-1.5 rounded bg-white/85 px-1.5 font-mono text-[11px]">
+                  <figcaption className="absolute bottom-1.5 left-1.5 rounded bg-white/85 px-1.5 font-mono text-xs">
                     {formatBytes(p.originalBytes)} → {formatBytes(p.blob.size)}
                   </figcaption>
                   <button

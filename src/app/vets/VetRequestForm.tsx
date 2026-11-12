@@ -8,12 +8,14 @@ import { CATEGORY_ICON, Icon } from '@/components/Icon';
 
 interface Props {
   counties: { code: number; name: string }[];
+  /** Counties that have a vet on i12farm, offered first. */
+  vetCounties: number[];
   animals: { slug: string; name: string }[];
   defaultCounty: number | null;
   defaultPhone: string;
 }
 
-export function VetRequestForm({ counties, animals, defaultCounty, defaultPhone }: Props) {
+export function VetRequestForm({ counties, vetCounties, animals, defaultCounty, defaultPhone }: Props) {
   const t = useTranslations('vets');
   const router = useRouter();
   const [county, setCounty] = useState(String(defaultCounty ?? ''));
@@ -88,11 +90,34 @@ export function VetRequestForm({ counties, animals, defaultCounty, defaultPhone 
           </label>
           <select id="vet-county" value={county} onChange={(e) => setCounty(e.target.value)} className="input">
             <option value="">—</option>
-            {counties.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
+            {vetCounties.length ? (
+              <>
+                <optgroup label={t('countiesWithVets')}>
+                  {counties
+                    .filter((c) => vetCounties.includes(c.code))
+                    .map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name}
+                      </option>
+                    ))}
+                </optgroup>
+                <optgroup label={t('otherCounties')}>
+                  {counties
+                    .filter((c) => !vetCounties.includes(c.code))
+                    .map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.name}
+                      </option>
+                    ))}
+                </optgroup>
+              </>
+            ) : (
+              counties.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))
+            )}
           </select>
         </div>
         <div className="flex flex-col gap-1.5">

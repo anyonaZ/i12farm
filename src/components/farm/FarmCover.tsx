@@ -51,8 +51,9 @@ export function FarmCover({
     >
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor={`hsl(${hue} 55% 82%)`} />
-          <stop offset="1" stopColor={`hsl(${(hue + 40) % 360} 45% 70%)`} />
+          {/* Saturation and lightness come from the theme (--cover-*), hue from the category. */}
+          <stop offset="0" style={{ stopColor: `hsl(${hue} var(--cover-s1, 55%) var(--cover-l1, 82%))` }} />
+          <stop offset="1" style={{ stopColor: `hsl(${(hue + 40) % 360} var(--cover-s2, 45%) var(--cover-l2, 70%))` }} />
         </linearGradient>
       </defs>
       <rect width="200" height="140" fill={`url(#${gid})`} />
@@ -62,6 +63,7 @@ export function FarmCover({
         ))}
       </g>
       <g
+        data-icon={CATEGORY_ICON[cat] ?? 'leaf'}
         transform="translate(118 46) scale(3.1)"
         fill="none"
         stroke={`hsl(${hue} 50% 28%)`}

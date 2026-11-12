@@ -220,7 +220,7 @@ export function FarmActions({ orderId, status }: { orderId: string; status: Orde
               className="btn-primary min-h-11 bg-forest text-sm"
               onClick={() => move('declined', reason)}
             >
-              {t('confirmDecline')}
+              {status === 'accepted' ? t('confirmCancelAccepted') : t('confirmDecline')}
             </button>
             <button type="button" className="btn-secondary min-h-11 text-sm" onClick={() => setDeclining(false)}>
               {t('back')}
@@ -241,7 +241,7 @@ export function FarmActions({ orderId, status }: { orderId: string; status: Orde
             </button>
           )}
           <button type="button" disabled={pending} className="btn-secondary min-h-13" onClick={() => setDeclining(true)}>
-            {t('decline')}
+            {status === 'accepted' ? t('cancelAccepted') : t('decline')}
           </button>
         </div>
       )}
@@ -253,6 +253,7 @@ export function BuyerActions({ orderId, status }: { orderId: string; status: Ord
   const t = useTranslations('orders');
   const router = useRouter();
   const [pending, start] = useTransition();
+  const [confirming, setConfirming] = useState(false);
   const err = useOrderError();
 
   function move(to: OrderStatus) {
@@ -265,13 +266,34 @@ export function BuyerActions({ orderId, status }: { orderId: string; status: Ord
   }
 
   if (status === 'ready') {
+    // Receiving closes the order for good, so it takes a second, deliberate tap.
     return (
       <section className="flex flex-col gap-2">
         {err.node}
-        <button type="button" disabled={pending} className="btn-primary min-h-14 text-lg" onClick={() => move('completed')}>
-          <Icon name="check" size={20} />
-          {t('confirmReceived')}
-        </button>
+        {confirming ? (
+          <div className="card gap-3 border-sprout-deep" role="alertdialog" aria-labelledby="recv-q" aria-describedby="recv-w">
+            <p id="recv-q" className="text-lg font-bold">
+              {t('receivedQuestion')}
+            </p>
+            <p id="recv-w" className="text-sm text-soil">
+              {t('receivedWarn')}
+            </p>
+            <div className="grid grid-cols-[2fr_1fr] gap-2">
+              <button type="button" disabled={pending} autoFocus className="btn-primary min-h-13" onClick={() => move('completed')}>
+                <Icon name="check" size={18} />
+                {t('receivedYes')}
+              </button>
+              <button type="button" className="btn-secondary min-h-13" onClick={() => setConfirming(false)}>
+                {t('notYet')}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" className="btn-primary min-h-14 text-lg" onClick={() => setConfirming(true)}>
+            <Icon name="check" size={20} />
+            {t('confirmReceived')}
+          </button>
+        )}
       </section>
     );
   }
@@ -279,7 +301,7 @@ export function BuyerActions({ orderId, status }: { orderId: string; status: Ord
     return (
       <section className="flex flex-col gap-2">
         {err.node}
-        <button type="button" disabled={pending} className="text-sm font-bold text-soil underline" onClick={() => move('cancelled')}>
+        <button type="button" disabled={pending} className="inline-flex min-h-11 items-center self-start text-sm font-bold text-soil underline" onClick={() => move('cancelled')}>
           {t('cancel')}
         </button>
       </section>

@@ -1,3 +1,4 @@
+import { titled } from '@/lib/titles';
 import { notFound } from 'next/navigation';
 import { getLocale } from 'next-intl/server';
 import { COUNTY_FOCUS, listCounties, listFarmCategories, listPilotSubCounties } from '@/domains/reference/queries';
@@ -7,7 +8,7 @@ import { displayPhone } from '@/lib/phone';
 import type { Locale } from '@/i18n/config';
 import { EditFarmForm } from './EditFarmForm';
 
-export const metadata = { title: 'Edit farm', robots: { index: false } };
+export const generateMetadata = titled('editFarm', { robots: { index: false } });
 
 export default async function EditFarmPage({ params }: { params: Promise<{ farmId: string }> }) {
   const { farmId } = await params;

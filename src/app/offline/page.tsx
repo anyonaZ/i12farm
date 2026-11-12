@@ -6,6 +6,7 @@ import sw from '../../../messages/sw.json';
 // Built once at deploy time, so it shows both languages rather than reading
 // the locale cookie.
 export const dynamic = 'force-static';
+export const metadata = { title: `${en.offline.title} · ${sw.offline.title}`, robots: { index: false } };
 
 export default function OfflinePage() {
   return (

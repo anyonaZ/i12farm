@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { BottomNav } from '@/components/BottomNav';
 import { AppRuntime } from '@/components/AppRuntime';
+import { FieldErrors } from '@/components/FieldErrors';
 import { TopNav } from '@/components/TopNav';
 import { displayName, getViewer } from '@/lib/auth/viewer';
 import { publicDemo } from '@/lib/demo';
@@ -50,6 +51,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale} className={jakarta.variable}>
       <body className="antialiased">
         <NextIntlClientProvider>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-full focus:bg-forest focus:px-4 focus:py-3 focus:font-bold focus:text-white"
+          >
+            {tApp('skip')}
+          </a>
           {publicDemo ? (
             <p className="bg-amber px-4 py-1.5 text-center text-xs font-bold text-forest" role="note">
               {tApp('demoBanner')}
@@ -67,9 +74,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             }
           />
           {/* Phones: one centred column. Desktop: each page sets its own width. */}
-          <div className="mx-auto min-h-dvh max-w-md lg:min-h-[calc(100dvh-4rem)] lg:max-w-none">{children}</div>
+          <div id="main" tabIndex={-1} className="mx-auto min-h-dvh max-w-md outline-none lg:min-h-[calc(100dvh-4rem)] lg:max-w-none">
+            {children}
+          </div>
           <BottomNav />
           <AppRuntime />
+          <FieldErrors />
         </NextIntlClientProvider>
       </body>
     </html>
