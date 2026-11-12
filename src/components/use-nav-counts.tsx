@@ -51,7 +51,7 @@ export function Badge({ n, label }: { n: number | undefined; label: string }) {
   if (!n) return null;
   return (
     <span
-      className="absolute -right-1 -top-1 grid min-w-[18px] place-items-center rounded-full bg-amber px-1 text-xs font-bold leading-[18px] text-forest ring-2 ring-surface"
+      className="absolute -right-1 -top-1 grid min-w-[18px] place-items-center rounded-full bg-amber px-1 text-xs font-bold leading-[18px] text-ink ring-2 ring-surface"
       aria-label={label}
     >
       {n > 9 ? '9+' : n}

@@ -231,7 +231,7 @@ function Chip({ href, active, small, children }: { href: string; active: boolean
       scroll={false}
       aria-current={active ? 'page' : undefined}
       className={`inline-flex shrink-0 items-center rounded-full border px-4 font-semibold whitespace-nowrap h-11 text-sm ${
-        active ? 'border-forest bg-forest text-white' : 'border-line bg-surface text-forest hover:bg-mint'
+        active ? 'border-forest bg-forest text-surface' : 'border-line bg-surface text-forest hover:bg-mint'
       }`}
     >
       {children}

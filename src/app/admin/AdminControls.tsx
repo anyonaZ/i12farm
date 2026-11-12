@@ -83,7 +83,7 @@ export function UserRow({
           return (
             <label
               key={r}
-              className={`chip min-h-11 cursor-pointer px-3.5 text-sm font-bold ${on ? 'border-forest bg-forest text-white' : ''}`}
+              className={`chip min-h-11 cursor-pointer px-3.5 text-sm font-bold ${on ? 'border-forest bg-forest text-surface' : ''}`}
             >
               <input
                 type="checkbox"

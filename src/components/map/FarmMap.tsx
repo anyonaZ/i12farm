@@ -9,7 +9,11 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 // Free vector tiles, no API key (https://openfreemap.org). Swap for a
 // self-hosted style URL if the pilot needs guaranteed uptime.
+// Dark map when the phone or computer is in dark mode; the light map if the
+// dark style can't be fetched.
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/positron';
+const DARK_STYLE_URL = 'https://tiles.openfreemap.org/styles/dark';
+const prefersDark = () => typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
 // Browsers without WebGL get a plain image-tile map instead (Leaflet).
 const RasterMap = dynamic(() => import('./RasterMap'), { ssr: false });
@@ -19,11 +23,11 @@ const GOOGLE_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 let googleFailed = false; // once Google fails on this page, don't try it again
 
 // When the map style can't be downloaded, pins still draw on a plain background.
-const OFFLINE_STYLE: StyleSpecification = {
+const offlineStyle = (): StyleSpecification => ({
   version: 8,
   sources: {},
   layers: [{ id: 'background', type: 'background', paint: { 'background-color': mapColors().background } }],
-};
+});
 
 function webglAvailable(): boolean {
   try {
@@ -37,9 +41,11 @@ function webglAvailable(): boolean {
 // One download of the style per page load, shared by every map; 8 s limit.
 let stylePromise: Promise<StyleSpecification | null> | null = null;
 function loadStyle(): Promise<StyleSpecification | null> {
-  stylePromise ??= fetch(STYLE_URL, { signal: AbortSignal.timeout(8000) })
-    .then((r) => (r.ok ? (r.json() as Promise<StyleSpecification>) : null))
-    .catch(() => null)
+  const get = (url: string) =>
+    fetch(url, { signal: AbortSignal.timeout(8000) })
+      .then((r) => (r.ok ? (r.json() as Promise<StyleSpecification>) : null))
+      .catch(() => null);
+  stylePromise ??= (prefersDark() ? get(DARK_STYLE_URL).then((s) => s ?? get(STYLE_URL)) : get(STYLE_URL))
     .then((style) => {
       if (!style) stylePromise = null; // try again on the next map
       return style;
@@ -163,7 +169,7 @@ function VectorMap({
       try {
         map = new maplibregl.Map({
           container: container.current,
-          style: style ?? OFFLINE_STYLE,
+          style: style ?? offlineStyle(),
           center,
           zoom,
           interactive,

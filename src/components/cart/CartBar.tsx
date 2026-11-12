@@ -15,7 +15,7 @@ export function CartBar({ farmId, variant = 'bar' }: { farmId: string; variant?:
   if (items === 0) return null;
   if (variant === 'panel') {
     return (
-      <Link href={`/checkout?farm=${encodeURIComponent(cart.farmSlug)}`} className="btn-primary min-h-13 justify-between bg-forest px-5">
+      <Link href={`/checkout?farm=${encodeURIComponent(cart.farmSlug)}`} className="btn-primary min-h-13 justify-between bg-ink px-5">
         <span className="inline-flex items-center gap-2 text-sm font-semibold">
           <Icon name="bag" size={18} />
           {t('items', { n: items })}
@@ -28,7 +28,7 @@ export function CartBar({ farmId, variant = 'bar' }: { farmId: string; variant?:
     <div className="fixed inset-x-0 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-30 px-4 lg:hidden">
       <Link
         href={`/checkout?farm=${encodeURIComponent(cart.farmSlug)}`}
-        className="mx-auto flex min-h-14 max-w-md items-center justify-between gap-3 rounded-full bg-forest px-5 text-white shadow-[0_8px_24px_rgba(5,59,43,0.35)]"
+        className="mx-auto flex min-h-14 max-w-md items-center justify-between gap-3 rounded-full bg-ink px-5 text-white shadow-[0_8px_24px_rgba(5,59,43,0.35)]"
       >
         <span className="inline-flex items-center gap-2 text-sm font-semibold">
           <Icon name="bag" size={18} />

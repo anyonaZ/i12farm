@@ -83,7 +83,7 @@ export default async function PartnerPage({ searchParams }: { searchParams: Prom
               href={href({ days: d })}
               scroll={false}
               aria-current={d === days ? 'page' : undefined}
-              className={`inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold ${d === days ? 'bg-forest text-white' : 'text-soil hover:bg-mint'}`}
+              className={`inline-flex h-11 items-center rounded-full px-4 text-sm font-semibold ${d === days ? 'bg-forest text-surface' : 'text-soil hover:bg-mint'}`}
             >
               {t('partner.days', { n: d })}
             </Link>
@@ -278,7 +278,7 @@ function Chip({ href, active, children }: { href: string; active: boolean; child
       scroll={false}
       aria-current={active ? 'page' : undefined}
       className={`inline-flex h-10 shrink-0 items-center rounded-full border px-4 text-sm font-semibold whitespace-nowrap ${
-        active ? 'border-forest bg-forest text-white' : 'border-line bg-surface text-forest hover:bg-mint'
+        active ? 'border-forest bg-forest text-surface' : 'border-line bg-surface text-forest hover:bg-mint'
       }`}
     >
       {children}

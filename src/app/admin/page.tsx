@@ -73,7 +73,7 @@ export default async function AdminPage({
             key={x.key}
             href={`/admin?tab=${x.key}`}
             aria-current={tab === x.key ? 'page' : undefined}
-            className={`flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-bold ${tab === x.key ? 'border-forest bg-forest text-white' : 'border-line bg-surface text-soil'}`}
+            className={`flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border px-4 text-sm font-bold ${tab === x.key ? 'border-forest bg-forest text-surface' : 'border-line bg-surface text-soil'}`}
           >
             <Icon name={x.icon} size={16} />
             {x.label}

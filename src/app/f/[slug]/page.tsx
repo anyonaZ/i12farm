@@ -105,7 +105,7 @@ export default async function FarmPage({ params }: Params) {
         <Link
           href="/"
           aria-label={t('farm.back')}
-          className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top))] grid size-11 place-items-center rounded-full bg-white/85 text-forest"
+          className="absolute left-4 top-[max(0.75rem,env(safe-area-inset-top))] grid size-11 place-items-center rounded-full bg-surface/85 text-forest"
         >
           <Icon name="back" />
         </Link>

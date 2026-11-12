@@ -1,4 +1,4 @@
-import { CATEGORY_HUE, CATEGORY_ICON, ICON_PATHS } from '@/components/Icon';
+import { CATEGORY_HUE, CATEGORY_ICON, IconShapes } from '@/components/Icon';
 import { publicMediaUrl } from '@/lib/media-url';
 
 // A farm's first photo, or a generated cover (category colour, contour lines,
@@ -66,13 +66,10 @@ export function FarmCover({
         data-icon={CATEGORY_ICON[cat] ?? 'leaf'}
         transform="translate(118 46) scale(3.1)"
         fill="none"
-        stroke={`hsl(${hue} 50% 28%)`}
-        strokeOpacity={0.55}
-        strokeWidth={1.4}
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        opacity={0.6}
+        style={{ color: `hsl(${hue} 50% var(--cover-ink-l, 30%))` }}
       >
-        <path d={ICON_PATHS[CATEGORY_ICON[cat] ?? 'leaf']} />
+        <IconShapes name={CATEGORY_ICON[cat] ?? 'leaf'} />
       </g>
     </svg>
   );

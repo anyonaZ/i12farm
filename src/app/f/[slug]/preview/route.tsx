@@ -21,23 +21,23 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        background: '#053B2B',
+        background: '#0A1F16',
         padding: 72,
         color: 'white',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 40, fontWeight: 700 }}>
-        <div style={{ width: 64, height: 64, borderRadius: 18, background: '#B6F04A', display: 'flex' }} />
+        <div style={{ width: 64, height: 64, borderRadius: 18, background: '#C6F36B', display: 'flex' }} />
         i12farm
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div style={{ fontSize: farm.name.length > 26 ? 72 : 92, fontWeight: 700, lineHeight: 1.05 }}>{farm.name}</div>
-        <div style={{ fontSize: 40, color: '#cfe9d9' }}>{place}</div>
+        <div style={{ fontSize: 40, color: '#cdeee0' }}>{place}</div>
       </div>
       <div style={{ display: 'flex', gap: 16, fontSize: 34 }}>
-        <div style={{ display: 'flex', background: '#12B76A', borderRadius: 999, padding: '10px 28px' }}>{types}</div>
+        <div style={{ display: 'flex', background: '#047857', borderRadius: 999, padding: '10px 28px' }}>{types}</div>
         {farm.verified_at ? (
-          <div style={{ display: 'flex', background: '#B6F04A', color: '#053B2B', borderRadius: 999, padding: '10px 28px' }}>
+          <div style={{ display: 'flex', background: '#C6F36B', color: '#0A1F16', borderRadius: 999, padding: '10px 28px' }}>
             Verified farm
           </div>
         ) : null}

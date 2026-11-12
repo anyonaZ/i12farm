@@ -1,31 +1,90 @@
 @import 'tailwindcss';
 
 /*
- * i12farm design tokens. Every colour on screen comes from here, so the
- * palette can change without touching a component.
+ * i12farm design tokens: "Emerald Fresh" (chosen 12 Nov 2026). Every colour on
+ * screen comes from here, so the palette can change without touching a
+ * component. Dark mode (below) follows the phone's or computer's setting.
  *
- * Contrast notes (WCAG): white text on Sprout is only 2.6:1, so filled
- * buttons use Sprout Deep (#067647, 5.7:1 with white). Sprout itself is for
- * map pins, icons, active states and large accents.
+ * Roles:
+ *   mint     page background          surface  cards, inputs, bars
+ *   forest   main text (light in dark mode)    soil  secondary text
+ *   line     borders                  muted    placeholders
+ *   sprout-deep  filled buttons and links (white text 5.5:1)
+ *   sprout   icons, pins, active accents (not for small text on white)
+ *   ink      dark panels and badges; stays dark in both modes, white text on it
+ *   lime, amber  highlights; text on them is always ink
  */
 @theme {
-  --color-sprout: #12b76a;
-  --color-sprout-deep: #067647;
-  --color-forest: #053b2b;
-  --color-lime: #b6f04a;
-  --color-mint: #f3fbf6;
-  --color-amber: #f5a524;
-  --color-soil: #5b6b63;
-  --color-line: #d8eadf;
+  --color-sprout: #10b981;
+  --color-sprout-deep: #047857;
+  --color-forest: #0a1f16;
+  --color-ink: #0a1f16;
+  --color-lime: #c6f36b;
+  --color-mint: #f5f8f6;
+  --color-amber: #f59e0b;
+  --color-soil: #56645d;
+  --color-line: #e1e9e4;
   --color-surface: #ffffff;
   --color-danger: #b42318; /* 6.5:1 on white */
-  --color-muted: #6b7a72; /* placeholders: 4.5:1 on white */
-  --color-map: #e8f3ec; /* map background before tiles load */
+  --color-muted: #6b7872; /* placeholders: 4.5:1 on white */
+  --color-map: #e4eee8; /* map background before tiles load */
 
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-outfit), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 1.25rem;
   --spacing-tap: 3rem; /* 48 px minimum tap target */
+}
+
+/* Not colours Tailwind makes classes for, but read by components. */
+:root {
+  --color-sprout-text: var(--color-sprout-deep); /* links and green text */
+  --shadow-card: 0 1px 3px rgb(10 31 22 / 0.05), 0 8px 24px rgb(10 31 22 / 0.05);
+  --shadow-button: 0 6px 16px rgb(4 120 87 / 0.22);
+  /* Generated farm covers: hue from the category, the rest from the theme. */
+  --cover-s1: 60%;
+  --cover-l1: 86%;
+  --cover-s2: 50%;
+  --cover-l2: 74%;
+  --cover-ink-l: 30%;
+  --color-cluster: #0a1f16; /* map groups of farms */
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-mint: #0b1410;
+    --color-surface: #121d18;
+    --color-line: #24342c;
+    --color-forest: #e8f1ec;
+    --color-soil: #a3b5ac;
+    --color-muted: #82968c;
+    --color-ink: #0f2b20;
+    --color-sprout: #34d399;
+    --color-sprout-deep: #047857; /* still the button fill: white text stays 5.5:1 */
+    --color-sprout-text: #4ade9f; /* green text on dark: 8:1 */
+    --color-lime: #c6f36b;
+    --color-amber: #fbbf24;
+    --color-danger: #f97066;
+    --color-map: #0f1a15;
+    --shadow-card: none;
+    --shadow-button: none;
+    --cover-s1: 32%;
+    --cover-l1: 24%;
+    --cover-s2: 28%;
+    --cover-l2: 17%;
+    --cover-ink-l: 72%;
+    --color-cluster: #047857;
+  }
+  /* Green text needs a lighter green on a dark page than a button fill does. */
+  .text-sprout-deep,
+  .hover\:text-sprout-deep:hover {
+    color: var(--color-sprout-text);
+  }
+  /* Photos and maps a touch dimmer so they don't glare at night. */
+  img:not([src$='.svg']) {
+    filter: brightness(0.92);
+  }
 }
 
 @layer base {
@@ -36,8 +95,14 @@
     background: var(--color-mint);
     color: var(--color-forest);
     font-family: var(--font-sans);
-    font-feature-settings: 'ss01';
+    font-feature-settings: 'cv11', 'ss01';
     min-height: 100dvh;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
   }
   :focus-visible {
     outline: 3px solid var(--color-sprout);
@@ -65,6 +130,7 @@
 @layer components {
   .btn-primary {
     @apply inline-flex min-h-tap w-full items-center justify-center gap-2 rounded-full bg-sprout-deep px-5 text-base font-semibold text-white transition active:scale-[0.98] disabled:opacity-60;
+    box-shadow: var(--shadow-button);
   }
   .btn-secondary {
     @apply inline-flex min-h-tap w-full items-center justify-center gap-2 rounded-full border border-line bg-surface px-5 text-base font-semibold text-forest transition active:scale-[0.98];
@@ -74,6 +140,7 @@
   }
   .card {
     @apply flex flex-col rounded-card border border-line bg-surface p-5;
+    box-shadow: var(--shadow-card);
   }
   /* A small inline link with a 44 px tall tap area that doesn't move the layout. */
   .hit {

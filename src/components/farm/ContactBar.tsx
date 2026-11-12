@@ -75,7 +75,7 @@ export function ContactBar({
       <button
         type="button"
         onClick={share}
-        className="grid size-11 place-items-center rounded-full bg-white/85 text-forest lg:hidden"
+        className="grid size-11 place-items-center rounded-full bg-surface/85 text-forest lg:hidden"
         aria-label={copied ? t('linkCopied') : t('share')}
       >
         <Icon name={copied ? 'check' : 'share'} />

@@ -74,7 +74,7 @@ export function FeatureForm({
   if (state?.status === 'active') {
     return (
       <section className="card items-center gap-3 text-center" role="status">
-        <span className="grid size-14 place-items-center rounded-full bg-lime">
+        <span className="grid size-14 place-items-center rounded-full bg-lime text-ink">
           <Icon name="star" size={28} className="fill-forest text-forest" />
         </span>
         <p className="text-lg font-bold">

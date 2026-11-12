@@ -39,7 +39,7 @@ export async function InsightsView({ data }: { data: Insights }) {
             key={d}
             href={`/admin?tab=insights&days=${d}`}
             aria-current={d === data.days ? 'page' : undefined}
-            className={`chip min-h-11 px-3 text-xs font-bold ${d === data.days ? 'border-forest bg-forest text-white' : ''}`}
+            className={`chip min-h-11 px-3 text-xs font-bold ${d === data.days ? 'border-forest bg-forest text-surface' : ''}`}
           >
             {t('period', { days: d })}
           </Link>

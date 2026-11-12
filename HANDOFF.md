@@ -57,6 +57,8 @@ recorded with time and county, because that data is the long-term asset.
 | Notifications | Free web push instead of SMS (decided 10 Nov 2026). Opt-in per device, per-topic switches, text in the person's language. Needs VAPID keys |
 | Safety | Report a farm; 3 different reporters hide an unverified farm until review (verified farms never auto-hidden); 3 new farms/day per account; 5 sign-ups/hour per network; honeypot field. All limits are settings |
 | Account deletion | Name, phone, email, password, saved farms and Google link removed; farms only that person managed are hidden; orders, payments and ledger kept without the name (tax/payment records). Blocked while orders are open, money is owed to them, or they manage unclaimed farms |
+| Look | **Emerald Fresh** (chosen 12 Nov 2026 from three mock-ups): emerald `#047857` buttons, ink `#0A1F16`, lime highlights, mist `#F5F8F6` page; Outfit headings + Inter text (self-hosted, OFL); Hugeicons Stroke Rounded icons (`@hugeicons/core-free-icons`, MIT; only the ~40 used are bundled). All colours are tokens in `src/app/globals.css` |
+| Dark mode | Follows the phone's or computer's setting (`prefers-color-scheme`), no switch in the app (decided 12 Nov 2026). Dark tokens in `globals.css`; `ink` stays dark in both modes for dark panels and text on lime/amber; selected chips invert (`bg-forest text-surface`); green text uses a lighter green on dark. Google Maps follows the system (`colorScheme`); the free map tries OpenFreeMap's dark style and falls back to the light one; browser bar colour per mode |
 | Privacy | Draft privacy notice and terms at `/privacy` and `/terms` (`src/content/legal.ts`), linked from sign-up. **Needs a Kenyan lawyer's review and a decision on ODPC registration** before launch. Set `NEXT_PUBLIC_CONTACT_EMAIL` |
 
 Still open: commission rate, featured-listing prices, annual subscription, domain, whether to automate payouts with the B2C API, whether vet requests carry a fee, whether partners pay for county insights, the Google Maps billing account (and a budget alert).
@@ -115,6 +117,16 @@ tab layout were left as they are). Fixed:
 Verified: 136 database checks, production build, all 196 page loads at 360 px
 and 1366 px in both languages (no errors, no sideways scroll, one h1, no raw
 keys), and browser walkthroughs of each fix.
+
+New look and dark mode (12 Nov 2026): Emerald Fresh applied (tokens, Outfit +
+Inter, Hugeicons, new app icons and link-preview colours, offline cache v5)
+and dark mode following the device setting. Verified: production build, 136
+database checks, all 196 page loads in light and in dark mode at 360 px and
+1366 px with no errors, no sideways scroll and no axe findings (contrast
+included), and screenshots of every main screen in both modes. Not verified
+here: OpenFreeMap's dark style URL (`/styles/dark`; falls back to the light
+map if it isn't there) and Google's dark map (no internet to either from the
+sandbox).
 
 Verified on 10 Nov 2026 (Phase 6 and charges): 136 database checks (17 new:
 push subscriptions private and moved to whoever signed in last on a shared

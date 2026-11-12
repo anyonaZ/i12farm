@@ -12,11 +12,18 @@ import { siteUrl } from '@/lib/env';
 import './globals.css';
 
 // Self-hosted (SIL OFL, see fonts/OFL.txt): no build-time call to Google Fonts,
-// and the font is cached with the app shell for offline use.
-const jakarta = localFont({
-  src: './fonts/PlusJakartaSans-latin.woff2',
-  weight: '200 800',
-  variable: '--font-jakarta',
+// and the fonts are cached with the app shell for offline use.
+// Inter for text, Outfit for headings and big numbers.
+const inter = localFont({
+  src: './fonts/Inter-latin.woff2',
+  weight: '100 900',
+  variable: '--font-inter',
+  display: 'swap',
+});
+const outfit = localFont({
+  src: './fonts/Outfit-latin.woff2',
+  weight: '100 900',
+  variable: '--font-outfit',
   display: 'swap',
 });
 
@@ -37,7 +44,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#053B2B',
+  // Browser bar colour follows the phone's light or dark setting.
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B1410' },
+  ],
+  colorScheme: 'light dark',
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
@@ -48,17 +60,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const viewer = await getViewer().catch(() => null);
   const tApp = await getTranslations('app');
   return (
-    <html lang={locale} className={jakarta.variable}>
+    <html lang={locale} className={`${inter.variable} ${outfit.variable}`}>
       <body className="antialiased">
         <NextIntlClientProvider>
           <a
             href="#main"
-            className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-full focus:bg-forest focus:px-4 focus:py-3 focus:font-bold focus:text-white"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-full focus:bg-ink focus:px-4 focus:py-3 focus:font-bold focus:text-white"
           >
             {tApp('skip')}
           </a>
           {publicDemo ? (
-            <p className="bg-amber px-4 py-1.5 text-center text-xs font-bold text-forest" role="note">
+            <p className="bg-amber px-4 py-1.5 text-center text-xs font-bold text-ink" role="note">
               {tApp('demoBanner')}
             </p>
           ) : null}

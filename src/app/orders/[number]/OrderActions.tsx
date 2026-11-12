@@ -217,7 +217,7 @@ export function FarmActions({ orderId, status }: { orderId: string; status: Orde
             <button
               type="button"
               disabled={pending}
-              className="btn-primary min-h-11 bg-forest text-sm"
+              className="btn-primary min-h-11 bg-ink text-sm"
               onClick={() => move('declined', reason)}
             >
               {status === 'accepted' ? t('confirmCancelAccepted') : t('confirmDecline')}

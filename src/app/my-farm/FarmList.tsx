@@ -59,7 +59,7 @@ export function FarmList({ farms }: { farms: ManagedFarmRow[] }) {
             type="button"
             aria-pressed={filter === k}
             onClick={() => setFilter(k)}
-            className={`chip ${filter === k ? 'border-forest bg-forest text-white' : ''}`}
+            className={`chip ${filter === k ? 'border-forest bg-forest text-surface' : ''}`}
           >
             {t(`filters.${k}`)}
           </button>

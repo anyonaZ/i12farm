@@ -4,11 +4,11 @@ import { mkdir } from 'node:fs/promises';
 
 const mark = (pad = 0) => `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${64 + 2 * pad} ${64 + 2 * pad}">
-  <rect x="${-pad}" y="${-pad}" width="${64 + 2 * pad}" height="${64 + 2 * pad}" rx="${pad ? 0 : 16}" fill="#053B2B"/>
-  <path d="M32 10c-9.4 0-17 7.4-17 16.6C15 39 32 54 32 54s17-15 17-27.4C49 17.4 41.4 10 32 10z" fill="#12B76A"/>
-  <path d="M32 40V27" stroke="#053B2B" stroke-width="3.2" stroke-linecap="round"/>
-  <path d="M32 29c0-6 4.2-9.6 10-9.6 0 6-4.4 9.6-10 9.6z" fill="#B6F04A"/>
-  <path d="M32 32c0-4.8-3.4-7.8-8.2-7.8 0 4.8 3.6 7.8 8.2 7.8z" fill="#B6F04A"/>
+  <rect x="${-pad}" y="${-pad}" width="${64 + 2 * pad}" height="${64 + 2 * pad}" rx="${pad ? 0 : 16}" fill="#0A1F16"/>
+  <path d="M32 10c-9.4 0-17 7.4-17 16.6C15 39 32 54 32 54s17-15 17-27.4C49 17.4 41.4 10 32 10z" fill="#10B981"/>
+  <path d="M32 40V27" stroke="#0A1F16" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M32 29c0-6 4.2-9.6 10-9.6 0 6-4.4 9.6-10 9.6z" fill="#C6F36B"/>
+  <path d="M32 32c0-4.8-3.4-7.8-8.2-7.8 0 4.8 3.6 7.8 8.2 7.8z" fill="#C6F36B"/>
 </svg>`;
 
 await mkdir('public/icons', { recursive: true });

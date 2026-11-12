@@ -95,7 +95,7 @@ export function FarmCard({
 
 export function FeaturedBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-forest px-2 py-0.5 text-xs font-bold text-lime">
+    <span className="inline-flex items-center gap-1 rounded-full bg-ink px-2 py-0.5 text-xs font-bold text-lime">
       <Icon name="star" size={12} className="fill-lime" />
       {label}
     </span>
@@ -104,7 +104,7 @@ export function FeaturedBadge({ label }: { label: string }) {
 
 export function VerifiedBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-lime px-2 py-0.5 text-xs font-bold text-forest">
+    <span className="inline-flex items-center gap-1 rounded-full bg-lime px-2 py-0.5 text-xs font-bold text-ink">
       <Icon name="check" size={12} />
       {label}
     </span>

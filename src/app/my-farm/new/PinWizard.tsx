@@ -438,13 +438,13 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
                 <figure key={p.previewUrl} className="relative aspect-square overflow-hidden rounded-2xl bg-mint">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.previewUrl} alt={`Photo ${i + 1}`} className="h-full w-full object-cover" />
-                  <figcaption className="absolute bottom-1.5 left-1.5 rounded bg-white/85 px-1.5 font-mono text-xs">
+                  <figcaption className="absolute bottom-1.5 left-1.5 rounded bg-surface/85 px-1.5 font-mono text-xs">
                     {formatBytes(p.originalBytes)} → {formatBytes(p.blob.size)}
                   </figcaption>
                   <button
                     type="button"
                     onClick={() => setPhotos(photos.filter((_, j) => j !== i))}
-                    className="absolute right-1.5 top-1.5 grid size-8 place-items-center rounded-full bg-white/85"
+                    className="absolute right-1.5 top-1.5 grid size-8 place-items-center rounded-full bg-surface/85"
                     aria-label={t('removePhoto')}
                   >
                     <Icon name="close" size={16} />

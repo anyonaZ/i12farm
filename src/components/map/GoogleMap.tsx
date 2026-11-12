@@ -25,6 +25,7 @@ type Libraries = { maps: google.maps.MapsLibrary; marker: google.maps.MarkerLibr
 
 let loading: Promise<Libraries> | null = null;
 let authFailed = false;
+let colorScheme: google.maps.ColorScheme | undefined;
 
 /** Loads the API once per page. Rejects if the key is refused or the script can't load (8 s). */
 export function loadGoogleMaps(locale: string): Promise<Libraries> {
@@ -38,9 +39,10 @@ export function loadGoogleMaps(locale: string): Promise<Libraries> {
     };
     const timer = setTimeout(() => reject(new Error('Google Maps did not load')), 8000);
     setOptions({ key: GOOGLE_MAPS_KEY, v: 'weekly', language: locale === 'sw' ? 'sw' : 'en', region: 'KE' });
-    Promise.all([importLibrary('maps'), importLibrary('marker')])
-      .then(([maps, marker]) => {
+    Promise.all([importLibrary('maps'), importLibrary('marker'), importLibrary('core')])
+      .then(([maps, marker, core]) => {
         clearTimeout(timer);
+        colorScheme = core.ColorScheme?.FOLLOW_SYSTEM;
         resolve({ maps, marker });
       })
       .catch((error) => {
@@ -128,6 +130,7 @@ export default function GoogleMap({
           center: { lat: center[1], lng: center[0] },
           zoom,
           mapId: MAP_ID,
+          colorScheme, // light or dark with the phone or computer (set once, at creation)
           disableDefaultUI: true,
           zoomControl: interactive,
           clickableIcons: false,

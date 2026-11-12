@@ -6,7 +6,7 @@
  * - Push notifications: shows them, and opens the right page when tapped.
  * Bump VERSION to force every phone to drop old caches.
  */
-const VERSION = 'v4';
+const VERSION = 'v5';
 const SHELL = `i12f-shell-${VERSION}`;
 const PAGES = `i12f-pages-${VERSION}`;
 const MEDIA = `i12f-media-${VERSION}`;

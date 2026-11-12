@@ -27,7 +27,7 @@ export function SaveButton({ farmId, initial, signedIn }: { farmId: string; init
           await toggleSavedFarm(farmId);
         });
       }}
-      className="grid size-11 place-items-center rounded-full bg-white/85 text-forest"
+      className="grid size-11 place-items-center rounded-full bg-surface/85 text-forest"
     >
       <svg
         width="20"

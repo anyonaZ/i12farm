@@ -102,7 +102,7 @@ export function PhotoManager({ farmId, photos }: { farmId: string; photos: { id:
               type="button"
               disabled={busy}
               onClick={() => remove(p.id)}
-              className="absolute right-1 top-1 grid size-7 place-items-center rounded-full bg-white/90"
+              className="absolute right-1 top-1 grid size-7 place-items-center rounded-full bg-surface/90"
               aria-label={t('removePhoto')}
             >
               <Icon name="close" size={14} />

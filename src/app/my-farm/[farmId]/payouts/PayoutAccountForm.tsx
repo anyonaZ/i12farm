@@ -56,7 +56,7 @@ export function PayoutAccountForm({
             <label
               key={c}
               className={`flex min-h-12 cursor-pointer items-center justify-center rounded-xl border px-3 text-sm font-bold ${
-                channel === c ? 'border-forest bg-forest text-white' : 'border-line bg-surface'
+                channel === c ? 'border-forest bg-forest text-surface' : 'border-line bg-surface'
               }`}
             >
               <input type="radio" name="channel" value={c} checked={channel === c} onChange={() => setChannel(c)} className="sr-only" />

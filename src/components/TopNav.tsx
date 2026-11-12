@@ -88,7 +88,7 @@ export function TopNav({ viewer }: { viewer: { name: string; admin: boolean; par
         <LanguageSwitch inNav />
         {viewer ? (
           <Link href="/account" className="inline-flex h-10 max-w-48 items-center gap-2 rounded-full bg-mint px-3 text-sm font-semibold">
-            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-forest text-xs font-bold text-lime">
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-ink text-xs font-bold text-lime">
               {viewer.name.trim().charAt(0).toUpperCase() || '?'}
             </span>
             <span className="hidden truncate xl:inline">{viewer.name}</span>

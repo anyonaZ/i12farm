@@ -124,7 +124,7 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
 
       {isAgent ? (
         <div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:items-start">
-          <section className="card gap-3 border-forest bg-forest text-white">
+          <section className="card gap-3 border-ink bg-ink text-white">
             <span className="text-sm text-white/75">{t('myFarm.pilotTarget')}</span>
             <h2 className="text-[22px] font-extrabold tabular-nums">{t('myFarm.target', { n: total })}</h2>
             <div
@@ -139,7 +139,7 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
               <i className="block h-full rounded-full bg-lime" style={{ width: `${Math.min(100, (total / PILOT_TARGET) * 100)}%` }} />
             </div>
             <p className="text-sm text-white/75">{t('myFarm.yours', { n: mine })}</p>
-            <Link href="/my-farm/new" className="btn-primary bg-lime text-forest">
+            <Link href="/my-farm/new" className="btn-primary bg-lime text-ink">
               <Icon name="plus" size={18} />
               {t('myFarm.enrolCta')}
             </Link>
@@ -177,10 +177,10 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
       ) : null}
 
       {!isAgent ? (
-        <section className="card gap-3 border-forest bg-forest text-white">
+        <section className="card gap-3 border-ink bg-ink text-white">
           <h2 className="text-lg font-bold">{rows.length ? t('myFarm.addFarm') : t('myFarm.haveFarm')}</h2>
           <p className="text-sm text-white/75">{t('myFarm.haveFarmD')}</p>
-          <Link href="/my-farm/new" className="btn-primary bg-lime text-forest">
+          <Link href="/my-farm/new" className="btn-primary bg-lime text-ink">
             <Icon name="pin" size={18} />
             {t('wizard.pinTitle')}
           </Link>

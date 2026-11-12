@@ -46,7 +46,7 @@ export default async function FeaturePage({ params }: { params: Promise<{ farmId
           <p className="truncate text-sm text-soil">{farm.name}</p>
         </div>
       </header>
-      <section className="card flex-row items-start gap-3 border-forest bg-forest text-white">
+      <section className="card flex-row items-start gap-3 border-ink bg-ink text-white">
         <Icon name="star" size={22} className="mt-0.5 shrink-0 fill-lime text-lime" />
         <p className="text-sm">{t('intro')}</p>
       </section>

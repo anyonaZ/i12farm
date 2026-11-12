@@ -377,7 +377,7 @@ function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () =>
       aria-pressed={pressed}
       onClick={onClick}
       className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold shadow-sm ${
-        pressed ? 'border-forest bg-forest text-white' : 'border-line bg-surface text-forest'
+        pressed ? 'border-forest bg-forest text-surface' : 'border-line bg-surface text-forest'
       }`}
     >
       {children}
