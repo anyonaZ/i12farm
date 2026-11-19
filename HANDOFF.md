@@ -1,6 +1,6 @@
 # i12farm handoff
 
-Last updated: 10 November 2026. Read this first when continuing in a new chat.
+Last updated: 19 November 2026. Read this first when continuing in a new chat.
 
 ## 1. What i12farm is
 
@@ -14,6 +14,7 @@ recorded with time and county, because that data is the long-term asset.
 - **Owner:** Zacc (ogadazaddock@gmail.com). Works on one laptop (Lenovo T470s, Arch Linux).
 - **Development plan and architecture:** https://claude.ai/code/artifact/c72e9879-fd6e-49e0-973c-bf92745cadae (written for the Supabase design; sections on auth and storage are superseded by this file)
 - **Clickable prototype (no backend needed):** https://claude.ai/artifact/Lm64B1Bka4m8S3s3GXcx3u, source in `prototype/index.html`
+- **Brand:** kit and guide in `brand/` (start with `brand/BRAND-GUIDE.md`; `brand/i12farm-brand-guide.pdf` is the version for partners). Brand board (logo concepts, palette, letterhead, report covers, proposal page): https://claude.ai/artifact/DToyg3eB9AeGc1EqhoMejY. Editable guide doc: https://claude.ai/artifact/HH1fDn5Kye4hsWGg8ih3rL
 
 ## 2. How Zacc wants the work done
 
@@ -58,6 +59,7 @@ recorded with time and county, because that data is the long-term asset.
 | Safety | Report a farm; 3 different reporters hide an unverified farm until review (verified farms never auto-hidden); 3 new farms/day per account; 5 sign-ups/hour per network; honeypot field. All limits are settings |
 | Account deletion | Name, phone, email, password, saved farms and Google link removed; farms only that person managed are hidden; orders, payments and ledger kept without the name (tax/payment records). Blocked while orders are open, money is owed to them, or they manage unclaimed farms |
 | Look | **Emerald Fresh** (chosen 12 Nov 2026 from three mock-ups): emerald `#047857` buttons, ink `#0A1F16`, lime highlights, mist `#F5F8F6` page; Outfit headings + Inter text (self-hosted, OFL); Hugeicons Stroke Rounded icons (`@hugeicons/core-free-icons`, MIT; only the ~40 used are bundled). All colours are tokens in `src/app/globals.css` |
+| Brand | Set 19 Nov 2026 (`brand/BRAND-GUIDE.md`). Master logo: **Field Pin** (map pin with a lime sun rising over white crop rows) + "i12farm" wordmark in Outfit ExtraBold ("i12" ink, "farm" emerald). Supporting designs with one job each: **Seed i** (favicon, Android notification icon, under 24 px), **Pin Sprout** (the current app mark, now only an in-app "pin your farm" illustration), **Harvest seal** (certificates, "Verified farm" stickers, MOUs). Same palette as the app plus chart colours (Emerald, Lake `#4A8FC9`, Amber, Mist grey `#9AA8A1`). Templates: letterhead, proposal page, and six report covers, one per report type (Field = pilot reports, Sunrise = quarterly partner reports, Crop rows = county insight, Harvest sun = annual review, Map contours = market/research briefs, Side panel = proposals). Name always written "i12farm". Zacc chose the first, calmer design direction over a bolder patchwork version |
 | Dark mode | Follows the phone's or computer's setting (`prefers-color-scheme`), no switch in the app (decided 12 Nov 2026). Dark tokens in `globals.css`; `ink` stays dark in both modes for dark panels and text on lime/amber; selected chips invert (`bg-forest text-surface`); green text uses a lighter green on dark. Google Maps follows the system (`colorScheme`); the free map tries OpenFreeMap's dark style and falls back to the light one; browser bar colour per mode |
 | Privacy | Draft privacy notice and terms at `/privacy` and `/terms` (`src/content/legal.ts`), linked from sign-up. **Needs a Kenyan lawyer's review and a decision on ODPC registration** before launch. Set `NEXT_PUBLIC_CONTACT_EMAIL` |
 
@@ -73,6 +75,21 @@ Still open: commission rate, featured-listing prices, annual subscription, domai
 | 3 Reach | Built 23 Oct in simulate mode (SMS alerts, USSD menu, vet requests, partner broadcasts). **10 Nov: SMS, USSD and broadcasts removed by decision**; vet requests stay, in the app; Admin → Reach became Admin → Vet requests |
 | 3.5 Hardening | **Done (4 Nov)** after the audit: demo mode locked in production builds, Next.js / Nodemailer / MapLibre upgraded (0 advisories), security headers, backup job skips without secrets, privacy notice + terms + download my data + delete my account, unanswered paid orders reminded then declined and refunded, edit farm and products after publishing, agent farm list with search, wizard drafts, tab badges, forgiving search, branded 404, clean farm links, link previews, sitemap |
 | 4 Insight | **Built (10 Nov)**: public `/prices` (weekly county median per product, 12-week chart with range and table, change over 4 weeks, "buyers looked for and found little"), "County median" beside prices on farm pages, partner `/partner` county insights (farms by type, on sale and medians, orders and value, buyer contacts, vet requests by animal, most searched and not found; 30/90/365 days), anonymous search log. Google Maps integrated with the free map as fallback |
+
+Brand identity (19 Nov 2026). Zacc asked for brand colours and logos for
+letters, reports and proposals. Three logo concepts (Pin Sprout, Field Pin,
+Seed i) plus a Harvest seal, the palette for paper, and A4 letterhead, report
+cover and proposal page were drawn on the brand board; a bolder "shamba
+patchwork" version was tried and dropped at Zacc's request. A brand guide
+says where and when each design is used, with the Field Pin as master logo.
+In the repo (PR #1, merged): `brand/` with logo files in every version
+(full colour, reversed, one colour, mark, app icon + maskable, Seed i
+favicons and notification shape, Pin Sprout, seal) as SVG with outlined text
+and PNG, colour tokens (`brand/tokens/colors.json`, `colors.css`), template
+previews, `BRAND-GUIDE.md` and a designed PDF guide. PR #2 (merged): five
+more report covers, one per report type, a Report covers
+section in the guide and the PDF regenerated (10 pages). App code untouched:
+the app still shows the old pin-and-sprout logo (see Known gaps).
 
 Pre-production design review and fixes (12 Nov 2026). Zacc asked for a full
 critique, then for every finding fixed **except payments** (he is still
@@ -236,6 +253,7 @@ sandbox; Explore now lists farms even without tiles).
 
 ```
 prototype/index.html               clickable demo (canvas map, sample data, localStorage)
+brand/                             brand kit: BRAND-GUIDE.md, PDF guide, logo/ (SVG + PNG), tokens/, templates/ (incl. report-covers/)
 src/app/page.tsx                   Explore → components/explore/ExploreClient.tsx
 src/app/f/[slug]/page.tsx          farm page: cart steppers, reviews, Message, contact bar
 src/app/checkout/                  cart re-pricing, pickup/delivery, M-Pesa number
@@ -314,6 +332,7 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 
 ## 8. Known gaps
 
+- The app still uses the old pin-and-sprout mark (`src/components/Logo.tsx`, `public/icons/`). The brand guide makes the Field Pin the app icon and logo (`brand/logo/field-pin/`, including a maskable icon) and Seed i the favicon and notification icon (`brand/logo/seed-i/`). Swap them in when ready.
 - Payouts are semi-manual (bulk payment file in, results file out). B2C API automation needs Safaricom go-live and an initiator certificate.
 - Google Maps untested against real Google (blocked in the build sandbox); the fallback is tested.
 - Prices are asking prices from listings, not prices paid; pilot counties have few farms per product, so medians move with one farm. Units differ by product (litre, tray of 30, 90 kg bag); medians are per product and unit.
