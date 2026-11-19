@@ -1,0 +1,17 @@
+/* i12farm brand colours. Same values as the app's tokens in src/app/globals.css. */
+:root {
+  --i12-emerald: #047857;
+  --i12-forest-ink: #0a1f16;
+  --i12-lime: #c6f36b;
+  --i12-mint-mist: #f5f8f6;
+  --i12-sprout: #10b981;
+  --i12-harvest-amber: #f59e0b;
+  --i12-soil: #56645d;
+  --i12-line: #e1e9e4;
+  --i12-chart-1: #047857;
+  --i12-chart-2: #4a8fc9;
+  --i12-chart-3: #f59e0b;
+  --i12-chart-4: #9aa8a1;
+  --i12-font-heading: 'Outfit', Arial, sans-serif;
+  --i12-font-body: 'Inter', Arial, sans-serif;
+}
