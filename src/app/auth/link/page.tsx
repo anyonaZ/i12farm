@@ -1,6 +1,6 @@
 import { titled } from '@/lib/titles';
 import { getTranslations } from 'next-intl/server';
-import { LogoMark } from '@/components/Logo';
+import { Logo } from '@/components/Logo';
 
 export const generateMetadata = titled('signIn', { robots: { index: false } });
 
@@ -10,7 +10,7 @@ export default async function LinkPage({ searchParams }: { searchParams: Promise
   const { token = '', next = '' } = await searchParams;
   return (
     <main className="mx-auto w-full flex flex-col items-center gap-5 px-4 pb-24 pt-16 text-center lg:max-w-md lg:px-8 lg:pb-16 lg:pt-10">
-      <LogoMark size={56} />
+      <Logo height={48} />
       <h1 className="text-2xl font-extrabold">{t('linkTitle')}</h1>
       <p className="max-w-[32ch] text-soil">{t('linkBody')}</p>
       <form action="/auth/link/confirm" method="post" className="w-full max-w-sm">

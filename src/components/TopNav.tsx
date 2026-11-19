@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Icon, type IconName } from '@/components/Icon';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
-import { Logo } from '@/components/Logo';
+import { Logo, PinSprout } from '@/components/Logo';
 import { Badge, useNavCounts } from '@/components/use-nav-counts';
 
 // Laptop and desktop navigation (the bottom tab bar is for phones). From 1024 to
@@ -82,7 +82,7 @@ export function TopNav({ viewer }: { viewer: { name: string; admin: boolean; par
           href="/my-farm/new"
           className="hidden h-10 items-center gap-2 whitespace-nowrap rounded-full border border-line px-4 text-sm font-semibold text-forest hover:bg-mint 2xl:inline-flex"
         >
-          <Icon name="pin" size={18} />
+          <PinSprout size={20} />
           {t('wizard.pinTitle')}
         </Link>
         <LanguageSwitch inNav />

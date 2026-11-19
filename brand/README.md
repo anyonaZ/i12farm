@@ -14,3 +14,5 @@ For partners and stakeholders, share the designed PDF: [i12farm-brand-guide.pdf]
 | `templates/report-covers/` | Six report covers, one per report type, as A4 PDF and PNG |
 
 The wordmark and seal text are outlined shapes, so the SVGs look the same on any computer without the fonts installed.
+
+**In the app:** `src/components/Logo.tsx` draws the Field Pin lockup, mark and Pin Sprout from these files (full colour on light screens, reversed in dark mode). `npm run icons` rebuilds the app icons, favicon and notification badge from `logo/`, so run it after changing a logo file.

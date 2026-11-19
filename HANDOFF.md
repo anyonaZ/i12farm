@@ -89,7 +89,24 @@ and PNG, colour tokens (`brand/tokens/colors.json`, `colors.css`), template
 previews, `BRAND-GUIDE.md` and a designed PDF guide. PR #2 (merged): five
 more report covers, one per report type, a Report covers
 section in the guide and the PDF regenerated (10 pages). App code untouched:
-the app still shows the old pin-and-sprout logo (see Known gaps).
+the app still showed the old pin-and-sprout logo at that point.
+
+App rebrand (19 Nov 2026), following `brand/BRAND-GUIDE.md`. Colours and fonts
+already matched the kit. `src/components/Logo.tsx` now draws the kit's
+artwork inline: `Logo` (Field Pin + outlined Outfit wordmark, never retyped;
+120 px wide in the desktop header, 160 px on sign-in, 404, offline and
+sign-in-link pages), `LogoMark` (Field Pin alone) and `PinSprout` (the
+"pin your farm" illustration: My Farm card and its button, desktop nav button,
+wizard header). Full colour on light screens, reversed on dark ones and on ink
+panels (`--logo-*` variables and `.logo-reversed` in `globals.css`, exact
+brand hex values). `npm run icons` builds every icon from `brand/logo/`:
+Field Pin app icon (192/512, maskable 512, square 180 for iPhone), Seed i
+favicon (`public/favicon.ico` with 16/32/48, SVG, 32 px PNG) and the Seed i
+white shape as the notification badge (`badge-96.png`). Farm link previews
+carry the reversed lockup (`public/icons/logo-reversed.svg`). Service worker
+v6 so installed apps pick up the new icons. Harvest seal is not used in the
+app (it is for stickers, gate signs and certificates). Checked: build, DB
+tests, 196-page sweeps in light and dark with no findings, screenshots.
 
 Pre-production design review and fixes (12 Nov 2026). Zacc asked for a full
 critique, then for every finding fixed **except payments** (he is still
@@ -254,6 +271,7 @@ sandbox; Explore now lists farms even without tiles).
 ```
 prototype/index.html               clickable demo (canvas map, sample data, localStorage)
 brand/                             brand kit: BRAND-GUIDE.md, PDF guide, logo/ (SVG + PNG), tokens/, templates/ (incl. report-covers/)
+src/components/Logo.tsx            Logo, LogoMark, PinSprout (brand artwork, follows dark mode); icons: npm run icons
 src/app/page.tsx                   Explore → components/explore/ExploreClient.tsx
 src/app/f/[slug]/page.tsx          farm page: cart steppers, reviews, Message, contact bar
 src/app/checkout/                  cart re-pricing, pickup/delivery, M-Pesa number
@@ -332,7 +350,6 @@ scripts/test-db.sh                 fresh database, all migrations, seed, all tes
 
 ## 8. Known gaps
 
-- The app still uses the old pin-and-sprout mark (`src/components/Logo.tsx`, `public/icons/`). The brand guide makes the Field Pin the app icon and logo (`brand/logo/field-pin/`, including a maskable icon) and Seed i the favicon and notification icon (`brand/logo/seed-i/`). Swap them in when ready.
 - Payouts are semi-manual (bulk payment file in, results file out). B2C API automation needs Safaricom go-live and an initiator certificate.
 - Google Maps untested against real Google (blocked in the build sandbox); the fallback is tested.
 - Prices are asking prices from listings, not prices paid; pilot counties have few farms per product, so medians move with one farm. Units differ by product (litre, tray of 30, 90 kg bag); medians are per product and unit.

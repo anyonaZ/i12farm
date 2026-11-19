@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { PushToggle } from '@/components/notify/PushToggle';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Icon } from '@/components/Icon';
+import { PinSprout } from '@/components/Logo';
 import { FarmCover } from '@/components/farm/FarmCover';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { getPilotProgress, listManagedFarmRows, listManagedFarms, listSavedFarms } from '@/domains/farms/queries';
@@ -178,10 +179,15 @@ export default async function MyFarmPage({ searchParams }: { searchParams: Promi
 
       {!isAgent ? (
         <section className="card gap-3 border-ink bg-ink text-white">
-          <h2 className="text-lg font-bold">{rows.length ? t('myFarm.addFarm') : t('myFarm.haveFarm')}</h2>
-          <p className="text-sm text-white/75">{t('myFarm.haveFarmD')}</p>
+          <div className="flex items-start gap-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <h2 className="text-lg font-bold">{rows.length ? t('myFarm.addFarm') : t('myFarm.haveFarm')}</h2>
+              <p className="text-sm text-white/75">{t('myFarm.haveFarmD')}</p>
+            </div>
+            <PinSprout size={rows.length ? 44 : 64} tone="reversed" className="shrink-0" />
+          </div>
           <Link href="/my-farm/new" className="btn-primary bg-lime text-ink">
-            <Icon name="pin" size={18} />
+            <PinSprout size={20} tone="reversed" />
             {t('wizard.pinTitle')}
           </Link>
         </section>

@@ -6,11 +6,11 @@
  * - Push notifications: shows them, and opens the right page when tapped.
  * Bump VERSION to force every phone to drop old caches.
  */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL = `i12f-shell-${VERSION}`;
 const PAGES = `i12f-pages-${VERSION}`;
 const MEDIA = `i12f-media-${VERSION}`;
-const PRECACHE = ['/offline', '/manifest.webmanifest', '/icons/icon-192.png'];
+const PRECACHE = ['/offline', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/badge-96.png'];
 const MAX_PAGES = 30;
 const MAX_MEDIA = 80;
 // Personal pages are never stored: field agents often share one phone.
@@ -100,7 +100,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title || 'i12farm', {
       body: data.body || '',
       icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      badge: '/icons/badge-96.png', // Seed i as a white shape (brand guide)
       tag: data.tag,
       data: { url: data.url || '/' },
     }),

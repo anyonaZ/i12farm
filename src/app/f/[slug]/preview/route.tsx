@@ -1,9 +1,18 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
 import { getFarmBySlug } from '@/domains/farms/queries';
 import { listFarmCategories } from '@/domains/reference/queries';
 
 // Link preview picture for farms without a photo (WhatsApp, Facebook, SMS apps):
-// the farm's name, place and type on the brand green. 1200×630, cached a day.
+// the farm's name, place and type on Forest Ink with the reversed i12farm
+// logo, as the brand guide asks for social posts. 1200×630, cached a day.
+let logo: Promise<string> | null = null;
+const reversedLogo = () =>
+  (logo ??= readFile(join(process.cwd(), 'public/icons/logo-reversed.svg')).then(
+    (b) => `data:image/svg+xml;base64,${b.toString('base64')}`,
+  ));
+
 export async function GET(_request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const farm = await getFarmBySlug((await params).slug);
   if (!farm) return new Response(null, { status: 404 });
@@ -13,6 +22,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
     .slice(0, 3)
     .join(' · ');
   const place = [farm.place_name, farm.county?.name].filter(Boolean).join(', ');
+  const logoSrc = await reversedLogo();
   return new ImageResponse(
     <div
       style={{
@@ -26,10 +36,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
         color: 'white',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 18, fontSize: 40, fontWeight: 700 }}>
-        <div style={{ width: 64, height: 64, borderRadius: 18, background: '#C6F36B', display: 'flex' }} />
-        i12farm
-      </div>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={logoSrc} width={300} height={90} alt="i12farm" />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div style={{ fontSize: farm.name.length > 26 ? 72 : 92, fontWeight: 700, lineHeight: 1.05 }}>{farm.name}</div>
         <div style={{ fontSize: 40, color: '#cdeee0' }}>{place}</div>

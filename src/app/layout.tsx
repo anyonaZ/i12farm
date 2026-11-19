@@ -36,7 +36,12 @@ export async function generateMetadata(): Promise<Metadata> {
     applicationName: 'i12farm',
     appleWebApp: { capable: true, title: 'i12farm', statusBarStyle: 'default' },
     icons: {
-      icon: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+      // Browser tab: Seed i (the Field Pin's rows blur under 24 px). Brand guide.
+      icon: [
+        { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+        { url: '/icons/favicon.svg', type: 'image/svg+xml' },
+        { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      ],
       apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
     },
     openGraph: { siteName: 'i12farm', type: 'website' },

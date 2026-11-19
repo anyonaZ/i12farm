@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Icon, CATEGORY_ICON } from '@/components/Icon';
+import { PinSprout } from '@/components/Logo';
 import { FarmMap } from '@/components/map/FarmMap';
 import { compressImage, formatBytes, type CompressedImage } from '@/lib/images';
 import { isKenyanMobile } from '@/lib/phone';
@@ -225,6 +226,7 @@ export function PinWizard({ isAgent, defaultFarmer, categories, products, counti
           >
             <Icon name={step === 1 ? 'close' : 'back'} />
           </button>
+          <PinSprout size={26} className="shrink-0" />
           <h1 className="min-w-0 flex-1 truncate text-lg font-bold">{title}</h1>
           <span className="text-sm tabular-nums text-soil">{t('step', { a: step, b: TOTAL })}</span>
         </div>

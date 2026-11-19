@@ -1,7 +1,7 @@
 import { titled } from '@/lib/titles';
 import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
-import { LogoMark } from '@/components/Logo';
+import { Logo } from '@/components/Logo';
 import { LanguageSwitch } from '@/components/LanguageSwitch';
 import { isGoogleConfigured } from '@/lib/auth/google';
 import { getViewer } from '@/lib/auth/viewer';
@@ -28,7 +28,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         next={safeNext}
         google={isGoogleConfigured}
         startTab={tab === 'up' ? 'up' : 'in'}
-        logo={<LogoMark size={56} />}
+        logo={<Logo height={48} />}
         error={
           error ? (
             <p role="alert" className="rounded-xl bg-amber/15 px-4 py-3 text-sm font-medium">

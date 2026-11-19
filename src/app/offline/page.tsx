@@ -1,4 +1,4 @@
-import { LogoMark } from '@/components/Logo';
+import { Logo } from '@/components/Logo';
 import en from '../../../messages/en.json';
 import sw from '../../../messages/sw.json';
 
@@ -11,7 +11,7 @@ export const metadata = { title: `${en.offline.title} · ${sw.offline.title}`, r
 export default function OfflinePage() {
   return (
     <main className="mx-auto w-full flex flex-col items-center gap-4 px-6 pb-24 pt-24 text-center lg:max-w-md lg:px-8 lg:pb-16 lg:pt-10">
-      <LogoMark size={56} />
+      <Logo height={48} />
       <h1 className="text-2xl font-extrabold">{en.offline.title}</h1>
       <p className="max-w-[32ch] text-soil">{en.offline.body}</p>
       <p lang="sw" className="max-w-[32ch] text-soil">

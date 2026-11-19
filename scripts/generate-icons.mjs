@@ -1,25 +1,55 @@
-// Renders the app icons from the logo SVG. Run: npm run icons
+// Builds the app's icons from the brand kit (brand/logo/, see brand/BRAND-GUIDE.md).
+// Run after changing a logo file: npm run icons
+//   Field Pin app icon  home screen, Play Store, iPhone, link previews
+//   Seed i              browser tab (favicon) and the Android notification shape
 import sharp from 'sharp';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
-const mark = (pad = 0) => `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${64 + 2 * pad} ${64 + 2 * pad}">
-  <rect x="${-pad}" y="${-pad}" width="${64 + 2 * pad}" height="${64 + 2 * pad}" rx="${pad ? 0 : 16}" fill="#0A1F16"/>
-  <path d="M32 10c-9.4 0-17 7.4-17 16.6C15 39 32 54 32 54s17-15 17-27.4C49 17.4 41.4 10 32 10z" fill="#10B981"/>
-  <path d="M32 40V27" stroke="#0A1F16" stroke-width="3.2" stroke-linecap="round"/>
-  <path d="M32 29c0-6 4.2-9.6 10-9.6 0 6-4.4 9.6-10 9.6z" fill="#C6F36B"/>
-  <path d="M32 32c0-4.8-3.4-7.8-8.2-7.8 0 4.8 3.6 7.8 8.2 7.8z" fill="#C6F36B"/>
-</svg>`;
+const brand = (f) => readFile(new URL(`../brand/logo/${f}`, import.meta.url), 'utf8');
+const png = (svg, size) => sharp(Buffer.from(svg), { density: 600 }).resize(size, size).png({ compressionLevel: 9 }).toBuffer();
+
+const appIcon = await brand('field-pin/i12farm-app-icon.svg');
+const maskable = await brand('field-pin/i12farm-app-icon-maskable.svg');
+const seed = await brand('seed-i/seed-i-favicon.svg');
+const seedWhite = await brand('seed-i/seed-i-mono-white.svg');
+// iPhones round the corners themselves, so give them the full square.
+const appIconSquare = appIcon.replace('rx="15" ', '');
 
 await mkdir('public/icons', { recursive: true });
 const jobs = [
-  ['public/icons/icon-192.png', 192, mark()],
-  ['public/icons/icon-512.png', 512, mark()],
-  ['public/icons/apple-touch-icon.png', 180, mark(6)],
-  // Maskable: Android crops to a circle, so keep the pin inside the safe zone.
-  ['public/icons/maskable-512.png', 512, mark(14)],
+  ['public/icons/icon-192.png', appIcon, 192],
+  ['public/icons/icon-512.png', appIcon, 512],
+  ['public/icons/maskable-512.png', maskable, 512],
+  ['public/icons/apple-touch-icon.png', appIconSquare, 180],
+  ['public/icons/favicon-32.png', seed, 32],
+  ['public/icons/favicon-48.png', seed, 48],
+  // Android shows notification badges as a white shape on transparent.
+  ['public/icons/badge-96.png', seedWhite, 96],
 ];
-for (const [file, size, svg] of jobs) {
-  await sharp(Buffer.from(svg)).resize(size, size).png({ compressionLevel: 9 }).toFile(file);
+for (const [file, svg, size] of jobs) {
+  await writeFile(file, await png(svg, size));
   console.log('wrote', file);
 }
+await writeFile('public/icons/favicon.svg', seed);
+console.log('wrote public/icons/favicon.svg');
+
+// favicon.ico for browsers that ask for it by name: 16, 32 and 48 px PNGs in one file.
+const sizes = [16, 32, 48];
+const images = await Promise.all(sizes.map((s) => png(seed, s)));
+const header = Buffer.alloc(6 + 16 * sizes.length);
+header.writeUInt16LE(0, 0);
+header.writeUInt16LE(1, 2);
+header.writeUInt16LE(sizes.length, 4);
+let offset = header.length;
+sizes.forEach((s, i) => {
+  const at = 6 + 16 * i;
+  header.writeUInt8(s, at);
+  header.writeUInt8(s, at + 1);
+  header.writeUInt16LE(1, at + 4); // colour planes
+  header.writeUInt16LE(32, at + 6); // bits per pixel
+  header.writeUInt32LE(images[i].length, at + 8);
+  header.writeUInt32LE(offset, at + 12);
+  offset += images[i].length;
+});
+await writeFile('public/favicon.ico', Buffer.concat([header, ...images]));
+console.log('wrote public/favicon.ico');

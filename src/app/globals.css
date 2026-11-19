@@ -1,7 +1,8 @@
 @import 'tailwindcss';
 
 /*
- * i12farm design tokens: "Emerald Fresh" (chosen 12 Nov 2026). Every colour on
+ * i12farm design tokens: "Emerald Fresh" (chosen 12 Nov 2026), the same values
+ * as the brand kit (brand/tokens/colors.css). Every colour on
  * screen comes from here, so the palette can change without touching a
  * component. Dark mode (below) follows the phone's or computer's setting.
  *
@@ -49,6 +50,21 @@
   --cover-ink-l: 30%;
   --color-cluster: #0a1f16; /* map groups of farms */
   color-scheme: light dark;
+  /* Logo (brand/BRAND-GUIDE.md): full colour on light, reversed on dark. Exact
+     brand values, not the screen tokens, so the logo never drifts. */
+  --logo-pin: #047857;
+  --logo-rows: #ffffff;
+  --logo-sun: #c6f36b;
+  --logo-name: #0a1f16;
+  --logo-farm: #047857;
+}
+
+/* Reversed logo: on Forest Ink or Emerald panels, and everywhere in dark mode. */
+.logo-reversed {
+  --logo-pin: #10b981;
+  --logo-rows: #0a1f16;
+  --logo-name: #ffffff;
+  --logo-farm: #c6f36b;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -75,6 +91,10 @@
     --cover-l2: 17%;
     --cover-ink-l: 72%;
     --color-cluster: #047857;
+    --logo-pin: #10b981;
+    --logo-rows: #0a1f16;
+    --logo-name: #ffffff;
+    --logo-farm: #c6f36b;
   }
   /* Green text needs a lighter green on a dark page than a button fill does. */
   .text-sprout-deep,
