@@ -10,6 +10,7 @@ For partners and stakeholders, share the designed PDF: [i12farm-brand-guide.pdf]
 | `logo/pin-sprout/` | In-app "pin your farm" illustration, light and dark |
 | `logo/harvest-seal/` | Emblem for certificates and "Verified farm" stickers |
 | `tokens/` | Brand colours as `colors.json` and `colors.css` (same values as `src/app/globals.css`) |
-| `templates/` | Letterhead, report cover and proposal page as A4 PDF and PNG previews |
+| `templates/` | Letterhead and proposal page as A4 PDF and PNG previews |
+| `templates/report-covers/` | Six report covers, one per report type, as A4 PDF and PNG |
 
 The wordmark and seal text are outlined shapes, so the SVGs look the same on any computer without the fonts installed.

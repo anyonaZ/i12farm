@@ -1,6 +1,6 @@
 # i12farm Brand Guide
 
-Where and when to use each part of the i12farm brand. Last updated 19 November 2026.
+Where and when to use each part of the i12farm brand. Last updated 19 November 2026 (report covers added).
 
 A designed PDF of this guide for partners is in [`i12farm-brand-guide.pdf`](i12farm-brand-guide.pdf).
 
@@ -97,19 +97,46 @@ Choose the template by what you are sending: a letter speaks to one person, a re
 | **Report cover** | The front page of anything with results over a period: pilot reports, quarterly partner reports, county insight reports, the annual review | Letters, or documents shorter than three pages | White top half with the lockup, label, big title and counties. Emerald field graphic with the rising sun on the bottom half, with the partner's name on it |
 | **Proposal page** | The inside pages of proposals, concept notes, grant applications and reports | A front page on its own | Small lockup and document name as a running header, Emerald section label, Forest Ink table headers, Mint Mist callouts, page number in Emerald |
 
-- **Proposals** use the report cover as their front page, with the label changed from "Pilot report" to "Partnership proposal".
+- **Proposals** and concept notes have their own Emerald cover. See [Report covers](#report-covers).
 - **Invoices and receipts** use the letterhead until a dedicated template exists. Keep amounts in Forest Ink, never Amber or Lime.
 - **Internal documents** such as meeting notes and plans skip the templates. Use plain Inter text with the mark-only logo in the corner.
 
 Previews of all three templates are in [`templates/`](templates/).
+
+## Report covers
+
+Each type of report has its own cover and colour, so readers can tell documents apart at a glance. All six use the Field Pin logo, the same fonts and the same order: label, title, counties or partner, then date.
+
+| Cover | Colour | Use it for | Printing | Files |
+| --- | --- | --- | --- | --- |
+| Field | Emerald | Pilot reports and pilot results | Office or professional printer | `templates/report-covers/field` |
+| Sunrise | Forest Ink | Quarterly partner reports | Professional printer or PDF. The dark cover uses a lot of ink | `templates/report-covers/sunrise` |
+| Crop rows | Lime | County insight reports for county agriculture teams | Office or professional printer | `templates/report-covers/crop-rows` |
+| Harvest sun | Harvest Amber | The annual review | Professional printer or PDF | `templates/report-covers/harvest-sun` |
+| Map contours | Mint Mist | Market price briefs and research briefs | Office printer | `templates/report-covers/map-contours` |
+| Side panel | Emerald | Proposals, concept notes and grant applications | Office or professional printer | `templates/report-covers/side-panel-proposal` |
+
+<p>
+  <img src="templates/report-covers/field.png" alt="Field cover" width="130">
+  <img src="templates/report-covers/sunrise.png" alt="Sunrise cover" width="130">
+  <img src="templates/report-covers/crop-rows.png" alt="Crop rows cover" width="130">
+  <img src="templates/report-covers/harvest-sun.png" alt="Harvest sun cover" width="130">
+  <img src="templates/report-covers/map-contours.png" alt="Map contours cover" width="130">
+  <img src="templates/report-covers/side-panel-proposal.png" alt="Side panel proposal cover" width="130">
+</p>
+
+- Use one cover per report type. A quarterly report never borrows the annual review cover.
+- Change only the words in square brackets. Keep the graphics, colours and positions.
+- Inside pages always use the proposal page template, whatever the cover.
+- Dark covers print poorly on office printers. Send them as a PDF or use a professional printer.
 
 ## Quick reference
 
 | Touchpoint | Logo | Colours | Template |
 | --- | --- | --- | --- |
 | Letter to a county, NGO or bank | Full colour lockup | White page, Emerald rule, Mint Mist footer | Letterhead |
-| Pilot or partner report | Full colour lockup on the cover, mark only inside | Emerald field block, white pages | Report cover + proposal pages |
-| Proposal, concept note, grant application | Full colour lockup | White, Emerald, Mint Mist callouts | Report cover + proposal pages |
+| Pilot or partner report | Full colour lockup on the cover, mark only inside | The cover's colour, white pages | Cover for that report type + proposal pages |
+| Proposal, concept note, grant application | Full colour lockup | White, Emerald, Mint Mist callouts | Proposal cover + proposal pages |
 | Invoice or receipt | Full colour lockup | Forest Ink on white | Letterhead |
 | Training or agent certificate | Harvest seal + full colour lockup | Forest Ink, Emerald, Lime | — |
 | "Verified farm" sticker or gate sign | Harvest seal | Forest Ink, Emerald, Lime | — |
